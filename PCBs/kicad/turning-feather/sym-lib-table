@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name feather2-eagle-import)(type Legacy)(uri ${KIPRJMOD}/feather2-eagle-import.lib)(options "")(descr "")(disabled))
+  (lib (name feather)(type Legacy)(uri ${KIPRJMOD}/feather.lib)(options "")(descr ""))
+)

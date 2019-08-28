@@ -1,0 +1,130 @@
+[
+  {
+    "name": "T&P1 (PP1)",
+    "stages": [
+      {"beep": 7, "face": 120, "away": 0, "repeat": 0},
+      {"beep": 7, "face": 2, "away": 5, "repeat": 6},
+      {"beep": 7, "face": 3, "away": 5, "repeat": 3}
+    ]
+  },
+
+  {
+    "name": "T&P2 (PP2)",
+    "stages": [
+      {"beep": 7, "face": 8},
+      {"beep": 7, "face": 5},
+
+      {"beep": 7, "face": 180},
+      {"beep": 7, "face": 150},
+
+      {"beep": 7, "face": 120},
+      {"beep": 7, "face": 105}
+    ]
+  },
+
+  {
+    "name": "T&P3 (PP3)",
+    "stages": [
+      {"beep": 7, "face": 15},
+      {"beep": 7, "face": 330}
+    ]
+  },
+
+  {
+    "name": "Granet",
+    "stages": [
+      {"beep": 7, "face": 3, "away": 7, "repeat": 3}
+    ]
+  },
+
+  {
+    "name": "Silhouettes",
+    "stages": [
+      {"beep": 7, "face": 12, "away": 0, "repeat": 0},
+      {"beep": 7, "face": 10, "away": 0, "repeat": 0},
+      {"beep": 7, "face": 8, "away": 0, "repeat": 0},
+      {"beep": 7, "face": 6, "away": 0, "repeat": 0}
+    ]
+  },
+
+  {
+    "name": "Multi-Target",
+    "stages": [
+      {"beep": 7, "face": 15},
+      {"beep": 7, "face": 10},
+      {"beep": 7, "face": 3, "away": 5, "repeat": 3},
+      {"beep": 7, "face": 8}
+    ]
+  },
+  
+  {
+    "name": "Phoenix A",
+    "stages": [
+      {"beep": 10, "face": 10, "away": 10, "repeat": 2},
+      {"beep": 7, "flash": 1, "flashaway": 7,
+       "face": 3, "away": 7, "repeat": 5},
+      {"beep": 7, "flash": 10, "flashaway": 7,
+       "face": 3, "away": 7, "repeat": 4},
+      {"beep": 7, "flash": 10, "flashaway": 7,
+       "face": 5, "away": 7, "repeat": 2}
+    ]
+  },
+
+  {
+    "name": "Multi-Target 3",
+    "stages": [
+      {"beep": 7, "face": 120},
+      {"beep": 7, "face": 5, "away": 7, "repeat": 4},
+      {"beep": 7, "face": 3, "away": 5, "repeat": 3},
+      {"beep": 7, "face": 8}
+    ]
+  },
+
+  {
+    "name": "1500",
+    "stages": [
+      {"beep": 7, "face": 30},
+      {"beep": 7, "face": 20},
+
+      {"beep": 7, "face": 90},
+
+      {"beep": 7, "face": 165},
+
+      {"beep": 7, "face": 35},
+
+      {"beep": 7, "face": 30},
+      {"beep": 7, "face": 20},
+
+      {"beep": 7, "face": 90},
+
+      {"beep": 7, "face": 165},
+      {"beep": 7, "face": 12}
+    ]
+  },
+
+  {
+    "name": "1020",
+    "stages": [
+      {"beep": 7, "face": 30},
+      {"beep": 7, "face": 20},
+
+      {"beep": 7, "face": 90},
+
+      {"beep": 7, "face": 35},
+
+      {"beep": 7, "face": 165},
+
+      {"beep": 7, "face": 12}
+    ]
+  },
+
+  {
+    "name": "Groda",
+    "stages": [
+      {"beep": 7, "face": 8},
+      {"beep": 7, "face": 6},
+      {"beep": 7, "face": 4},
+      {"beep": 7, "face": 2}
+    ]
+  }
+]

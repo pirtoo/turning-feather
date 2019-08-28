@@ -1,0 +1,238 @@
+EESchema Schematic File Version 4
+LIBS:turning-feather-external-cache
+EELAYER 30 0
+EELAYER END
+$Descr User 11980 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Switch:SW_Push_DPDT SW2
+U 1 1 5D6019C5
+P 4400 3450
+F 0 "SW2" H 4400 3935 50  0000 C CNN
+F 1 "SW_Push_DPDT" H 4400 3844 50  0000 C CNN
+F 2 "" H 4400 3650 50  0001 C CNN
+F 3 "~" H 4400 3650 50  0001 C CNN
+	1    4400 3450
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:Buzzer BZ1
+U 1 1 5D619AD2
+P 9500 3650
+F 0 "BZ1" H 9652 3679 50  0000 L CNN
+F 1 "Buzzer" H 9652 3588 50  0000 L CNN
+F 2 "" V 9475 3750 50  0001 C CNN
+F 3 "~" V 9475 3750 50  0001 C CNN
+	1    9500 3650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9500 3650 9500 3550
+$Comp
+L Connector:USB_B_Micro J6
+U 1 1 5D63E66A
+P 4950 4650
+F 0 "J6" H 5007 5117 50  0000 C CNN
+F 1 "micro plug -> HUZZAH32 socket" H 5007 5026 50  0000 C CNN
+F 2 "" H 5100 4600 50  0001 C CNN
+F 3 "~" H 5100 4600 50  0001 C CNN
+	1    4950 4650
+	-1   0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x03 J3
+U 1 1 5D656D28
+P 8650 3900
+F 0 "J3" H 8730 3942 50  0000 L CNN
+F 1 "In to J2" H 8730 3851 50  0000 L CNN
+F 2 "" H 8650 3900 50  0001 C CNN
+F 3 "~" H 8650 3900 50  0001 C CNN
+	1    8650 3900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Switch:SW_Push SW3
+U 1 1 5D65A636
+P 7050 4000
+F 0 "SW3" H 7050 4285 50  0000 C CNN
+F 1 "Start/Stop" H 7050 4194 50  0000 C CNN
+F 2 "" H 7050 4200 50  0001 C CNN
+F 3 "~" H 7050 4200 50  0001 C CNN
+	1    7050 4000
+	1    0    0    -1  
+$EndComp
+$Comp
+L Switch:SW_Push SW4
+U 1 1 5D65AD7C
+P 7700 4000
+F 0 "SW4" H 7700 4285 50  0000 C CNN
+F 1 "Face/Away" H 7700 4194 50  0000 C CNN
+F 2 "" H 7700 4200 50  0001 C CNN
+F 3 "~" H 7700 4200 50  0001 C CNN
+	1    7700 4000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9400 3550 8450 3550
+Wire Wire Line
+	8450 3550 8450 3800
+Wire Wire Line
+	9400 3750 9400 4300
+Wire Wire Line
+	9400 4300 8200 4300
+Wire Wire Line
+	8200 4300 8200 3900
+Wire Wire Line
+	8200 3900 8450 3900
+Wire Wire Line
+	8450 4000 7900 4000
+Wire Wire Line
+	7500 4000 7400 4000
+Wire Wire Line
+	7400 4000 7400 4300
+Wire Wire Line
+	7400 4300 8200 4300
+Connection ~ 7400 4000
+Wire Wire Line
+	7400 4000 7250 4000
+Connection ~ 8200 4300
+$Comp
+L Device:R_Small R4
+U 1 1 5D67BEF3
+P 6850 4150
+F 0 "R4" H 6909 4196 50  0000 L CNN
+F 1 "2.2kR" H 6909 4105 50  0000 L CNN
+F 2 "" H 6850 4150 50  0001 C CNN
+F 3 "~" H 6850 4150 50  0001 C CNN
+	1    6850 4150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6850 4000 6850 4050
+Wire Wire Line
+	6850 4250 6850 4300
+Wire Wire Line
+	6850 4300 7400 4300
+Connection ~ 7400 4300
+$Comp
+L Connector:USB_B_Micro J5
+U 1 1 5D682A96
+P 3800 4650
+F 0 "J5" H 3857 5117 50  0000 C CNN
+F 1 "Case micro socket" H 3857 5026 50  0000 C CNN
+F 2 "" H 3950 4600 50  0001 C CNN
+F 3 "~" H 3950 4600 50  0001 C CNN
+	1    3800 4650
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:RJ45 J4
+U 1 1 5D68C4B6
+P 2650 3550
+F 0 "J4" H 2707 4217 50  0000 C CNN
+F 1 "RJ45 to targets" H 2707 4126 50  0000 C CNN
+F 2 "" V 2650 3575 50  0001 C CNN
+F 3 "~" V 2650 3575 50  0001 C CNN
+	1    2650 3550
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3800 5050 3800 5200
+Wire Wire Line
+	3800 5200 4950 5200
+Wire Wire Line
+	4950 5200 4950 5050
+Wire Wire Line
+	3700 5050 3700 5300
+Wire Wire Line
+	3700 5300 5050 5300
+Wire Wire Line
+	5050 5300 5050 5050
+Wire Wire Line
+	4100 4850 4650 4850
+Wire Wire Line
+	4650 4750 4100 4750
+Wire Wire Line
+	4100 4650 4650 4650
+$Comp
+L Connector_Generic:Conn_01x04 J4
+U 1 1 5D6CB12A
+P 5550 3450
+F 0 "J4" H 5630 3442 50  0000 L CNN
+F 1 "In to J1" H 5630 3351 50  0000 L CNN
+F 2 "" H 5550 3450 50  0001 C CNN
+F 3 "~" H 5550 3450 50  0001 C CNN
+	1    5550 3450
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3300 2850 5350 2850
+Wire Wire Line
+	5350 2850 5350 3350
+Wire Wire Line
+	5000 3650 5000 3350
+Wire Wire Line
+	5000 3350 4600 3350
+Wire Wire Line
+	3300 3950 3300 3550
+Wire Wire Line
+	3300 3550 3050 3550
+Wire Wire Line
+	3050 3450 3400 3450
+Wire Wire Line
+	3400 3450 3400 3850
+Wire Wire Line
+	5000 3650 5350 3650
+Wire Wire Line
+	5350 3550 5250 3550
+Wire Wire Line
+	5250 3550 5250 3950
+Wire Wire Line
+	5250 3950 3300 3950
+Wire Wire Line
+	3400 3850 5150 3850
+Wire Wire Line
+	5150 3850 5150 3450
+Wire Wire Line
+	5150 3450 5350 3450
+Wire Wire Line
+	4100 4450 4200 4450
+Wire Wire Line
+	4200 4450 4200 3650
+Wire Wire Line
+	4600 3550 4650 3550
+Wire Wire Line
+	4650 3550 4650 4450
+Wire Wire Line
+	3900 3250 4200 3250
+Wire Wire Line
+	3900 3350 3900 3250
+Wire Wire Line
+	3050 3350 3900 3350
+Wire Wire Line
+	3050 3150 3150 3150
+Wire Wire Line
+	3300 3150 3300 2850
+Wire Wire Line
+	3050 3250 3150 3250
+Wire Wire Line
+	3150 3250 3150 3150
+Connection ~ 3150 3150
+Wire Wire Line
+	3150 3150 3300 3150
+Wire Wire Line
+	3150 3250 3150 3650
+Wire Wire Line
+	3150 3650 3050 3650
+Connection ~ 3150 3250
+$EndSCHEMATC
