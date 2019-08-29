@@ -31,7 +31,7 @@
 
 ## Current state
 
-* I have a prototype in a case being tested locally. Designing a [custom PCB](PCBs/kicad/turning-feather) to shim between the Feather and Featherwing to provide the needed IO and power regulation better then the Feather double protoboard current being used. See [schematic](images/turning-feather-schematic.jpg).
+* I have a prototype in a case being tested locally. Designing a [custom PCB](PCBs/kicad/turning-feather) to shim between the Feather and Featherwing to provide the needed IO and power regulation better then the Feather double protoboard current being used. See [schematic](PCBs/kicad/turning-feather/turning-feather.pdf).
 * Graphics are currently fairly simplistic but functional.
 
 * RF interference is a problem with the remote at the test range. The bigger remote handles this better. May need a larger antennae.
