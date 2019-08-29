@@ -5,7 +5,7 @@ const int capacity=\
   TURN_MAX_PROGRAMS*JSON_ARRAY_SIZE(TURN_MAX_STAGES) + \
   TURN_MAX_PROGRAMS*JSON_OBJECT_SIZE(2) + \
   TURN_MAX_STAGES*TURN_MAX_PROGRAMS*JSON_OBJECT_SIZE(8) + \
-  TURN_MAX_PROGRAMS*116;
+  TURN_MAX_PROGRAMS*241;
 
 void StageConfig::save(JsonObject obj) const {
   obj["beep"]=beep / NUM_MULT;

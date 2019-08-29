@@ -70,7 +70,7 @@
 #define CLOCK_RATE 80
 
 // Number of times to retry the SD card
-#define SD_RETRIES 5
+#define SD_RETRIES 3
 
 // Constants
 #define ONE_SECOND 1000000
@@ -731,8 +731,7 @@ void setup() {
     delay(1000);
     // Wait for SD card, loop retrying.
     if (count > 2) {
-      lcd_println("SD card:");
-      lcd_println(" init failed");
+      lcd_println("SD card init failed");
     }
     count++;
   }
@@ -763,7 +762,8 @@ void setup() {
 
   // This may fail if the JSON is invalid
   if (!deserializeTurnConfig(turnfile, turnconfig)) {
-    lcd_println("Failed to deserialize");
+    lcd_clear();
+    lcd_println("Failed to deserialise");
     lcd_println(" configuration");
     while (1);
   }

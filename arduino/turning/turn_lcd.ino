@@ -343,6 +343,12 @@ void lcd_display_set(const ProgramConfig *program, uint8_t prognum, uint8_t stag
   lcd_stage(&program->stage[stagenum], stagenum);
 }
 
+void lcd_clear() {
+  tft.fillScreen(ILI9341_BLACK);
+  tft.setCursor(0, 0);
+  lcd_print_lines=0;
+}
+
 void lcd_print(const char *str) {
   // Output a string to both LCD and serial
   Serial.print(str);
@@ -354,9 +360,7 @@ void lcd_println(const char *str) {
   // Output a string to both LCD and serial
   // with a newline
   if (lcd_print_lines >= 15) {
-    tft.fillScreen(ILI9341_BLACK);
-    tft.setCursor(0, 0);
-    lcd_print_lines=0;
+    lcd_clear();
   }
   Serial.println(str);
   tft.setTextSize(2);
@@ -371,9 +375,13 @@ void lcd_setup() {
   tft.setTextWrap(true);
   tft.fillScreen(ILI9341_BLACK);
 
+  uint8_t i=0;
   while(!ts.begin()) {
-    lcd_print("Touchscreen controller");
-    lcd_println(" init fail");
+    if (i>2) {
+      lcd_print("Touchscreen controller");
+      lcd_println(" init fail");
+    }
+    i++;
     delay(1000);
   }
 

@@ -7,12 +7,12 @@
 
 // maximum stages per program
 #ifndef TURN_MAX_STAGES
-#define TURN_MAX_STAGES 10
+#define TURN_MAX_STAGES 12
 #endif // TURN_MAX_STAGES
 
 // maximum number of programs
 #ifndef TURN_MAX_PROGRAMS
-#define TURN_MAX_PROGRAMS 50
+#define TURN_MAX_PROGRAMS 55
 #endif // TURN_MAX_PROGRAMS
 
 #define NUM_MULT 10.0

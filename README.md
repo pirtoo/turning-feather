@@ -5,7 +5,7 @@
 
 * More flexible than an [Auto Duel](http://www.indelfa.co.uk/tt/ttcontruk.html) controller, programs defined in JSON in a text file on a micro SD card. Can have a backup config file flashed to SPI accessed via SPIFFS.
 
-  * Current maximums of 50 programs and up to 20 stages per program (limited by memory in the controller) but will increase with development.
+  * Current maximums of 55 programs and up to 12 stages per program (limited by memory in the controller) but will increase with development and it will be easier to swap between sets of programs.
 
   * [Example config](arduino/turning/data/turnconf.txt)
 
