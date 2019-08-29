@@ -261,7 +261,6 @@ Wire Wire Line
 NoConn ~ 9150 4750
 NoConn ~ 9950 4750
 NoConn ~ 1650 4350
-NoConn ~ 1650 4850
 Wire Wire Line
 	1450 4550 1450 5250
 Connection ~ 1450 4550
@@ -291,7 +290,6 @@ NoConn ~ 6550 4750
 NoConn ~ 6550 4850
 NoConn ~ 6550 4950
 NoConn ~ 5400 4850
-NoConn ~ 5400 4750
 NoConn ~ 5400 4650
 NoConn ~ 5400 4550
 NoConn ~ 5400 4450
@@ -643,4 +641,14 @@ Text Notes 7450 3950 0    30   ~ 0
 If using a LiPo battery with\nthe feather, turn off here.
 Text Notes 1800 4000 0    30   ~ 0
 Antenna connected to U.FL connector\nsurface mount soldered to ZPT
+Wire Wire Line
+	5400 4750 3000 4750
+Wire Wire Line
+	3000 4750 3000 5050
+Wire Wire Line
+	3000 5050 1550 5050
+Wire Wire Line
+	1550 5050 1550 4850
+Wire Wire Line
+	1550 4850 1650 4850
 $EndSCHEMATC
