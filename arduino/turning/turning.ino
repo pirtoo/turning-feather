@@ -17,7 +17,8 @@
 // TODO: Text for stage use, eg: "GRCF stage 1"?
 // TODO: Add SD card insertion detection?
 //       - requires CD pin to be soldered on wing
-// TODO: 
+// TODO: Use ZPT serial to show low battery warning
+// TODO: Mode to show ZPT signal strength
 
 /*************************************************/
 /* Hardware pins and other definitions */
@@ -731,7 +732,8 @@ void setup() {
     delay(1000);
     // Wait for SD card, loop retrying.
     if (count > 2) {
-      lcd_println("SD card init failed");
+      lcd_println("SD card:");
+      lcd_println(" init failed");
     }
     count++;
   }
