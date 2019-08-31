@@ -1,3 +1,6 @@
+/*
+ * Config parsing from and to JSON
+ */
 #include "TurnConfig.h"
 
 const int capacity=\

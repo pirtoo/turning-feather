@@ -52,11 +52,13 @@
 // Physical buttons pin
 #define BUTTONS_PIN A3 // AKA 39
 
+// Unused currently
+
 // Double the value here for battery voltage
 //#define BATTERY_VOLTAGE A13
 
 // Unused on the HUZZAH32
-//#define UNUSED_1 A4/36
+//#define UNUSED_1 A4/36 // wired to 5v MOSFET
 //#define UNUSED_2 A11/12
 
 // Using these to generate rising edge interrupts
@@ -102,8 +104,14 @@
 // on config.
 #define INIT_PAUSE 6
 
-// Debounce RF buttons in case of problems
-#define RF_BUTTON_DEBOUNCE 200
+
+/*
+ * Definitions that need to be early
+ */
+// Are the targets facing (or in the process of facing)
+// vs away or in the process of turning away.
+// Are we in a running program or stopped.
+bool face=true, turnstop=true;
 
 
 /*
@@ -115,59 +123,24 @@ char line[30];
 
 
 /* 
- * SD card and config file 
+ * SD card and config file
   */
-#include <ArduinoJson.h>
-#include <SPI.h>
-#include <SD.h>
-#include <FS.h>
-#include <SPIFFS.h>
+#include "sdcard.h"
 
+
+/* 
+ * Config file
+  */
 #include "TurnConfig.h"
 
-TurnConfig turnconfig;
-ProgramConfig *currentprog;
-StageConfig *currentstage;
-StageConfig runningstage;
+struct TurnConfig turnconfig;
+struct ProgramConfig *currentprog;
+struct StageConfig *currentstage;
+struct StageConfig runningstage;
 
 const char *turnconf_file="/turnconf.txt";
 uint8_t currentstagenum=0, currentprognum=0;
 
-File checksdfile(const char *filename) {
-  File file;
-
-  if (!SD.exists(filename)) {
-    lcd_print("Config file ");
-    lcd_print(filename);
-    lcd_println(" does not exist");
-    return file;
-  }
-  // Open file for reading
-  file=SD.open(filename, FILE_READ);
-  if (!file) {
-    lcd_print("Couldn't open ");
-    lcd_println(filename);
-  }
-  return file;
-}
-
-File checkspiffsfile(const char *filename) {
-  File file;
-
-  if (!SPIFFS.exists(filename)) {
-    lcd_print("Config file ");
-    lcd_print(filename);
-    lcd_println(" does not exist");
-    return file;
-  }
-  // Open file for reading
-  file=SPIFFS.open(filename, FILE_READ);
-  if (!file) {
-    lcd_print("Couldn't open ");
-    lcd_println(filename);
-  }
-  return file;
-}
 
 bool changestagenum(const int change, const bool rf_button) {
   // Alter the current stage num within parameters
@@ -187,7 +160,7 @@ bool changestagenum(const int change, const bool rf_button) {
     // If changing stages from the remote, chirp
     beep(STAGE_CHANGE_CHIRP);
   }
-#endif // STAGE_CHANGE_CHIRP
+#endif //STAGE_CHANGE_CHIRP
   updatecurrent();
   lcd_stage(currentstage, currentstagenum);
   return true;
@@ -230,8 +203,6 @@ AnalogMultiButton buttons(BUTTONS_PIN, 2, buttons_values);
 void buttons_setup() {
   // Make sure all analog systems read the same
   analogReadResolution(10);
-  // Turn on the pullup
-  //pinMode(BUTTONS_PIN, INPUT_PULLUP);
 }
 
 void buttons_loop() {
@@ -347,7 +318,7 @@ void button_action(const unsigned int button, const bool rf_button) {
 #ifdef DEBUG
       Serial.println("stage--");
 #endif // DEBUG
-      if (stopped()) {
+      if (turnstop) {
         changestagenum(-1, rf_button);
       }
       break;
@@ -356,7 +327,7 @@ void button_action(const unsigned int button, const bool rf_button) {
 #ifdef DEBUG
       Serial.println("stage++");
 #endif // DEBUG
-      if (stopped()) {
+      if (turnstop) {
         changestagenum(1, rf_button);
       }
       break;
@@ -365,7 +336,7 @@ void button_action(const unsigned int button, const bool rf_button) {
 #ifdef DEBUG
       Serial.println("program--");
 #endif // DEBUG
-      if (stopped()) {
+      if (turnstop) {
         changeprognum(-1);
       }
       break;
@@ -374,7 +345,7 @@ void button_action(const unsigned int button, const bool rf_button) {
 #ifdef DEBUG
       Serial.println("program++");
 #endif // DEBUG
-      if (stopped()) {
+      if (turnstop) {
         changeprognum(1);
       }
       break;
@@ -413,10 +384,6 @@ bool in_fudge=false;
 // How many seconds since the turn counter
 // started.
 volatile uint32_t turncounter=0;
-// Are the targets facing (or in the process of facing)
-// vs away or in the process of turning away.
-// Are we in a running program or stopped.
-bool face=true, turnstop=true;
 
 void starttimer(hw_timer_t *timer, const bool resetturn=false) {
   timerStop(timer);
@@ -617,9 +584,6 @@ void turntick() {
   }
 }
 
-bool stopped() {
-  return turnstop;
-}
 
 void prog_init() {
   updatecurrent();
@@ -744,46 +708,12 @@ void setup() {
   
   Serial.println("\r\n");
   lcd_println("Turning target controller");
+  lcd_println("Turning feather");
   lcd_println("(c) pir 2019");
   Serial.println("");
 
-
-  // SD card and main config file setup
-  uint8_t count=0;
-
-  while (!SD.begin(SD_CS) and count <= SD_RETRIES) {
-    delay(1000);
-    // Wait for SD card, loop retrying.
-    if (count > 2) {
-      lcd_println("SD card:");
-      lcd_println(" init failed");
-    }
-    count++;
-  }
-
-  if (!SPIFFS.begin(true)) {
-    lcd_println("SPIFFS storage:");
-    lcd_println("  init failed");
-  }
- 
-  Serial.print(F("Reading config from: "));
-  Serial.println(turnconf_file);
-  // Open the file
-  File turnfile=checksdfile(turnconf_file);
-  if (!turnfile) {
-    lcd_println("Can't read config from SD.");
-    lcd_println("Trying SPIFFS:");
-    turnfile=checkspiffsfile(turnconf_file);
-    if (!turnfile) {
-      lcd_println("File not found on SPIFFS");
-      while (1);
-    } else {
-      lcd_println("Using backup file from");
-      lcd_println("SPIFFS.");
-      delay(5000);
-    }
-  }
-
+  // Get the config file from SD or SPIFFS
+  File turnfile=turn_file_init();
 
   // This may fail if the JSON is invalid
   if (!deserializeTurnConfig(turnfile, turnconfig)) {
@@ -818,8 +748,6 @@ void setup() {
 
 
   // bravo/ZPT RF setup
-  //pinMode(A3, INPUT_PULLUP);
-  //pinMode(A4, INPUT_PULLUP);
   pinMode(RF_1, INPUT_PULLUP);
   pinMode(RF_2, INPUT_PULLUP);
   pinMode(RF_3, INPUT_PULLUP);
