@@ -1,7 +1,7 @@
-/****************************************************************/
-/* Write to the featherwing touchscreen LCD and get */
-/* touch info */
-/****************************************************************/
+/*
+ * Write to the featherwing touchscreen LCD and get
+ * touch info
+  */
 
 #include "SPI.h"
 #include <Wire.h>  // this is needed even though we aren't using it
@@ -15,12 +15,17 @@
 Adafruit_ILI9341 tft=Adafruit_ILI9341(TFT_CS, TFT_DC);
 Adafruit_STMPE610 ts=Adafruit_STMPE610(STMPE_CS);
 
+// format line for printing the program name
+#define LCD_PROG_FORMAT "%-" STR(TURN_NAME_LENGTH) "." STR(TURN_NAME_LENGTH) "s"
+
 // Active screen area
-static const rect screen={{TS_MINX, TS_MINY}, {TS_MAXX, TS_MAXY}};
+static const struct rect screen={{TS_MINX, TS_MINY}, {TS_MAXX, TS_MAXY}};
 
 // Used for buffering
 char lcd_line[30];
-// X co-ord for printing timings
+//static const char lcd_prog_format=
+
+// Co-ords for printing timings
 static const uint16_t timing_x=45;
 static const uint16_t timing_y_1=26;
 static const uint16_t timing_y_2=43;
@@ -44,7 +49,7 @@ static const rect s_do={{274, 134}, {317, 240}};
 static const rect start={{53, 150}, {262, 190}};
 
 // Used for the input point, keep around
-point t;
+struct point t;
 TS_Point p;
 
 // Screen button presses
@@ -58,21 +63,21 @@ bool between(const uint16_t num, const uint16_t low, const uint16_t high) {
   return (num > low) and (num < high);
 }
 
-bool in_rect(const point *a, const rect *box) {
+bool in_rect(const struct point *a, const struct rect *box) {
   return (between(a->x, box->a.x, box->b.x) and between(a->y, box->a.y, box->b.y));
 }
 
-void ts_remap(point *a) {
+void ts_remap(struct point *a) {
   uint16_t temp_y=a->y;
   a->y=map(a->x, TS_MINX, TS_MAXX, tft.height(), 0);
   a->x=map(temp_y, TS_MINY, TS_MAXY, tft.width(), 0);
 }
 
-void fill_rect(const rect *r, const uint16_t colour) {
+void fill_rect(const struct rect *r, const uint16_t colour) {
   tft.fillRect(r->a.x, r->a.y, r->b.x-r->a.x, r->b.y-r->a.y, colour);
 }
 
-void draw_rect(const rect *r, const uint16_t colour) {
+void draw_rect(const struct rect *r, const uint16_t colour) {
   tft.drawRect(r->a.x, r->a.y, r->b.x-r->a.x, r->b.y-r->a.y, colour);
 }
 
@@ -80,7 +85,7 @@ void text_background(const uint16_t x, const uint16_t y, const uint16_t colour) 
   tft.fillRect(x -3, y -3, 39, 27, colour);
 }
 
-uint8_t screen_button_num(const point *t) {
+uint8_t screen_button_num(const struct point *t) {
   if (in_rect(t, &s_do)) {
     return 3;
   } else if (in_rect(t, &s_up)) {
@@ -187,7 +192,8 @@ void lcd_prog(const char *progname, const uint8_t prognum) {
   tft.setTextSize(3);
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   tft.setCursor(3, 0);
-  sprintf(lcd_line, "%-17.17s", progname);
+  sprintf(lcd_line, LCD_PROG_FORMAT, progname);
+  //sprintf(lcd_line, "%-16.16s", progname);
   tft.print(lcd_line);
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   tft.setCursor(prognum_x, psnum_y);
@@ -196,7 +202,7 @@ void lcd_prog(const char *progname, const uint8_t prognum) {
   tft.print(lcd_line);
 }
 
-void lcd_stage(const StageConfig *stage, const uint8_t stagenum) {
+void lcd_stage(const struct StageConfig *stage, const uint8_t stagenum) {
   tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
   tft.setCursor(stagenum_x, psnum_y);
   tft.setTextSize(3);
@@ -227,7 +233,6 @@ void lcd_stage(const StageConfig *stage, const uint8_t stagenum) {
   tft.setCursor(timing_x, timing_y_5);
   tft.setTextColor(ILI9341_RED, ILI9341_WHITE);
   tft.print("FLASH FAWAY NAWAY");
-  //tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
   tft.setTextColor(ILI9341_BLACK, ILI9341_YELLOW);
   tft.print(" ");
   tft.print(stage->autonext ? "Y" : "N");
@@ -336,11 +341,27 @@ void lcd_stagerun_clear_bottom() {
   tft.print("                   ");  
 }
 
-void lcd_display_set(const ProgramConfig *program, uint8_t prognum, uint8_t stagenum) {
+void lcd_display_set(const struct ProgramConfig *program, uint8_t prognum, uint8_t stagenum) {
   tft.fillScreen(ILI9341_BLACK);
   lcd_buttons();
   lcd_prog(program->longname, prognum);
   lcd_stage(&program->stage[stagenum], stagenum);
+}
+
+void lcd_statusprint(const char ch) {
+  // Print up a status character in the top right
+  tft.setTextColor(ILI9341_RED, ILI9341_WHITE);
+  tft.setTextSize(3);
+  tft.setCursor(299, 0);
+  tft.print(ch);
+}
+
+void lcd_statusclear() {
+  // Clear the status character in the top right
+  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+  tft.setTextSize(3);
+  tft.setCursor(299, 0);
+  tft.print(' ');
 }
 
 void lcd_clear() {

@@ -1,7 +1,7 @@
-/*************************************************/
-/* Turning target controller. */
-/* Turning feather */
-/*************************************************/
+/*
+ * Turning target controller.
+ * Turning feather.
+  */
 
 // TODO: Put fudge times into a config file
 // TODO: Put debug settings into a config file
@@ -15,15 +15,15 @@
 //       - or boot with face/away held down to choose
 //         files?
 // TODO: Text for stage use, eg: "GRCF stage 1"?
+//       - will this make the file too large for json?
 // TODO: Add SD card insertion detection?
 //       - requires CD pin to be soldered on wing
-// TODO: Use ZPT serial to show low battery warning
 // TODO: Mode to show ZPT signal strength
 
-/*************************************************/
-/* Hardware pins and other definitions */
-/* Definitions for the Feather HUZZAH32 */
-/*************************************************/
+/*
+ * Hardware pins and other definitions
+ * Definitions for the Feather HUZZAH32
+  */
 
 // Extra debugging to the serial port while running
 //#define DEBUG
@@ -70,6 +70,9 @@
 // Clock rate for timer divider
 #define CLOCK_RATE 80
 
+// Extre serial output from the ZPT
+#define USE_ZPT_SERIAL
+
 // Number of times to retry the SD card
 #define SD_RETRIES 3
 
@@ -102,17 +105,18 @@
 // Debounce RF buttons in case of problems
 #define RF_BUTTON_DEBOUNCE 200
 
-/*************************************************/
-/* Adafruit featherwing LCD display */
-/*************************************************/
+
+/*
+ * Adafruit featherwing LCD display
+  */
 #include "turn_lcd.h"
 uint8_t lcd_button_num=0;
 char line[30];
 
 
-/*************************************************/
-/* SD card and config file */
-/*************************************************/
+/* 
+ * SD card and config file 
+  */
 #include <ArduinoJson.h>
 #include <SPI.h>
 #include <SD.h>
@@ -215,9 +219,9 @@ void updatecurrent() {
 }
 
 
-/*************************************************/
-/* Analog multi buttons */
-/*************************************************/
+/*
+ * Analog multi buttons
+  */
 #include <AnalogMultiButton.h>
 
 const int buttons_values[2] = {0, 217};
@@ -247,12 +251,29 @@ void buttons_loop() {
 }
 
 
-/*************************************************/
-/* RF bravo/ZPT radio control */
-/*************************************************/
+/*
+ * RF bravo/ZPT radio control
+  */
 volatile uint8_t rf_button=0;
 portMUX_TYPE rf_buttonmux=portMUX_INITIALIZER_UNLOCKED;
 volatile SemaphoreHandle_t rf_buttonsemaphore;
+
+#ifdef USE_ZPT_SERIAL
+#include "zpt_serial.h"
+#endif // USE_ZPT_SERIAL
+
+void rf_serial_actions() {
+  if (zpt_packet_lowbatt(&packetin)) {
+    // Print a red on white '!' if remote barttery low
+    lcd_statusprint('!');
+  } else if (!zpt_packet_learn(&packetin)) {
+    // Print a red on white '?' if remote not paired
+    lcd_statusprint('?');
+  } else {
+    // Clear status
+    lcd_statusclear();
+  }
+}
 
 uint8_t get_rf_button() {
   uint8_t button;
@@ -301,10 +322,11 @@ void IRAM_ATTR rfbutton4() {
 }
 
 void button_action(const unsigned int button, const bool rf_button) {
-  /*  Various button actions to be taken
-      when specific buttons are pressed.
-      Actions are integer numbers.
-  */
+  /*
+   * Various button actions to be taken
+   * when specific buttons are pressed.
+   * Actions are integer numbers.
+    */
   switch (button) {
     case 1:
       // Action 1, toggle start/stop
@@ -339,7 +361,7 @@ void button_action(const unsigned int button, const bool rf_button) {
       }
       break;
     case 5:
-      // Action 3, decrement program number
+      // Action 5, decrement program number
 #ifdef DEBUG
       Serial.println("program--");
 #endif // DEBUG
@@ -348,7 +370,7 @@ void button_action(const unsigned int button, const bool rf_button) {
       }
       break;
     case 6:
-      // Action 4, increment program number
+      // Action 6, increment program number
 #ifdef DEBUG
       Serial.println("program++");
 #endif // DEBUG
@@ -359,9 +381,10 @@ void button_action(const unsigned int button, const bool rf_button) {
   }
 }
 
-/*************************************************/
-/* Away/face control and timers */
-/*************************************************/
+
+/*
+ * Away/face control and timers
+  */
 hw_timer_t *turntimer=NULL, *changetimer=NULL, *beeptimer=NULL;
 volatile SemaphoreHandle_t turnsemaphore, changesemaphore;
 portMUX_TYPE turnmux=portMUX_INITIALIZER_UNLOCKED;
@@ -696,9 +719,9 @@ void beep(const uint32_t length) {
 }
 
 
-/*************************************************/
-/* Setup and loop */
-/*************************************************/
+/*
+ * Setup and loop
+ */
 void setup() {
   // outputs setup
   // Make aure the 12v mosfet drivers are off
@@ -771,9 +794,8 @@ void setup() {
   }
 
   lcd_print("Loaded ");
-  sprintf(line, "%10d", turnconfig.programs);
+  sprintf(line, "%d", turnconfig.programs);
   lcd_print(line);
-  //lcd_print(turnconfig.programs);
   lcd_println(" programs");
 #ifdef DEBUG
   for (uint8_t i=0; i<turnconfig.programs; i++) {
@@ -807,7 +829,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(RF_3), rfbutton3, RISING);
   attachInterrupt(digitalPinToInterrupt(RF_4), rfbutton4, RISING);
   rf_buttonsemaphore=xSemaphoreCreateBinary();
-
+  zpt_serial_setup();
   
   // Timer and face/away setup.
   
@@ -855,7 +877,7 @@ void loop() {
     turntick();
   }
   if (xSemaphoreTake(changesemaphore, 0) == pdTRUE) {
-    // Turn off facce/away pins afer a time
+    // Turn off face/away pins afer a time
     finishchange();
   }
   // Take screen button press actions
@@ -863,5 +885,14 @@ void loop() {
 
   // Physical buttons action
   buttons_loop();
+
+  // ZPT serial handling
+  zpt_serial_loop();
+  if (zpt_serialpacket_ready) {
+    rf_serial_actions();
+    // Signal ready for another packet.
+    zpt_serialpacket_ready=false;
+  }
+
   yield();
 }
