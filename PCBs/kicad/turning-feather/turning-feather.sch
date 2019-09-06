@@ -33,7 +33,7 @@ U 1 1 5D61717C
 P 7550 2450
 F 0 "C1" H 7665 2496 50  0000 L CNN
 F 1 "22uF" H 7665 2405 50  0000 L CNN
-F 2 "Capacitor_THT:C_Disc_D7.5mm_W2.5mm_P5.00mm" H 7588 2300 50  0001 C CNN
+F 2 "Capacitor_THT:CP_Radial_Tantal_D4.5mm_P2.50mm" H 7588 2300 50  0001 C CNN
 F 3 "~" H 7550 2450 50  0001 C CNN
 	1    7550 2450
 	1    0    0    -1  
@@ -110,14 +110,14 @@ F 3 "~" H 3400 4650 50  0001 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L Device:D_ALT D1
+L Diode:1N5817 D1
 U 1 1 5D6C0A71
-P 7400 1900
-F 0 "D1" V 7400 1700 50  0000 L CNN
-F 1 "1N5817" V 7300 1500 50  0000 L CNN
-F 2 "Diode_THT:D_A-405_P7.62mm_Horizontal" H 7400 1900 50  0001 C CNN
-F 3 "~" H 7400 1900 50  0001 C CNN
-	1    7400 1900
+P 7400 1550
+F 0 "D1" V 7400 1350 50  0000 L CNN
+F 1 "1N5817" V 7300 1150 50  0000 L CNN
+F 2 "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" H 7400 1550 50  0001 C CNN
+F 3 "~" H 7400 1550 50  0001 C CNN
+	1    7400 1550
 	0    -1   -1   0   
 $EndComp
 $Comp
@@ -181,12 +181,12 @@ $EndComp
 $Comp
 L power:+12V #PWR0104
 U 1 1 5D95E1B5
-P 5850 2100
-F 0 "#PWR0104" H 5850 1950 50  0001 C CNN
-F 1 "+12V" H 5865 2273 50  0000 C CNN
-F 2 "" H 5850 2100 50  0001 C CNN
-F 3 "" H 5850 2100 50  0001 C CNN
-	1    5850 2100
+P 8250 1750
+F 0 "#PWR0104" H 8250 1600 50  0001 C CNN
+F 1 "+12V" H 8265 1923 50  0000 C CNN
+F 2 "" H 8250 1750 50  0001 C CNN
+F 3 "" H 8250 1750 50  0001 C CNN
+	1    8250 1750
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
@@ -196,8 +196,6 @@ Wire Wire Line
 Connection ~ 3650 4650
 Wire Wire Line
 	3650 4650 3650 6000
-Wire Wire Line
-	5850 2250 5850 2100
 $Comp
 L power:+5V #PWR0106
 U 1 1 5D9A2CCA
@@ -267,7 +265,6 @@ Wire Wire Line
 Wire Wire Line
 	7900 4550 7900 4950
 NoConn ~ 6400 4250
-NoConn ~ 6400 4650
 NoConn ~ 6400 4850
 NoConn ~ 6400 4950
 NoConn ~ 6400 5050
@@ -288,9 +285,8 @@ Wire Wire Line
 	1500 4850 1300 4850
 Wire Wire Line
 	5850 2650 5850 2250
-Connection ~ 5850 2250
 Wire Wire Line
-	7850 2250 7550 2250
+	7850 2250 7700 2250
 Connection ~ 7550 2250
 Connection ~ 1200 3950
 Wire Wire Line
@@ -350,12 +346,12 @@ Wire Wire Line
 $Comp
 L power:PWR_FLAG #FLG0102
 U 1 1 5D9C484F
-P 5550 2250
-F 0 "#FLG0102" H 5550 2325 50  0001 C CNN
-F 1 "PWR_FLAG" H 5550 2423 50  0000 C CNN
-F 2 "" H 5550 2250 50  0001 C CNN
-F 3 "~" H 5550 2250 50  0001 C CNN
-	1    5550 2250
+P 8900 1750
+F 0 "#FLG0102" H 8900 1825 50  0001 C CNN
+F 1 "PWR_FLAG" H 8900 1923 50  0000 C CNN
+F 2 "" H 8900 1750 50  0001 C CNN
+F 3 "~" H 8900 1750 50  0001 C CNN
+	1    8900 1750
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -502,51 +498,45 @@ Wire Wire Line
 Wire Wire Line
 	6350 3000 6350 2950
 $Comp
-L Device:LED_ALT D3
+L Device:LED_ALT D5
 U 1 1 5DDFE48C
-P 4600 2250
-F 0 "D3" H 4593 2466 50  0000 C CNN
-F 1 "12V" H 4593 2375 50  0000 C CNN
-F 2 "LED_THT:LED_D3.0mm_Clear" H 4600 2250 50  0001 C CNN
-F 3 "~" H 4600 2250 50  0001 C CNN
-	1    4600 2250
-	1    0    0    -1  
+P 10100 1750
+F 0 "D5" H 10093 1966 50  0000 C CNN
+F 1 "12V" H 10093 1875 50  0000 C CNN
+F 2 "LED_THT:LED_D3.0mm_Clear" H 10100 1750 50  0001 C CNN
+F 3 "~" H 10100 1750 50  0001 C CNN
+	1    10100 1750
+	-1   0    0    1   
 $EndComp
 $Comp
 L Device:R_Small R5
 U 1 1 5DE1442F
-P 5150 2250
-F 0 "R5" V 4954 2250 50  0000 C CNN
-F 1 "2.2KR" V 5045 2250 50  0000 C CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal" H 5150 2250 50  0001 C CNN
-F 3 "~" H 5150 2250 50  0001 C CNN
-	1    5150 2250
+P 9600 1750
+F 0 "R5" V 9404 1750 50  0000 C CNN
+F 1 "2.2KR" V 9495 1750 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal" H 9600 1750 50  0001 C CNN
+F 3 "~" H 9600 1750 50  0001 C CNN
+	1    9600 1750
 	0    1    1    0   
 $EndComp
-Wire Wire Line
-	5850 2250 5550 2250
-Wire Wire Line
-	5050 2250 4750 2250
 $Comp
 L power:GND #PWR0108
 U 1 1 5DE1BF9E
-P 4000 2250
-F 0 "#PWR0108" H 4000 2000 50  0001 C CNN
-F 1 "GND" H 4005 2077 50  0000 C CNN
-F 2 "" H 4000 2250 50  0001 C CNN
-F 3 "" H 4000 2250 50  0001 C CNN
-	1    4000 2250
+P 10650 1750
+F 0 "#PWR0108" H 10650 1500 50  0001 C CNN
+F 1 "GND" H 10655 1577 50  0000 C CNN
+F 2 "" H 10650 1750 50  0001 C CNN
+F 3 "" H 10650 1750 50  0001 C CNN
+	1    10650 1750
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	4000 2250 4450 2250
 $Comp
-L Device:D_ALT D2
+L Diode:1N5817 D2
 U 1 1 5D66D982
 P 9000 3050
 F 0 "D2" V 9046 2971 50  0000 R CNN
 F 1 "1N5817" V 8955 2971 50  0000 R CNN
-F 2 "Diode_THT:D_A-405_P7.62mm_Horizontal" H 9000 3050 50  0001 C CNN
+F 2 "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" H 9000 3050 50  0001 C CNN
 F 3 "~" H 9000 3050 50  0001 C CNN
 	1    9000 3050
 	0    -1   -1   0   
@@ -566,7 +556,7 @@ Text Notes 5200 3150 0    50   ~ 0
 Away
 Text Notes 8200 2800 0    30   ~ 0
 If using a Draco TSR 1-2450\nthen C1 and C2 can technically\nbe left off.
-Text Notes 8350 1800 0    30   ~ 0
+Text Notes 8350 1450 0    30   ~ 0
 If using a LiPo battery with\nthe feather, turn off here.
 Text Notes 1650 4400 0    30   ~ 0
 Antenna connected to U.FL connector\nsurface mount soldered to ZPT
@@ -585,69 +575,57 @@ Wire Wire Line
 $Comp
 L feather:8P8C_Shielded J4
 U 1 1 5D75526D
-P 6350 1650
-F 0 "J4" H 6020 1746 50  0000 R CNN
-F 1 "RJ45_Shielded" H 6020 1655 50  0000 R CNN
-F 2 "turning-feather:RJ45_Horizontal_Shielded" V 6350 1675 50  0001 C CNN
-F 3 "~" V 6350 1675 50  0001 C CNN
-	1    6350 1650
+P 6350 1300
+F 0 "J4" H 6020 1396 50  0000 R CNN
+F 1 "RJ45_Shielded" H 6020 1305 50  0000 R CNN
+F 2 "turning-feather:RJ45_Horizontal_Shielded" V 6350 1325 50  0001 C CNN
+F 3 "~" V 6350 1325 50  0001 C CNN
+	1    6350 1300
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	6350 3100 6950 3100
-Wire Wire Line
-	6350 3000 7050 3000
 $Comp
 L power:GND #PWR0102
 U 1 1 5D77BA03
-P 8800 1150
-F 0 "#PWR0102" H 8800 900 50  0001 C CNN
-F 1 "GND" H 8805 977 50  0000 C CNN
-F 2 "" H 8800 1150 50  0001 C CNN
-F 3 "" H 8800 1150 50  0001 C CNN
-	1    8800 1150
+P 8800 800
+F 0 "#PWR0102" H 8800 550 50  0001 C CNN
+F 1 "GND" H 8805 627 50  0000 C CNN
+F 2 "" H 8800 800 50  0001 C CNN
+F 3 "" H 8800 800 50  0001 C CNN
+	1    8800 800 
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	8800 1050 8800 1150
+	8800 700  8800 800 
 Wire Wire Line
-	6350 1050 6850 1050
+	6350 700  6850 700 
 Wire Wire Line
-	6850 1050 6850 1250
+	6850 700  6850 900 
 Wire Wire Line
-	6850 2150 6350 2150
+	6750 900  6850 900 
+Connection ~ 6850 900 
 Wire Wire Line
-	6750 1250 6850 1250
-Connection ~ 6850 1250
+	6850 900  6850 1000
 Wire Wire Line
-	6850 1250 6850 1350
+	6750 1000 6850 1000
+Connection ~ 6850 1000
 Wire Wire Line
-	6750 1350 6850 1350
-Connection ~ 6850 1350
+	6850 1000 6850 1400
 Wire Wire Line
-	6850 1350 6850 1750
+	6750 1400 6850 1400
+Connection ~ 6850 1400
 Wire Wire Line
-	6750 1750 6850 1750
-Connection ~ 6850 1750
+	6850 1400 6850 1800
 Wire Wire Line
-	6850 1750 6850 2150
+	6750 1100 7200 1100
+Connection ~ 7200 1100
 Wire Wire Line
-	6750 1450 7200 1450
-Connection ~ 7200 1450
+	6950 1300 6750 1300
 Wire Wire Line
-	6950 3100 6950 1650
-Wire Wire Line
-	6950 1650 6750 1650
-Connection ~ 6950 3100
-Wire Wire Line
-	6750 1550 7050 1550
-Wire Wire Line
-	7050 1550 7050 3000
-Connection ~ 7050 3000
-Text Notes 5450 1100 0    30   ~ 0
+	6750 1200 7050 1200
+Text Notes 5450 750  0    30   ~ 0
 Use a soldered RJ45 jack\nor a jack connected via J1
-NoConn ~ 6750 1850
-NoConn ~ 6750 1950
+NoConn ~ 6750 1500
+NoConn ~ 6750 1600
 Wire Wire Line
 	9400 5450 9400 5650
 Wire Wire Line
@@ -662,118 +640,147 @@ Wire Wire Line
 Connection ~ 9000 3900
 Wire Wire Line
 	9000 3900 9000 3200
-Wire Wire Line
-	5850 2250 7400 2250
 $Comp
 L Connector_Generic:Conn_01x04 J1
 U 1 1 5D8A6096
-P 7950 1550
-F 0 "J1" H 7900 1900 50  0000 L CNN
-F 1 "Out to power switch" H 7750 1800 50  0000 L CNN
-F 2 "Connector_JST:JST_PH_S4B-PH-K_1x04_P2.00mm_Horizontal" H 7950 1550 50  0001 C CNN
-F 3 "~" H 7950 1550 50  0001 C CNN
-	1    7950 1550
+P 7950 1200
+F 0 "J1" H 7900 1550 50  0000 L CNN
+F 1 "Out to power switch" H 7750 1450 50  0000 L CNN
+F 2 "Connector_JST:JST_PH_S4B-PH-K_1x04_P2.00mm_Horizontal" H 7950 1200 50  0001 C CNN
+F 3 "~" H 7950 1200 50  0001 C CNN
+	1    7950 1200
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	7200 1450 7200 2900
-Connection ~ 7400 2250
-Wire Wire Line
 	7400 2250 7550 2250
 Wire Wire Line
-	7400 2050 7400 2250
-Wire Wire Line
-	7400 1750 7400 1550
-Text Notes 8450 1450 0    30   ~ 0
+	7400 1400 7400 1200
+Text Notes 8450 1100 0    30   ~ 0
 Can be jumpered if no need for switch
 Text Notes 7700 2900 0    30   ~ 0
 Can be left off\nif using RJ45
 Wire Wire Line
 	10200 5150 10200 5650
 Wire Wire Line
-	6850 1050 7600 1050
-Connection ~ 6850 1050
+	6850 700  7600 700 
+Connection ~ 6850 700 
 Wire Wire Line
-	7200 1450 7750 1450
+	7200 1100 7750 1100
 Wire Wire Line
-	7750 1750 7600 1750
+	7750 1400 7600 1400
 Wire Wire Line
-	7600 1750 7600 1050
-Connection ~ 7600 1050
+	7600 1400 7600 700 
+Connection ~ 7600 700 
 Wire Wire Line
-	7600 1050 8800 1050
+	7600 700  8800 700 
 Wire Wire Line
-	7400 1550 7750 1550
+	7400 1200 7750 1200
 Wire Wire Line
 	7400 3200 7400 3500
 Connection ~ 7400 3500
 Wire Wire Line
 	5850 3500 7400 3500
 Wire Wire Line
-	6950 3100 7400 3100
-Wire Wire Line
-	7050 3000 7400 3000
-Wire Wire Line
 	7200 2900 7400 2900
 Wire Wire Line
-	7300 4350 7300 1650
-Wire Wire Line
-	7300 1650 7750 1650
+	7300 1300 7750 1300
 Wire Wire Line
 	6400 4350 7300 4350
-Text Notes 8050 1450 0    30   ~ 0
+Text Notes 8050 1100 0    30   ~ 0
 !2V switch out
-Text Notes 8050 1550 0    30   ~ 0
+Text Notes 8050 1200 0    30   ~ 0
 12V switch in
-Text Notes 8050 1650 0    30   ~ 0
+Text Notes 8050 1300 0    30   ~ 0
 EN line
-Text Notes 8050 1750 0    30   ~ 0
+Text Notes 8050 1400 0    30   ~ 0
 GND
 Connection ~ 8150 3500
 Wire Wire Line
 	7400 3500 8150 3500
-Connection ~ 5550 2250
-Wire Wire Line
-	5250 2250 5550 2250
+Connection ~ 8900 1750
 Wire Wire Line
 	900  4300 900  4400
 Connection ~ 900  4400
 Wire Wire Line
 	900  4400 900  4650
-Wire Wire Line
-	9000 5150 7900 5150
-Wire Wire Line
-	7900 5150 7900 5550
-Wire Wire Line
-	7900 5550 4600 5550
-Wire Wire Line
-	4600 5550 4600 4650
-Wire Wire Line
-	4600 4650 5250 4650
 $Comp
-L Connector_Generic:Conn_01x02 J5
-U 1 1 5D6E1A6E
-P 10400 6050
-F 0 "J5" H 10480 6042 50  0000 L CNN
-F 1 "Currently unused" H 10480 5951 50  0000 L CNN
-F 2 "Connector_JST:JST_PH_S2B-PH-K_1x02_P2.00mm_Horizontal" H 10400 6050 50  0001 C CNN
-F 3 "~" H 10400 6050 50  0001 C CNN
-	1    10400 6050
+L Diode:1N5817 D3
+U 1 1 5D71C130
+P 6400 2250
+F 0 "D3" H 6400 2466 50  0000 C CNN
+F 1 "1N5817" H 6400 2375 50  0000 C CNN
+F 2 "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" H 6400 2075 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/88525/1n5817.pdf" H 6400 2250 50  0001 C CNN
+	1    6400 2250
+	1    0    0    -1  
+$EndComp
+Connection ~ 7400 2250
+Wire Wire Line
+	6350 3100 6950 3100
+Wire Wire Line
+	6350 3000 7050 3000
+Wire Wire Line
+	6850 1800 6350 1800
+Wire Wire Line
+	7400 1700 7400 2250
+Wire Wire Line
+	7200 1100 7200 2900
+Wire Wire Line
+	7050 1200 7050 3000
+Connection ~ 7050 3000
+Wire Wire Line
+	7050 3000 7400 3000
+Wire Wire Line
+	6950 1300 6950 3100
+Connection ~ 6950 3100
+Wire Wire Line
+	6950 3100 7400 3100
+Wire Wire Line
+	6550 2250 7400 2250
+Wire Wire Line
+	5850 2250 6250 2250
+Wire Wire Line
+	8900 1750 9500 1750
+Wire Wire Line
+	7700 1750 7700 2250
+Wire Wire Line
+	7700 1750 8250 1750
+Connection ~ 8250 1750
+Wire Wire Line
+	8250 1750 8900 1750
+Connection ~ 7700 2250
+Wire Wire Line
+	7700 2250 7550 2250
+Wire Wire Line
+	9700 1750 9950 1750
+Wire Wire Line
+	10250 1750 10650 1750
+Wire Wire Line
+	7300 1300 7300 4350
+NoConn ~ 5250 4650
+Wire Wire Line
+	9400 5650 10200 5650
+Wire Wire Line
+	6400 4650 7750 4650
+Wire Wire Line
+	7750 4650 7750 5150
+Wire Wire Line
+	7750 5150 9000 5150
+$Comp
+L Connector_Generic:Conn_01x01 J5
+U 1 1 5D8C6918
+P 10400 5850
+F 0 "J5" H 10480 5892 50  0000 L CNN
+F 1 "Spare" H 10480 5801 50  0000 L CNN
+F 2 "Connector_PinHeader_1.00mm:PinHeader_1x01_P1.00mm_Vertical" H 10400 5850 50  0001 C CNN
+F 3 "~" H 10400 5850 50  0001 C CNN
+	1    10400 5850
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	9400 5650 9650 5650
-Wire Wire Line
 	9800 5150 10050 5150
 Wire Wire Line
-	10050 5150 10050 6050
+	10050 5150 10050 5850
 Wire Wire Line
-	10050 6050 10200 6050
-Wire Wire Line
-	10200 6150 9650 6150
-Wire Wire Line
-	9650 6150 9650 5650
-Connection ~ 9650 5650
-Wire Wire Line
-	9650 5650 10200 5650
+	10050 5850 10200 5850
 $EndSCHEMATC
