@@ -6,14 +6,23 @@
 #include "SPI.h"
 #include <Wire.h>  // this is needed even though we aren't using it
 
+#include "sdcard.h"
+
+#ifdef TURN_USE_TFT_ESPI
+#include <TFT_eSPI.h>
+TFT_eSPI tft=TFT_eSPI();
+#else
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
+Adafruit_ILI9341 tft=Adafruit_ILI9341(TFT_CS, TFT_DC);
+#endif //TURN_USE_TFT_ESPI
+
+// STMPE610 isn't supported by TFT_eSPI
 #include <Adafruit_STMPE610.h>
+Adafruit_STMPE610 ts=Adafruit_STMPE610(STMPE_CS);
 
 #include "turn_lcd.h"
 
-Adafruit_ILI9341 tft=Adafruit_ILI9341(TFT_CS, TFT_DC);
-Adafruit_STMPE610 ts=Adafruit_STMPE610(STMPE_CS);
 
 // format line for printing the program name
 #define LCD_PROG_FORMAT "%-" STR(TURN_NAME_LENGTH) "." STR(TURN_NAME_LENGTH) "s"
@@ -100,6 +109,8 @@ uint8_t screen_button_num(const struct point *t) {
 
 uint8_t lcd_button() {
   // Loop function to handle screen presses
+  boolean pressed = ts.touched();
+  
   if (ts.touched()) {
     while (!ts.bufferEmpty()) {
       // Retrieve a point
@@ -389,6 +400,14 @@ void lcd_println(const char *str) {
   lcd_print_lines++;
 }
 
+void lcd_splash() {
+  lcd_clear();
+#ifdef TURN_USE_TFT_ESPI
+  drawBmp("/pp1-320x240.bmp", 0, 0);
+  delay(2000);
+#endif //TURN_USE_TFT_ESPI
+}
+
 void lcd_setup() {
   tft.begin();
   // Puts the USB port to the lower/right.
@@ -406,6 +425,7 @@ void lcd_setup() {
     delay(1000);
   }
 
+#ifdef DEBUG2
   // read diagnostics (optional but can help debug problems)
   uint8_t x = tft.readcommand8(ILI9341_RDMODE);
   Serial.print("Display Power Mode: 0x"); Serial.println(x, HEX);
@@ -421,4 +441,94 @@ void lcd_setup() {
   Serial.println(tft.width());
   Serial.print("Screen height: ");
   Serial.println(tft.height());
+#endif //DEBUG2
+}
+
+
+/*
+ * Bodmers BMP image rendering function
+ * See https://github.com/Bodmer/TFT_eSPI/tree/master/examples/Generic/TFT_SPIFFS_BMP
+ */
+void drawBmp(const char *filename, int16_t x, int16_t y) {
+  if ((x >= tft.width()) || (y >= tft.height())) return;
+
+  fs::File bmpFS;
+
+  // Open requested file on SD card
+  bmpFS = SPIFFS.open(filename, "r");
+
+  if (!bmpFS) {
+    Serial.print("File not found");
+    return;
+  }
+
+  uint32_t seekOffset;
+  uint16_t w, h, row, col;
+  uint8_t  r, g, b;
+
+#ifdef DEBUG
+  uint32_t startTime = millis();
+#endif //DEBUG
+
+  if (read16(bmpFS) == 0x4D42) {
+    read32(bmpFS);
+    read32(bmpFS);
+    seekOffset = read32(bmpFS);
+    read32(bmpFS);
+    w = read32(bmpFS);
+    h = read32(bmpFS);
+
+    if ((read16(bmpFS) == 1) && (read16(bmpFS) == 24) && (read32(bmpFS) == 0)){
+      y += h - 1;
+
+      tft.setSwapBytes(true);
+      bmpFS.seek(seekOffset);
+
+      uint16_t padding = (4 - ((w * 3) & 3)) & 3;
+      uint8_t lineBuffer[w * 3 + padding];
+
+      for (row = 0; row < h; row++) {
+        bmpFS.read(lineBuffer, sizeof(lineBuffer));
+        uint8_t*  bptr = lineBuffer;
+        uint16_t* tptr = (uint16_t*)lineBuffer;
+        // Convert 24 to 16 bit colours
+        for (uint16_t col = 0; col < w; col++) {
+          b = *bptr++;
+          g = *bptr++;
+          r = *bptr++;
+          *tptr++ = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+        }
+
+        // Push the pixel row to screen, pushImage will crop the line if needed
+        // y is decremented as the BMP image is drawn bottom up
+        tft.pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
+      }
+#ifdef DEBUG
+      Serial.print("Loaded in "); Serial.print(millis() - startTime);
+      Serial.println(" ms");
+#endif //DEBUG
+    }
+    else Serial.println("BMP format not recognized.");
+  }
+  bmpFS.close();
+}
+
+// These read 16- and 32-bit types from the SD card file.
+// BMP data is stored little-endian, Arduino is little-endian too.
+// May need to reverse subscript order if porting elsewhere.
+
+uint16_t read16(fs::File &f) {
+  uint16_t result;
+  ((uint8_t *)&result)[0] = f.read(); // LSB
+  ((uint8_t *)&result)[1] = f.read(); // MSB
+  return result;
+}
+
+uint32_t read32(fs::File &f) {
+  uint32_t result;
+  ((uint8_t *)&result)[0] = f.read(); // LSB
+  ((uint8_t *)&result)[1] = f.read();
+  ((uint8_t *)&result)[2] = f.read();
+  ((uint8_t *)&result)[3] = f.read(); // MSB
+  return result;
 }

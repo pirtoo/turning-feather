@@ -51,6 +51,7 @@ void lcd_print(const char *str);
 void lcd_println(const char *str);
 void lcd_clear();
 void lcd_display_set(const ProgramConfig *program, uint8_t prognum, uint8_t stagenum);
+void lcd_splash();
 void lcd_setup();
 
 #endif // TURN_LCD

@@ -39,8 +39,8 @@ File checkspiffsfile(const char *filename) {
   return file;
 }
 
-File turn_file_init() {
-  // SD card and main config file setup
+void storage_init() {
+  // SD card and spiffs setup
   uint8_t count=0;
 
   while (!SD.begin(SD_CS) and count <= SD_RETRIES) {
@@ -57,7 +57,11 @@ File turn_file_init() {
     lcd_println("SPIFFS storage:");
     lcd_println("  init failed");
   }
- 
+   
+}
+
+File turn_file_init() {
+  // Config file load
   Serial.print(F("Reading config from: "));
   Serial.println(turnconf_file);
   // Open the file

@@ -19,6 +19,7 @@
 // TODO: Add SD card insertion detection?
 //       - requires CD pin to be soldered on wing
 // TODO: Mode to show ZPT signal strength
+// TODO: Use a better font for the program name?
 
 /*
  * Hardware pins and other definitions
@@ -28,6 +29,7 @@
 // Extra debugging to the serial port while running
 //#define DEBUG
 //#define DEBUG2
+
 
 // LED_BUILTIN is 13 on the HUZZAH32
 #define BUZZER 13
@@ -58,8 +60,8 @@
 //#define BATTERY_VOLTAGE A13
 
 // Unused on the HUZZAH32
-//#define UNUSED_1 A4/36 // wired to 5v MOSFET
-//#define UNUSED_2 A11/12
+//#define UNUSED_1 A4/36 
+//#define UNUSED_2 A11/12 // wired to 5v MOSFET
 
 // Using these to generate rising edge interrupts
 // fails badly.
@@ -74,6 +76,10 @@
 
 // Extre serial output from the ZPT
 #define USE_ZPT_SERIAL
+
+// Use the TFT_EPSI library instead of the
+// Adafruit tft library
+#define TURN_USE_TFT_ESPI
 
 // Number of times to retry the SD card
 #define SD_RETRIES 3
@@ -90,8 +96,8 @@
 // Tenth of a second gives enough repeats to loop properly
 #define TURN_RATE TENTH_SECOND
 
-// Length of beep chirp when RF stage change done
-// COmment out to disable entirely
+// Length of beep chirp when RF stage change happens
+// Comment out to disable entirely
 #define STAGE_CHANGE_CHIRP 0.4*TENTH_SECOND
 
 // Fudge to allow time for targets to turn
@@ -119,7 +125,6 @@ bool face=true, turnstop=true;
   */
 #include "turn_lcd.h"
 uint8_t lcd_button_num=0;
-char line[30];
 
 
 /* 
@@ -705,12 +710,14 @@ void setup() {
 
   // Basic LCD setup
   lcd_setup();
-  
+  storage_init();
+
+  lcd_splash();
   Serial.println("\r\n");
-  lcd_println("Turning target controller");
-  lcd_println("Turning feather");
+  lcd_println("Turning feather controller");
   lcd_println("(c) pir 2019");
   Serial.println("");
+  delay(1000);
 
   // Get the config file from SD or SPIFFS
   File turnfile=turn_file_init();
@@ -723,6 +730,7 @@ void setup() {
     while (1);
   }
 
+  char line[4];
   lcd_print("Loaded ");
   sprintf(line, "%d", turnconfig.programs);
   lcd_print(line);
@@ -786,13 +794,13 @@ void setup() {
   timerAlarmWrite(turntimer, TURN_RATE, true);
   timerAlarmEnable(turntimer);
 
-
   // Display setup on the LCD
   lcd_display_set(currentprog, currentprognum, currentstagenum);
   lcd_stop(turnstop);
 
-
+#ifdef DEBUG
   Serial.println(F("\r\nSetup finished.\r\n"));
+#endif //DEBUG
 }
 
 void loop() {
