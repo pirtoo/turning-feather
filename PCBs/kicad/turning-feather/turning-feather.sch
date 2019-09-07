@@ -556,7 +556,7 @@ Text Notes 5200 3150 0    50   ~ 0
 Away
 Text Notes 8200 2800 0    30   ~ 0
 If using a Draco TSR 1-2450\nthen C1 and C2 can technically\nbe left off.
-Text Notes 8350 1450 0    30   ~ 0
+Text Notes 8300 1400 0    30   ~ 0
 If using a LiPo battery with\nthe feather, turn off here.
 Text Notes 1650 4400 0    30   ~ 0
 Antenna connected to U.FL connector\nsurface mount soldered to ZPT
