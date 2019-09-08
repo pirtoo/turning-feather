@@ -47,8 +47,7 @@ void storage_init() {
     delay(1000);
     // Wait for SD card, loop retrying.
     if (count > 2) {
-      lcd_println("SD card:");
-      lcd_println(" init failed");
+      lcd_println("SD card init failed");
     }
     count++;
   }

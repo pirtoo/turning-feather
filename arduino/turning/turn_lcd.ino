@@ -11,7 +11,17 @@
 #ifdef TURN_USE_TFT_ESPI
 #include <TFT_eSPI.h>
 TFT_eSPI tft=TFT_eSPI();
-#else
+// Use these when printing or drawing text in GLCD and high rendering speed fonts
+#define GFXFF 1
+#define GLCD  0
+#define FONT2 2
+#define FONT4 4
+#define FONT6 6
+#define FONT7 7
+#define FONT8 8
+#define PRETTY_FONT_12 &FreeSans12pt7b
+#define PRETTY_FONT_24 &FreeSans24pt7b
+#else //TURN_USE_TFT_ESPI
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
 Adafruit_ILI9341 tft=Adafruit_ILI9341(TFT_CS, TFT_DC);
@@ -30,9 +40,6 @@ Adafruit_STMPE610 ts=Adafruit_STMPE610(STMPE_CS);
 // Active screen area
 static const struct rect screen={{TS_MINX, TS_MINY}, {TS_MAXX, TS_MAXY}};
 
-// Used for buffering
-char lcd_line[30];
-//static const char lcd_prog_format=
 
 // Co-ords for printing timings
 static const uint16_t timing_x=45;
@@ -54,8 +61,13 @@ static const rect p_do={{0, 134}, {43, 240}};
 static const rect s_up={{274, 24}, {317, 130}};
 static const rect s_do={{274, 134}, {317, 240}};
 
-// Start text background
+// Run/Stop and Face/away text background
+#ifdef TURN_USE_TFT_ESPI
+static const rect runrect={{53, 144}, {263, 191}};
+static const rect facerect={{53, 197}, {263, 243}};
+#else //TURN_USE_TFT_ESPI
 static const rect start={{53, 150}, {262, 190}};
+#endif //TURN_USE_TFT_ESPI
 
 // Used for the input point, keep around
 struct point t;
@@ -67,6 +79,9 @@ uint8_t last_screen_button=0;
 
 // Clearing text when screen full.
 uint8_t lcd_print_lines=0;
+
+// sprintf buffer
+char buff[TURN_NAME_LENGTH +1];
 
 bool between(const uint16_t num, const uint16_t low, const uint16_t high) {
   return (num > low) and (num < high);
@@ -139,10 +154,26 @@ uint8_t lcd_button() {
   return 0;
 }
 
+#ifdef TURN_USE_TFT_ESPI
+void lcd_prettyfont(const uint8_t fsize) {
+  tft.setTextDatum(TL_DATUM);
+  tft.setTextSize(1);
+  switch (fsize) {
+    case 24:
+      tft.setFreeFont(PRETTY_FONT_24);
+      break;
+    default:
+      tft.setFreeFont(PRETTY_FONT_12);
+      break;
+  }
+}
+
+void lcd_defaultfont() {
+  tft.setFreeFont();
+}
+#endif //TURN_USE_TFT_ESPI
 
 void lcd_buttons() {
-  tft.setTextSize(3);
-
   fill_rect(&p_up, ILI9341_GREEN);
   draw_rect(&p_up, ILI9341_WHITE);
   fill_rect(&p_do, ILI9341_GREEN);
@@ -150,11 +181,6 @@ void lcd_buttons() {
   text_background(prognum_x, psnum_y, ILI9341_BLACK);
   text_background(prognum_x, pslabeltop_y, ILI9341_BLACK);
   text_background(prognum_x, pslabelbot_y, ILI9341_BLACK);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.setCursor(prognum_x, pslabeltop_y);
-  tft.print("P+");
-  tft.setCursor(prognum_x, pslabelbot_y);
-  tft.print("P-");
 
   fill_rect(&s_up, ILI9341_RED);
   draw_rect(&s_up, ILI9341_WHITE);
@@ -163,15 +189,49 @@ void lcd_buttons() {
   text_background(stagenum_x, psnum_y, ILI9341_BLACK);
   text_background(stagenum_x, pslabeltop_y, ILI9341_BLACK);
   text_background(stagenum_x, pslabelbot_y, ILI9341_BLACK);
+
+  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
+#ifdef TURN_USE_TFT_ESPI
+  lcd_prettyfont(12);
+  tft.setTextPadding(25);
+  tft.drawString("P+", prognum_x +3, pslabeltop_y +1, GFXFF);
+  tft.drawString("P-", prognum_x +3, pslabelbot_y +1, GFXFF);
+
+  tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
+  tft.drawString("S+", stagenum_x +3, pslabeltop_y +1, GFXFF);
+  tft.drawString("S-", stagenum_x +3, pslabelbot_y +1, GFXFF);
+  lcd_defaultfont();
+#else //TURN_USE_TFT_ESPI
+  tft.setTextSize(3);
+  tft.setCursor(prognum_x, pslabeltop_y);
+  tft.print("P+");
+  tft.setCursor(prognum_x, pslabelbot_y);
+  tft.print("P-");
+
   tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
   tft.setCursor(stagenum_x, pslabeltop_y);
   tft.print("S+");
   tft.setCursor(stagenum_x, pslabelbot_y);
   tft.print("S-");
+#endif //TURN_USE_TFT_ESPI
 }
 
 void lcd_face(const bool isface) {
   // Write to the LCD face/away
+#ifdef TURN_USE_TFT_ESPI
+  lcd_prettyfont(24);
+  tft.setTextPadding(0);
+  if (isface) {
+    tft.setTextColor(ILI9341_YELLOW);
+    fill_rect(&facerect, ILI9341_NAVY);
+    tft.drawString("FACE", 98, 200, GFXFF);
+  } else {
+    tft.setTextColor(ILI9341_CYAN);
+    fill_rect(&facerect, ILI9341_RED);
+    tft.drawString("AWAY", 91, 200, GFXFF);
+  }
+  lcd_defaultfont();
+#else //TURN_USE_TFT_ESPI
   tft.setTextSize(5);
   tft.setCursor(70, 202);
   if (isface) {
@@ -181,10 +241,25 @@ void lcd_face(const bool isface) {
     tft.setTextColor(ILI9341_CYAN, ILI9341_RED);
     tft.print(" AWAY ");
   }
+#endif //TURN_USE_TFT_ESPI
 }
 
 void lcd_stop(const bool isstop) {
   // Write to the LCD face/away
+#ifdef TURN_USE_TFT_ESPI
+  lcd_prettyfont(24);
+  tft.setTextPadding(0);
+  if (isstop) {
+    tft.setTextColor(ILI9341_CYAN);
+    fill_rect(&runrect, ILI9341_RED);
+    tft.drawString("STOP", 97, 149, GFXFF);
+  } else {
+    tft.setTextColor(ILI9341_YELLOW);
+    fill_rect(&runrect, ILI9341_NAVY);
+    tft.drawString("RUN", 108, 149, GFXFF);
+  }
+  lcd_defaultfont();
+#else //TURN_USE_TFT_ESPI
   tft.setTextSize(5);
   if (isstop) {
     tft.setTextColor(ILI9341_CYAN, ILI9341_RED);
@@ -197,50 +272,66 @@ void lcd_stop(const bool isstop) {
     tft.setCursor(85, 150);
     tft.print(" RUN ");
   }
+#endif //TURN_USE_TFT_ESPI
 }
 
 void lcd_prog(const char *progname, const uint8_t prognum) {
-  tft.setTextSize(3);
+  lcd_statusclear();
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
+#ifdef TURN_USE_TFT_ESPI
+  lcd_prettyfont(12);
+  sprintf(buff, LCD_PROG_FORMAT, progname);
+  tft.setTextPadding(tft.width());
+  tft.drawString(buff, 3, 0, GFXFF);
+  sprintf(buff, "%02d", prognum +1);
+  tft.setTextPadding(25);
+  tft.drawString(buff, prognum_x +4, psnum_y +1, GFXFF);
+  lcd_defaultfont();
+#else //TURN_USE_TFT_ESPI
+  tft.setTextSize(3);
   tft.setCursor(3, 0);
-  sprintf(lcd_line, LCD_PROG_FORMAT, progname);
-  //sprintf(lcd_line, "%-16.16s", progname);
-  tft.print(lcd_line);
+  tft.printf(LCD_PROG_FORMAT, progname);
+  tft.setTextSize(3);
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   tft.setCursor(prognum_x, psnum_y);
   // Program num displayed, from 1
-  sprintf(lcd_line, "%02d", prognum +1);
-  tft.print(lcd_line);
+  tft.printf("%02d", prognum +1);
+#endif //TURN_USE_TFT_ESPI
 }
 
 void lcd_stage(const struct StageConfig *stage, const uint8_t stagenum) {
   tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
+#ifdef TURN_USE_TFT_ESPI
+  lcd_prettyfont(12);
+  sprintf(buff, "%02d", stagenum +1);
+  tft.setTextPadding(25);
+  tft.drawString(buff, stagenum_x +4, psnum_y +1, GFXFF);
+  lcd_defaultfont();
+#else //TURN_USE_TFT_ESPI
   tft.setCursor(stagenum_x, psnum_y);
   tft.setTextSize(3);
   // Stage num displayed, from 1 not 0
-  sprintf(lcd_line, "%02d", stagenum +1);
-  tft.print(lcd_line);
+  tft.printf("%02d", stagenum +1);
+#endif //TURN_USE_TFT_ESPI
   
   tft.setTextSize(2);
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
   tft.setCursor(timing_x, timing_y_1);
-  sprintf(lcd_line, "%4.1f %5.1f %5.1f %2d",
+  tft.printf("%4.1f %5.1f %5.1f %2d",
     stage->beep / TIME_DIV,
     stage->face / TIME_DIV,
     stage->away / TIME_DIV,
     stage->repeat);
-  tft.print(lcd_line);
   tft.setCursor(timing_x, timing_y_2);
   tft.setTextColor(ILI9341_RED, ILI9341_WHITE);
   tft.print("  B   FACE  AWAY RE");
 
   tft.setCursor(timing_x, timing_y_4);
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  sprintf(lcd_line, "%5.1f %5.1f %5.1f",
+  tft.printf("%5.1f %5.1f %5.1f",
     stage->flash / TIME_DIV,
     stage->flashaway / TIME_DIV,
     stage->nextaway / TIME_DIV);
-  tft.print(lcd_line);
   tft.setCursor(timing_x, timing_y_5);
   tft.setTextColor(ILI9341_RED, ILI9341_WHITE);
   tft.print("FLASH FAWAY NAWAY");
@@ -264,8 +355,7 @@ void lcd_stagerun(const uint16_t num, const uint8_t pos, const uint8_t repeat) {
       // beep
       tft.setCursor(timing_x, timing_y_3);
       tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      sprintf(lcd_line, "%4.1f               ", num / TIME_DIV);
-      tft.print(lcd_line);
+      tft.printf("%4.1f               ", num / TIME_DIV);
       lcd_stagerun_clear_bottom();
       break;
 
@@ -273,8 +363,7 @@ void lcd_stagerun(const uint16_t num, const uint8_t pos, const uint8_t repeat) {
       // face
       tft.setCursor(timing_x, timing_y_3);
       tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      sprintf(lcd_line, "     %5.1f       %2d", num / TIME_DIV, repeat);
-      tft.print(lcd_line);
+      tft.printf("     %5.1f       %2d", num / TIME_DIV, repeat);
       lcd_stagerun_clear_bottom();
       break;
 
@@ -282,8 +371,7 @@ void lcd_stagerun(const uint16_t num, const uint8_t pos, const uint8_t repeat) {
       // away
       tft.setCursor(timing_x, timing_y_3);
       tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      sprintf(lcd_line, "           %5.1f %2d", num / TIME_DIV, repeat);
-      tft.print(lcd_line);
+      tft.printf("           %5.1f %2d", num / TIME_DIV, repeat);
       lcd_stagerun_clear_bottom();
       break;
 
@@ -292,8 +380,7 @@ void lcd_stagerun(const uint16_t num, const uint8_t pos, const uint8_t repeat) {
       lcd_stagerun_clear_top();
       tft.setCursor(timing_x, timing_y_6);
       tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      sprintf(lcd_line, "%5.1f             ", num / TIME_DIV);
-      tft.print(lcd_line);
+      tft.printf("%5.1f             ", num / TIME_DIV);
       break;
 
     case IN_FLASH_AWAY:
@@ -301,8 +388,7 @@ void lcd_stagerun(const uint16_t num, const uint8_t pos, const uint8_t repeat) {
       lcd_stagerun_clear_top();
       tft.setCursor(timing_x, timing_y_6);
       tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      sprintf(lcd_line, "      %5.1f       ", num / TIME_DIV);
-      tft.print(lcd_line);
+      tft.printf("      %5.1f       ", num / TIME_DIV);
       break;
 
     case IN_NEXT:
@@ -310,8 +396,7 @@ void lcd_stagerun(const uint16_t num, const uint8_t pos, const uint8_t repeat) {
       lcd_stagerun_repeat_top(repeat);
       tft.setCursor(timing_x, timing_y_6);
       tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      sprintf(lcd_line, "            %5.1f ", num / TIME_DIV);
-      tft.print(lcd_line);
+      tft.printf("            %5.1f ", num / TIME_DIV);
       break;
 
     default:
@@ -341,8 +426,7 @@ void lcd_stagerun_repeat_top(const uint8_t rep) {
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
   tft.setTextSize(2);
   tft.setCursor(timing_x, timing_y_3);
-  sprintf(lcd_line, "                 %2d", rep);
-  tft.print(lcd_line);  
+  tft.printf("                 %2d", rep);
 }
 
 void lcd_stagerun_clear_bottom() {

@@ -8,8 +8,8 @@
  */
 
 #ifdef USE_ZPT_SERIAL
-#ifndef ZPT_SERIAL
-#define ZPT_SERIAL
+#ifndef ZPT_SERIAL_H
+#define ZPT_SERIAL_H
 
 struct zpt_serial_packet {
   // Serial number of the transmitter, largest byte first
@@ -40,5 +40,5 @@ bool zpt_packet_learn(const struct zpt_serial_packet *packet);
 void zpt_serial_setup();
 void zpt_serial_loop();
 
-#endif // ZPT_SERIAL
+#endif // ZPT_SERIAL_H
 #endif // USE_ZPT_SERIAL

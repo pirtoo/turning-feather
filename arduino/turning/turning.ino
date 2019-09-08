@@ -6,10 +6,11 @@
 // TODO: Put fudge times into a config file
 // TODO: Put debug settings into a config file
 // TODO: Put chirp (and chirp time) into config file
-// TODO: yield() ? milticore?
 // TODO: WIFI/web server
-// TODO: - edit device config file
-// TODO: - add extra turning configs, concat them from
+//       - edit device config file
+//       - watch current state, provide buttons
+//       - ability to edit extra configs
+// TODO: add extra turning configs, concat them from
 //         main file, write out seperately?
 // TODO: Have a directory on SD let you choose config?
 //       - or boot with face/away held down to choose
@@ -60,8 +61,8 @@
 //#define BATTERY_VOLTAGE A13
 
 // Unused on the HUZZAH32
-//#define UNUSED_1 A4/36 
-//#define UNUSED_2 A11/12 // wired to 5v MOSFET
+#define UNUSED_1 12 // AKA A11, wired to 5v MOSFET
+//#define UNUSED_2 A4/36
 
 // Using these to generate rising edge interrupts
 // fails badly.
@@ -215,13 +216,13 @@ void buttons_loop() {
   if (buttons.onPress(0)) {
 #ifdef DEBUG2
     Serial.println("Physical 0 has been pressed");
-#endif //DEBUG
+#endif //DEBUG2
     button_action(2, false);
   }
   if (buttons.onPress(1)) {
 #ifdef DEBUG2
     Serial.println("Physical 1 has been pressed");
-#endif //DEBUG
+#endif //DEBUG2
     button_action(1, false);
   }
 }
@@ -267,7 +268,7 @@ void IRAM_ATTR rfbutton1() {
   xSemaphoreGiveFromISR(rf_buttonsemaphore, NULL);
 #ifdef DEBUG2
   Serial.println(F("RF button 1"));
-#endif // DEBUG
+#endif // DEBUG2
 }
 void IRAM_ATTR rfbutton2() {
   portENTER_CRITICAL(&rf_buttonmux);
@@ -276,7 +277,7 @@ void IRAM_ATTR rfbutton2() {
   xSemaphoreGiveFromISR(rf_buttonsemaphore, NULL);
 #ifdef DEBUG2
   Serial.println(F("RF button 2"));
-#endif // DEBUG
+#endif // DEBUG2
 }
 void IRAM_ATTR rfbutton3() {
   portENTER_CRITICAL(&rf_buttonmux);
@@ -285,7 +286,7 @@ void IRAM_ATTR rfbutton3() {
   xSemaphoreGiveFromISR(rf_buttonsemaphore, NULL);
 #ifdef DEBUG2
   Serial.println(F("RF button 3"));
-#endif // DEBUG
+#endif // DEBUG2
 }
 void IRAM_ATTR rfbutton4() {
   portENTER_CRITICAL(&rf_buttonmux);
@@ -294,7 +295,7 @@ void IRAM_ATTR rfbutton4() {
   xSemaphoreGiveFromISR(rf_buttonsemaphore, NULL);
 #ifdef DEBUG2
   Serial.println(F("RF button 4"));
-#endif // DEBUG
+#endif // DEBUG2
 }
 
 void button_action(const unsigned int button, const bool rf_button) {
@@ -372,17 +373,19 @@ portMUX_TYPE changemux=portMUX_INITIALIZER_UNLOCKED;
 #define BEEP_TIMER 2
 
 // Where in the process are we?
-#define IN_INIT 0
-#define IN_BEEP 1
-#define IN_FACE 2
-#define IN_AWAY 3
-#define IN_NEXT 4
-#define IN_FLASH 5
-#define IN_FLASH_AWAY 6
-#define IN_INIT_PAUSE 10
+enum stage {
+  IN_INIT,
+  IN_BEEP,
+  IN_FACE,
+  IN_AWAY,
+  IN_NEXT,
+  IN_FLASH,
+  IN_FLASH_AWAY,
+  IN_INIT_PAUSE
+};
+enum stage in_stage=IN_INIT;
 
-
-uint8_t in_stage=IN_INIT, in_repeat=0;
+uint8_t in_repeat=0;
 // Are we in the turning fudge time
 bool in_fudge=false;
 
@@ -698,8 +701,12 @@ void setup() {
   digitalWrite(FACE_PIN, LOW);
   pinMode(AWAY_PIN, OUTPUT);
   digitalWrite(AWAY_PIN, LOW);
-
+  // Set up other general pins
   pinMode(BUZZER, OUTPUT);
+  pinMode(UNUSED_1, OUTPUT);
+  digitalWrite(BUZZER, LOW);
+  digitalWrite(UNUSED_1, LOW);
+
     
   // Serial setup
   Serial.begin(SERIAL_SPEED);
@@ -756,10 +763,10 @@ void setup() {
 
 
   // bravo/ZPT RF setup
-  pinMode(RF_1, INPUT_PULLUP);
-  pinMode(RF_2, INPUT_PULLUP);
-  pinMode(RF_3, INPUT_PULLUP);
-  pinMode(RF_4, INPUT_PULLUP);
+  pinMode(RF_1, INPUT);
+  pinMode(RF_2, INPUT);
+  pinMode(RF_3, INPUT);
+  pinMode(RF_4, INPUT);
   attachInterrupt(digitalPinToInterrupt(RF_1), rfbutton1, RISING);
   attachInterrupt(digitalPinToInterrupt(RF_2), rfbutton2, RISING);
   attachInterrupt(digitalPinToInterrupt(RF_3), rfbutton3, RISING);

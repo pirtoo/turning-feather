@@ -2,8 +2,8 @@
  * SD card and config file 
   */
 
-#ifndef TURN_SDCARD
-#define TURN_SDCARD
+#ifndef TURNING_SDCARD_H
+#define TURNING_SDCARD_H
 
 #include <SPI.h>
 #include <SD.h>
@@ -14,4 +14,4 @@
 void storage_init();
 File turn_file_init();
 
-#endif //TURN_SDCARD
+#endif //TURNING_SDCARD_H

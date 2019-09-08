@@ -3,8 +3,8 @@
  * touch info
   */
 
-#ifndef TURN_LCD
-#define TURN_LCD
+#ifndef TURNING_LCD_H
+#define TURNING_LCD_H
 
 #include "TurnConfig.h"
 
@@ -54,4 +54,4 @@ void lcd_display_set(const ProgramConfig *program, uint8_t prognum, uint8_t stag
 void lcd_splash();
 void lcd_setup();
 
-#endif // TURN_LCD
+#endif // TURNING_LCD_U

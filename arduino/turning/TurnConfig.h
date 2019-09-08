@@ -18,7 +18,7 @@
 #define TURN_MAX_PROGRAMS 55
 #endif // TURN_MAX_PROGRAMS
 
-#define TURN_NAME_LENGTH 16
+#define TURN_NAME_LENGTH 20
 
 #define NUM_MULT 10.0
 
