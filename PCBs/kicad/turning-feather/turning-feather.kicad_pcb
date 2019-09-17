@@ -1005,7 +1005,7 @@
     (descr "DCDC-Converter, TRACO, TSR 1-xxxx")
     (tags "DCDC-Converter TRACO TSR-1")
     (path /5D5FE28C)
-    (fp_text reference U1 (at 7.62 0.254 90) (layer F.SilkS)
+    (fp_text reference U1 (at 6.858 -2.032 90) (layer F.SilkS)
       (effects (font (size 1 1) (thickness 0.15)))
     )
     (fp_text value "TSR 1-2450" (at 2.794 -3.81 90) (layer F.SilkS)
