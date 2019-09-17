@@ -304,7 +304,7 @@ L Device:D_Schottky_Small D1
 U 1 1 5D82304C
 P 4100 6050
 F 0 "D1" H 4100 5845 50  0000 C CNN
-F 1 "D1" H 4100 5936 50  0000 C CNN
+F 1 "1N5817" H 4100 5936 50  0000 C CNN
 F 2 "" V 4100 6050 50  0001 C CNN
 F 3 "~" V 4100 6050 50  0001 C CNN
 	1    4100 6050
@@ -339,5 +339,5 @@ Wire Wire Line
 Wire Wire Line
 	3700 5550 4700 5550
 Text Notes 3050 4400 0    50   ~ 0
-This layout is used if you use the board-mounted RJ45\nconnector. Suppy voltage from USB should have a diode\ninline or you risk back-feeding 5V when 12V is supplied.
+This layout is used if you use the board-mounted RJ45\nconnector. Suppy voltage from USB should have a diode\ninline or you risk back-feeding 5V when 12V is supplied.\nThis supports a battery connected to the HUZZAH32.
 $EndSCHEMATC
