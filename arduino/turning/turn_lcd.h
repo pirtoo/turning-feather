@@ -22,11 +22,15 @@
 #define SD_CS 14
 #endif // SD_CS
 
-// This is calibration data for the raw touch data to the screen coordinates
+// This is calibration data for the raw touch
+// data to the screen coordinates
 #define TS_MINX 100
 #define TS_MAXX 3800
 #define TS_MINY 100
 #define TS_MAXY 3750
+
+// Try to not have calibration data for each screen
+#define TOUCH_FUDGE 20
 
 #define SCREEN_DEBOUNCE 400
 

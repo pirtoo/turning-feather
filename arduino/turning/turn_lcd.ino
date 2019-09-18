@@ -83,12 +83,13 @@ uint8_t lcd_print_lines=0;
 // sprintf buffer
 char buff[TURN_NAME_LENGTH +1];
 
-bool between(const uint16_t num, const uint16_t low, const uint16_t high) {
-  return (num > low) and (num < high);
+bool between(const uint16_t num, const uint16_t low, const uint16_t high, const uint8_t fudge) {
+  return (num > low - fudge) and (num < high + fudge);
 }
 
-bool in_rect(const struct point *a, const struct rect *box) {
-  return (between(a->x, box->a.x, box->b.x) and between(a->y, box->a.y, box->b.y));
+bool in_rect(const struct point *a, const struct rect *box, const uint8_t fudge) {
+  return (between(a->x, box->a.x, box->b.x, fudge) and
+          between(a->y, box->a.y, box->b.y, 0));
 }
 
 void ts_remap(struct point *a) {
@@ -110,13 +111,13 @@ void text_background(const uint16_t x, const uint16_t y, const uint16_t colour) 
 }
 
 uint8_t screen_button_num(const struct point *t) {
-  if (in_rect(t, &s_do)) {
+  if (in_rect(t, &s_do, TOUCH_FUDGE)) {
     return 3;
-  } else if (in_rect(t, &s_up)) {
+  } else if (in_rect(t, &s_up, TOUCH_FUDGE)) {
     return 4;
-  } else if (in_rect(t, &p_do)) {
+  } else if (in_rect(t, &p_do, TOUCH_FUDGE)) {
     return 5;
-  } else if (in_rect(t, &p_up)) {
+  } else if (in_rect(t, &p_up, TOUCH_FUDGE)) {
     return 6;
   }
   return 0;
@@ -132,7 +133,7 @@ uint8_t lcd_button() {
       p=ts.getPoint();
       t.x=p.x;
       t.y=p.y;
-      if (in_rect(&t, &screen)) {
+      if (in_rect(&t, &screen, 0)) {
         ts_remap(&t);
         uint8_t button=screen_button_num(&t);
         if (button == last_screen_button and screen_button_time + SCREEN_DEBOUNCE > millis()) {
