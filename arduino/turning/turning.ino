@@ -621,7 +621,7 @@ void toggle_stop() {
   lcd_stop(turnstop);
 
   if (turnstop) {
-    timerStop(turntimer);
+    onbeeptimer();
 #ifdef DEBUG
     Serial.println("STOP");
 #endif //DEBUG
