@@ -33,7 +33,7 @@
   {
     "name": "Granet",
     "stages": [
-      {"beep": 7, "face": 3, "away": 7, "repeat": 3}
+      {"beep": 7, "face": 3, "away": 7, "repeat": 5}
     ]
   },
 
