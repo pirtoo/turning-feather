@@ -48,6 +48,11 @@ void StageConfig::load(JsonObjectConst obj) {
   flashaway=flashaway % 10000;
 }
 
+void StageConfig::clearnext() {
+  autonext=false;
+  nextaway=0;
+}
+
 void ProgramConfig::save(JsonObject obj) const {
   obj["name"]=longname;
 
@@ -75,6 +80,9 @@ void ProgramConfig::load(JsonObjectConst obj) {
       break;
   }
 
+  // The last stage should not have autonext or nextaway set
+  // because there is nothing to move on to.
+  stage[stages -1].clearnext();
 }
 
 void TurnConfig::load(JsonArrayConst obj) {

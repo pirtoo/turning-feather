@@ -67,6 +67,7 @@ struct StageConfig {
   uint16_t flash=0;
   uint16_t flashaway=0;
 
+  void clearnext();
   void load(JsonObjectConst);
   void save(JsonObject) const;
 };
