@@ -11,6 +11,14 @@
 #ifndef ZPT_SERIAL_H
 #define ZPT_SERIAL_H
 
+// HUZZAH32 TX/RX pins for Serial2.
+#ifndef RXD2
+#define RXD2 16
+#endif //RXD32
+#ifndef TXD2
+#define TXD2 17
+#endif //RXD32
+
 struct zpt_serial_packet {
   // Serial number of the transmitter, largest byte first
   uint8_t serialnum[3];

@@ -9,10 +9,6 @@
 
 #ifdef USE_ZPT_SERIAL
 
-// HUZZAH32 TX/RX pins for Serial2.
-#define RXD2 16
-#define TXD2 17
-
 #include "zpt_serial.h"
 
 uint8_t c=0;
