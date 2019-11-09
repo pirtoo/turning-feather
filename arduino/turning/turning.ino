@@ -123,20 +123,20 @@ bool face=true, turnstop=true;
 
 /*
  * Adafruit featherwing LCD display
-  */
+ */
 #include "turn_lcd.h"
 uint8_t lcd_button_num=0;
 
 
-/* 
+/*
  * SD card and config file
-  */
+ */
 #include "sdcard.h"
 
 
-/* 
+/*
  * Config file
-  */
+ */
 #include "TurnConfig.h"
 
 struct TurnConfig turnconfig;
@@ -148,12 +148,15 @@ const char *turnconf_file="/turnconf.txt";
 uint8_t currentstagenum=0, currentprognum=0;
 
 
+bool checkstagechange(const int change) {
+  // Check if a stage change can be made
+  return ((currentstagenum + change < currentprog->stages) and
+          (currentstagenum + change >= 0));
+}
+
 bool changestagenum(const int change, const bool rf_button) {
   // Alter the current stage num within parameters
-  if (currentstagenum + change >= currentprog->stages) {
-    return false;
-  }
-  if (currentstagenum + change < 0) {
+  if (not checkstagechange(change)) {
     return false;
   }
   currentstagenum=currentstagenum + change;
@@ -194,7 +197,7 @@ bool changeprognum(const int change) {
 
 void updatecurrent() {
   currentprog=&turnconfig.program[currentprognum];
-  currentstage=&currentprog->stage[currentstagenum];  
+  currentstage=&currentprog->stage[currentstagenum];
 }
 
 
@@ -237,7 +240,6 @@ volatile SemaphoreHandle_t rf_buttonsemaphore;
 
 #ifdef USE_ZPT_SERIAL
 #include "zpt_serial.h"
-#endif // USE_ZPT_SERIAL
 
 void rf_serial_actions() {
   if (zpt_packet_lowbatt(&packetin)) {
@@ -251,6 +253,7 @@ void rf_serial_actions() {
     lcd_statusclear();
   }
 }
+#endif // USE_ZPT_SERIAL
 
 uint8_t get_rf_button() {
   uint8_t button;
@@ -425,6 +428,25 @@ void IRAM_ATTR onbeeptimer() {
   timerStop(beeptimer);
 }
 
+void start_stage() {
+  // Common code used in turntick() to begin a stage
+  // without wasting a tick to go to the beep state
+  // when beep is zero.
+
+  if (!face) {
+    toggle_face();
+  }
+  starttimer(turntimer, true);
+  if (currentstage->flash > 0) {
+    // Need to do a flash stage.
+    in_stage=IN_FLASH;
+  } else {
+    // No flash, go straight to face
+    in_stage=IN_FACE;
+  }
+  in_repeat=1;
+}
+
 void turntick() {
   // Turning target counter has ticked up one count
   portENTER_CRITICAL(&turnmux);
@@ -439,7 +461,10 @@ void turntick() {
   // Where are we in what part of a stage?
   // Main turning targets logic.
 
-  if (!turnstop) {
+  if (turnstop) {
+    // We are not running, stop the timer
+    timerStop(turntimer);
+  } else {
     // We are running
 #ifdef DEBUG2
     Serial.print("in_stage: ");
@@ -466,27 +491,18 @@ void turntick() {
         // Initial stage setup/start.
         if (currentstage->beep > 0) {
           beep(BEEP_LENGTH);
+          in_stage=IN_BEEP;
           starttimer(turntimer, true);
+        } else {
+          start_stage();
         }
-        in_stage=IN_BEEP;
         break;
 
       case IN_BEEP:
         // Are we ready to face targets?
         if (currentstage->beep <= turncount) {
           // finished beep pause
-          if (!face) {
-            toggle_face();
-          }
-          starttimer(turntimer, true);
-          if (currentstage->flash > 0) {
-            // Need to do a flash stage.
-            in_stage=IN_FLASH;
-          } else {
-            // No flash, go straight to face
-            in_stage=IN_FACE;
-          }
-          in_repeat=1;
+          start_stage();
         }
         break;
 
@@ -496,7 +512,7 @@ void turntick() {
           in_fudge=true;
         }
         if (currentstage->flash + FACE_FUDGE <= turncount) {
-          in_fudge=false;          
+          in_fudge=false;
           // finished exposure pause
           if (face) {
             toggle_face();
@@ -505,30 +521,14 @@ void turntick() {
           in_stage=IN_FLASH_AWAY;
         }
         break;
-  
-      case IN_FACE:
-        // Targets are in an exposure.
-        if (currentstage->face <= turncount) {
-          in_fudge=true;
-        }
-        if (currentstage->face + FACE_FUDGE <= turncount) {
-          in_fudge=false;          
-          // finished exposure pause
-          if (face) {
-            toggle_face();
-          }
-          starttimer(turntimer, true);
-          in_stage=IN_AWAY;
-        }
-        break;
-  
+
       case IN_FLASH_AWAY:
         // Targets are in a flash away time
         if (currentstage->flashaway <= turncount) {
           in_fudge=true;
         }
         if (currentstage->flashaway + AWAY_FUDGE <= turncount) {
-          in_fudge=false;          
+          in_fudge=false;
           // Flash away has finished, off to normal face
           starttimer(turntimer, true);
           if (!face) {
@@ -538,56 +538,82 @@ void turntick() {
         }
         break;
 
-      case IN_AWAY:
-        // Targets are in an away time.
-        // Was that the last repeat?
-        if (currentstage->repeat <= in_repeat) {
-          // We are done with this stage.
-          // Do we auto-increment?
-          if (currentstage->autonext) {
-            // Straight on to the next one, if we can
-            if (changestagenum(1, false)) {
-#ifdef DEBUG
-              Serial.println("AUTONEXT");
-#endif //DEBUG
+      case IN_FACE:
+        // Targets are in an exposure.
+        if (currentstage->face <= turncount) {
+          in_fudge=true;
+        }
+        if (currentstage->face + FACE_FUDGE <= turncount) {
+          in_fudge=false;
+          // finished exposure pause
+          if (face) {
+            toggle_face();
+          }
+          starttimer(turntimer, true);
+          // if we're at the end, what next?
+          // do we have an automatic next stage?
+          if (currentstage->repeat <= in_repeat) {
+            if (currentstage->autonext) {
+              // Straight on to the next one, if we can
               in_stage=IN_NEXT;
+            } else {
+              // We're done
+              toggle_stop();
             }
           } else {
-            toggle_stop();
+            in_stage=IN_AWAY;
           }
-        } else {
-          uint8_t c;
-          if (currentstage->away <= turncount ) {
-            in_fudge=true;
+        }
+        break;
+
+      case IN_AWAY:
+        // Targets are in an away time.
+        uint8_t c;
+        if (currentstage->away <= turncount ) {
+          in_fudge=true;
+        }
+        if (currentstage->away + AWAY_FUDGE <= turncount ) {
+          in_fudge=false;
+          // finished away pause
+          starttimer(turntimer, true);
+          if (!face) {
+            toggle_face();
           }
-          if (currentstage->away + AWAY_FUDGE <= turncount ) {
-            in_fudge=false;
-            // finished away pause
-            starttimer(turntimer, true);
-            if (!face) {
-              toggle_face();
-            }
-            in_stage=IN_FACE;
-            in_repeat++;
-          }
+          in_stage=IN_FACE;
+          in_repeat++;
         }
         break;
 
       case IN_NEXT:
         // Skipping onto the next stage automatically
+        // Setting is taken from the previous stage.
+        if (not checkstagechange(1)) {
+#ifdef DEBUG
+          Serial.println("NO AUTONEXT");
+#endif //DEBUG
+          toggle_stop();
+#ifdef DEBUG
+        } else {
+          Serial.println("AUTONEXT");
+#endif //DEBUG
+        }
         if (currentstage->nextaway <= turncount) {
-            in_fudge=true;
+          in_fudge=true;
         }
         if (currentstage->nextaway + AWAY_FUDGE <= turncount) {
-            in_fudge=false;
-            // Start the next program
-            prog_init();
+          in_fudge=false;
+          // Start the next program
+          changestagenum(1, false);
+          prog_init();
+          if (currentstage->beep > 0) {
             in_stage=IN_BEEP;
-            if (currentstage->beep > 0) {
-              beep(BEEP_LENGTH);
-            } 
+            beep(BEEP_LENGTH);
+          } else {
+            start_stage();
+          }
         }
-        break;
+      break;
+
     }
   }
 }
@@ -622,6 +648,7 @@ void toggle_stop() {
 
   if (turnstop) {
     onbeeptimer();
+    timerStop(turntimer);
 #ifdef DEBUG
     Serial.println("STOP");
 #endif //DEBUG
@@ -654,7 +681,7 @@ void toggle_face() {
   if (face) {
     // Face the target
 #ifdef DEBUG
-    Serial.println("FACE");  
+    Serial.println("FACE");
 #endif //DEBUG
     digitalWrite(AWAY_PIN, LOW);
     digitalWrite(FACE_PIN, HIGH);
@@ -706,14 +733,16 @@ void setup() {
   pinMode(UNUSED_1, OUTPUT);
   digitalWrite(BUZZER, LOW);
   digitalWrite(UNUSED_1, LOW);
+  pinMode(BUTTONS_PIN, INPUT);
 
-    
+
   // Serial setup
   Serial.begin(SERIAL_SPEED);
   while (!Serial) {
     ; // wait for serial port
   }
   Serial.println("\r\n");
+
 
   // Basic LCD setup
   lcd_setup();
@@ -724,7 +753,10 @@ void setup() {
   lcd_println("Turning feather controller");
   lcd_println("(c) pir 2019");
   Serial.println("");
+
+
   delay(1000);
+
 
   // Get the config file from SD or SPIFFS
   File turnfile=turn_file_init();
@@ -732,8 +764,7 @@ void setup() {
   // This may fail if the JSON is invalid
   if (!deserializeTurnConfig(turnfile, turnconfig)) {
     lcd_clear();
-    lcd_println("Failed to deserialise");
-    lcd_println(" configuration");
+    lcd_println("Config file not valid");
     while (1);
   }
 
@@ -772,10 +803,10 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(RF_3), rfbutton3, RISING);
   attachInterrupt(digitalPinToInterrupt(RF_4), rfbutton4, RISING);
   rf_buttonsemaphore=xSemaphoreCreateBinary();
-  zpt_serial_setup();
-  
+
+
   // Timer and face/away setup.
-  
+
   // Semaphores
   changesemaphore=xSemaphoreCreateBinary();
   turnsemaphore=xSemaphoreCreateBinary();
@@ -787,7 +818,7 @@ void setup() {
   timerAttachInterrupt(changetimer, &onchangetimer, true);
   timerAlarmWrite(changetimer, CHANGE_LENGTH, true);
   timerAlarmEnable(changetimer);
-  
+
   beeptimer=timerBegin(BEEP_TIMER, CLOCK_RATE, true);
   timerStop(beeptimer);
   timerWrite(beeptimer, 0);
@@ -829,6 +860,7 @@ void loop() {
   // Physical buttons action
   buttons_loop();
 
+#ifdef USE_ZPT_SERIAL
   // ZPT serial handling
   zpt_serial_loop();
   if (zpt_serialpacket_ready) {
@@ -836,6 +868,7 @@ void loop() {
     // Signal ready for another packet.
     zpt_serialpacket_ready=false;
   }
+#endif //USE_ZPT_SERIAL
 
   yield();
 }
