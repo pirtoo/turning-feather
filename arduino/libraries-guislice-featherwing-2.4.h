@@ -152,14 +152,19 @@ extern "C" {
   //#define ADATOUCH_X_MAX    3858
   //#define ADATOUCH_Y_MIN    141
   //#define ADATOUCH_Y_MAX    3717
-  //#define ADATOUCH_REMAP_YX 0    // Some touch controllers may swap X & Y coords
+  #define ADATOUCH_REMAP_YX 0    // Some touch controllers may swap X & Y coords
 
-  #define ADATOUCH_X_MIN    3935
-  #define ADATOUCH_X_MAX    316
-  #define ADATOUCH_Y_MIN    161
-  #define ADATOUCH_Y_MAX    3707
-  #define ADATOUCH_REMAP_YX 0
   
+  //#define ADATOUCH_X_MIN    3935
+  //#define ADATOUCH_X_MAX    316
+  //#define ADATOUCH_Y_MIN    161
+  //#define ADATOUCH_Y_MAX    3707
+
+  #define ADATOUCH_X_MIN    3965
+  #define ADATOUCH_X_MAX    379
+  #define ADATOUCH_Y_MIN    279
+  #define ADATOUCH_Y_MAX    3684
+
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   // SECTION 4D: Additional touch configuration
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -185,7 +190,7 @@ extern "C" {
   //   to indicate the initialization status, even during success.
   // - To disable the messages during successful initialization,
   //   uncomment the following line.
-  //#define INIT_MSG_DISABLE
+  #define INIT_MSG_DISABLE
 
   // -----------------------------------------------------------------------------
   // SECTION 6: Optional Features
@@ -195,8 +200,8 @@ extern "C" {
   // - For memory constrained devices such as Arduino, it is best to
   //   set the following features to 0 (to disable) unless they are
   //   required.
-  #define GSLC_FEATURE_COMPOUND       0   // Compound elements (eg. XSelNum)
-  #define GSLC_FEATURE_XTEXTBOX_EMBED 0   // XTextbox control with embedded color
+  #define GSLC_FEATURE_COMPOUND       1   // Compound elements (eg. XSelNum)
+  #define GSLC_FEATURE_XTEXTBOX_EMBED 1   // XTextbox control with embedded color
   #define GSLC_FEATURE_INPUT          0   // Keyboard / GPIO input control
 
   // Enable support for SD card
@@ -243,8 +248,8 @@ extern "C" {
   #define GSLC_DEV_TOUCH ""
   #define GSLC_USE_PROGMEM      0
 
-  #define GSLC_LOCAL_STR        0   // 1=Use local strings (in element array), 0=External
-  #define GSLC_LOCAL_STR_LEN    30  // Max string length of text elements
+  #define GSLC_LOCAL_STR        1   // 1=Use local strings (in element array), 0=External
+  #define GSLC_LOCAL_STR_LEN    32  // Max string length of text elements
 
   // -----------------------------------------------------------------------------
   // Debug diagnostic modes
