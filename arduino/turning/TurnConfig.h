@@ -25,8 +25,10 @@
 #include <ArduinoJson.h>
 
 // File format:
-// Numbers in the file are in seconds, can be floats but
-// Will be cut off at a tenth of a second.
+// Numbers in the file for times are in seconds, can be floats but
+// will be cut off at a tenth of a second.
+// Repeat minimum is 1.
+// autonext (bool) and nextaway (time) not listed here yet.
 //[
 //  {
 //    "name": "T&P1 (PP1)",

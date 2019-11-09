@@ -3,7 +3,7 @@
  */
 #include "TurnConfig.h"
 
-const int capacity=\
+const int turn_capacity=\
   JSON_ARRAY_SIZE(TURN_MAX_PROGRAMS) + \
   TURN_MAX_PROGRAMS*JSON_ARRAY_SIZE(TURN_MAX_STAGES) + \
   TURN_MAX_PROGRAMS*JSON_OBJECT_SIZE(2) + \
@@ -34,7 +34,10 @@ void StageConfig::load(JsonObjectConst obj) {
   face=face % 10000;
   away=(obj["away"] | 0.0) * NUM_MULT;
   away=away % 10000;
-  repeat=obj["repeat"] | 0;
+  repeat=obj["repeat"] | 1;
+  if (repeat < 1) {
+    repeat=1;
+  }
   repeat=repeat % 100;
   autonext=obj["autonext"] | false;
   nextaway=(obj["nextaway"] | 0.0) * NUM_MULT;
@@ -95,7 +98,7 @@ void TurnConfig::save(JsonArray obj) const {
 }
 
 bool serializeTurnConfig(const TurnConfig &config, Print &dst) {
-  DynamicJsonDocument doc(capacity);
+  DynamicJsonDocument doc(turn_capacity);
 
   // Create an array at the root
   JsonArray rootarr = doc.to<JsonArray>();
@@ -107,7 +110,7 @@ bool serializeTurnConfig(const TurnConfig &config, Print &dst) {
 }
 
 bool deserializeTurnConfig(Stream &src, TurnConfig &config) {
-  DynamicJsonDocument doc(capacity);
+  DynamicJsonDocument doc(turn_capacity);
 
   // Parse the JSON object in the file
   DeserializationError err=deserializeJson(doc, src);
