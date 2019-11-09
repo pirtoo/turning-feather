@@ -126,5 +126,18 @@
       {"beep": 7, "face": 4},
       {"beep": 7, "face": 2}
     ]
+  },
+
+  {
+    "name": "Warfield Standard",
+    "stages": [
+      {"beep": 10, "face": 1, "away": 5, "repeat": 6, "autonext": true,
+       "nextaway": 10},
+      {"beep": 0,  "face": 1, "away": 5, "repeat": 6, "autonext": true,
+       "nextaway": 10},
+      {"beep": 0,  "face": 1, "away": 5, "repeat": 6, "autonext": true,
+       "nextaway": 10},
+      {"beep": 0,  "face": 1, "away": 5, "repeat": 6}
+    ]
   }
 ]
