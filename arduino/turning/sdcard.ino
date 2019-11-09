@@ -51,10 +51,15 @@ void storage_init() {
     }
     count++;
   }
+  if (count <= SD_RETRIES) {
+    sd_init_ok=true;
+  }
 
   if (!SPIFFS.begin(true)) {
     lcd_println("SPIFFS storage:");
     lcd_println("  init failed");
+  } else {
+    spiffs_init_ok=true;
   }
    
 }

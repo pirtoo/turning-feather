@@ -14,4 +14,6 @@
 void storage_init();
 File turn_file_init();
 
+bool sd_init_ok=false, spiffs_init_ok=false;
+
 #endif //TURNING_SDCARD_H
