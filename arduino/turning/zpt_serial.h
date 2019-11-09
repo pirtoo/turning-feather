@@ -32,12 +32,11 @@ struct zpt_serial_packet {
 
 struct zpt_serial_packet packetin;
 uint8_t *packetin_p=(uint8_t *)&packetin;
-bool zpt_serialpacket_ready=false;
+bool zpt_serialpacket_ready=false, zpt_serial_setup_done=false;
 
 uint32_t zpt_packet_serialnum(const struct zpt_serial_packet *packet);
 bool zpt_packet_lowbatt(const struct zpt_serial_packet *packet);
 bool zpt_packet_learn(const struct zpt_serial_packet *packet);
-void zpt_serial_setup();
 void zpt_serial_loop();
 
 #endif // ZPT_SERIAL_H

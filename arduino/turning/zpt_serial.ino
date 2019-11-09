@@ -44,13 +44,23 @@ bool zpt_packet_learn(const struct zpt_serial_packet *packet) {
 void zpt_serial_setup() {
   // Note the format for setting a serial port is as follows: Serial2.begin(baud-rate, protocol, RX pin, TX pin);
   Serial2.begin(19200, SERIAL_8N1, RXD2, TXD2);
+  zpt_serial_setup_done=true;
 }
 
 
 void zpt_serial_loop() {
+  // If we haven't done setup, do it.
+  if (!zpt_serial_setup_done) {
+      zpt_serial_setup();
+  }
+
   while (!zpt_serialpacket_ready and Serial2.available()) {
     // Read bytes into the packet struct via pointer
     // to assemble a full packet and make it available.
+#ifdef DEBUG2
+    Serial.println("Getting ZPT_SERIAL data");
+#endif
+
     Serial2.readBytes((uint8_t *) &packetin_p[c], sizeof(uint8_t));
     if (packetin_p[c] == '\n') {
       // We got a newline
