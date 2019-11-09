@@ -7,13 +7,6 @@
  * https://www.rfsolutions.co.uk/downloads/1523289764DS-ZPT-1.pdf
  */
 
-//
-// Testing Serial2 for ZPT module serial data on an Adafruit Feather HUZZAH32
-//
-// Packet and serial IO type defined here:
-// https://www.rfsolutions.co.uk/downloads/1523289764DS-ZPT-1.pdf
-//
-
 #ifdef USE_ZPT_SERIAL
 
 // HUZZAH32 TX/RX pins for Serial2.
