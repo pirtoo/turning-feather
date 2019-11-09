@@ -31,20 +31,28 @@
 
 ## Current state
 
-* I have a prototype in a case being tested locally. Designing a [custom PCB](PCBs/kicad/turning-feather) to shim between the Feather and Featherwing to provide the needed IO and power regulation better then the Feather double protoboard current being used. See [schematic](PCBs/kicad/turning-feather/turning-feather.pdf).
+* I have [custom PCB](PCBs/kicad/turning-feather) made for the main board manufactured by [PCBWay](https://www.pcbway.com/project/shareproject/Turning_Feather.html). See [schematic](PCBs/kicad/turning-feather/turning-feather.pdf).
+
+* First production unit is in use at my local club, other ROs seem very happy with it so far since it makes running turning targets much simpler.
+
 * Graphics are currently fairly simplistic but functional.
 
-* RF interference is a problem with the remote at the test range. The bigger remote handles this better. May need a larger antennae.
+* RF interference is still a bit of a problem with the remote at the test range but it is usable. The bigger remote handles this better.
 
 * Two physical buttons for face/away and start/stop. Program selection via the touchscreen.
 
 
-![Prototype](images/turning-feather-proto.jpg)
+![](images/turning-feather-prod-ext.jpg)
+![](images/turning-feather-prod-internal.jpg)
 
 
 ## Future plans
 
 Turning Feather is still very much in beta and under development.
+
+- [ ] Config GUI to change system settings.
+
+- [ ] Signal strength meter for the RFSolutions system.
 
 - [ ] Add a stage name/comment to describe what each stage is for.
 
