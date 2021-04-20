@@ -2,7 +2,7 @@
   {
     "name": "T&P1 (PP1)",
     "stages": [
-      {"beep": 7, "face": 120, "away": 0, "repeat": 0},
+      {"beep": 7, "face": 120},
       {"beep": 7, "face": 2, "away": 5, "repeat": 6},
       {"beep": 7, "face": 3, "away": 5, "repeat": 3}
     ]
@@ -40,10 +40,10 @@
   {
     "name": "Silhouettes",
     "stages": [
-      {"beep": 7, "face": 12, "away": 0, "repeat": 0},
-      {"beep": 7, "face": 10, "away": 0, "repeat": 0},
-      {"beep": 7, "face": 8, "away": 0, "repeat": 0},
-      {"beep": 7, "face": 6, "away": 0, "repeat": 0}
+      {"beep": 7, "face": 12},
+      {"beep": 7, "face": 10},
+      {"beep": 7, "face": 8},
+      {"beep": 7, "face": 6}
     ]
   },
 
@@ -129,7 +129,58 @@
   },
 
   {
-    "name": "Warfield Standard",
+    "name": "Super Groda",
+    "stages": [
+      {"beep": 7, "face": 40},
+      {"beep": 7, "face": 28},
+      {"beep": 7, "face": 35},
+      {"beep": 7, "face": 22},
+      {"beep": 7, "face": 30},
+      {"beep": 7, "face": 16}
+    ]
+  },
+
+  {
+    "name": "Kryten",
+    "stages": [
+      {"beep": 9, "face": 60},
+      {"beep": 9, "face": 30},
+      {"beep": 9, "face": 4, "away": 9, "repeat": 4},
+      {"beep": 9, "face": 3, "away": 9, "repeat": 4},
+      {"beep": 9, "face": 2, "away": 9, "repeat": 4}
+    ]
+  },
+
+  {
+    "name": "Bad Robot",
+    "stages": [
+      {"beep": 7, "face": 45},
+      {"beep": 7, "face": 1, "away": 3, "repeat": 5},
+      {"beep": 9, "face": 3, "away": 4, "repeat": 5}
+    ]
+  },
+
+  {
+    "name": "Gastro",
+    "stages": [
+      {"beep": 7, "face": 6, "away": 4, "repeat": 6},
+      {"beep": 7, "face": 5, "away": 4, "repeat": 6},
+      {"beep": 7, "face": 4, "away": 4, "repeat": 6},
+      {"beep": 7, "face": 3, "away": 4, "repeat": 6},
+      {"beep": 7, "face": 2, "away": 4, "repeat": 6}
+    ]
+  },
+
+  {
+    "name": "Six Pack",
+    "stages": [
+      {"beep": 7, "flash": 1, "flashaway": 10,
+       "face": 10, "away": 10, "repeat": 2}
+    ]
+  },
+
+  {
+    "name": "War Shot Standard",
     "stages": [
       {"beep": 10, "face": 1, "away": 5, "repeat": 6,
        "autonext": true, "nextaway": 10},
