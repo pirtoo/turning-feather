@@ -154,8 +154,8 @@
   {
     "name": "Bad Robot",
     "stages": [
-      {"beep": 7, "face": 45},
-      {"beep": 7, "face": 1, "away": 3, "repeat": 5},
+      {"beep": 9, "face": 45},
+      {"beep": 9, "face": 1, "away": 3, "repeat": 5},
       {"beep": 9, "face": 3, "away": 4, "repeat": 5}
     ]
   },
