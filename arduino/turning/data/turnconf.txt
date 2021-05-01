@@ -174,8 +174,7 @@
   {
     "name": "Six Pack",
     "stages": [
-      {"beep": 7, "flash": 1, "flashaway": 10,
-       "face": 10, "away": 10, "repeat": 2}
+      {"beep": 10, "face": 10, "away": 10, "repeat": 2}
     ]
   },
 
