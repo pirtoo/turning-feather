@@ -27,10 +27,9 @@
  */
 
 // Extra debugging to the serial port while running
-//#define DEBUG
+#define DEBUG
 //#define DEBUG2
 //#define DEBUG_TIMER
-
 
 // LED_BUILTIN is 13 on the HUZZAH32
 #define BUZZER 13
@@ -119,6 +118,10 @@
 // Are we in a running program or stopped.
 bool face=true, turnstop=true;
 
+/*
+ * GUISlice config GUI
+ */
+#include "tfconfgui.h"
 
 /*
  * Adafruit featherwing LCD display
@@ -758,6 +761,17 @@ void setup() {
   Serial.println("");
 
 
+  // Is the turn/face button being held down at boot?
+  if (analogRead(BUTTONS_PIN) < 5) {
+    // Run the config GUI instead of booting normally
+    lcd_println("Entering config mode");
+    delay(1000);
+    tf_conf_gui_setup();
+    while (1) {
+      // Loop only exited by a restart from config mode
+      tf_conf_gui_loop();
+    }
+  }
   delay(1000);
 
 
