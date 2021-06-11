@@ -1,7 +1,7 @@
 /*
  * Turning target controller.
  * Turning feather.
-  */
+ */
 
 // TODO: Put fudge times into a config file
 // TODO: Put debug settings into a config file
@@ -24,11 +24,12 @@
 /*
  * Hardware pins and other definitions
  * Definitions for the Feather HUZZAH32
-  */
+ */
 
 // Extra debugging to the serial port while running
 //#define DEBUG
 //#define DEBUG2
+//#define DEBUG_TIMER
 
 
 // LED_BUILTIN is 13 on the HUZZAH32
@@ -708,16 +709,6 @@ void toggle_face(bool use_timer) {
 #ifdef KEEP_CHANGE_ACTIVE
   }
 #endif //KEEP_CHANGE_ACTIVE
-}
-
-void finishchange() {
-  // pin should only be low for a short time
-  timerStop(changetimer);
-  digitalWrite(AWAY_PIN, LOW);
-  digitalWrite(FACE_PIN, LOW);
-#ifdef DEBUG2
-  Serial.println("CHANGETIMER END");
-#endif //DEBUG
 }
 
 void beep(const uint32_t length) {
