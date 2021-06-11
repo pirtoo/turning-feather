@@ -20,7 +20,6 @@
 // TODO: Add SD card insertion detection?
 //       - requires CD pin to be soldered on wing
 // TODO: Mode to show ZPT signal strength
-// TODO: Use a better font for the program name?
 
 /*
  * Hardware pins and other definitions
@@ -77,10 +76,6 @@
 
 // Extre serial output from the ZPT
 #define USE_ZPT_SERIAL
-
-// Use the TFT_EPSI library instead of the
-// Adafruit tft library
-#define TURN_USE_TFT_ESPI
 
 // Number of times to retry the SD card
 #define SD_RETRIES 3
@@ -203,7 +198,7 @@ void updatecurrent() {
 
 /*
  * Analog multi buttons
-  */
+ */
 #include <AnalogMultiButton.h>
 
 const int buttons_values[2] = {0, 217};
@@ -233,7 +228,7 @@ void buttons_loop() {
 
 /*
  * RF bravo/ZPT radio control
-  */
+ */
 volatile uint8_t rf_button=0;
 portMUX_TYPE rf_buttonmux=portMUX_INITIALIZER_UNLOCKED;
 volatile SemaphoreHandle_t rf_buttonsemaphore;
@@ -306,7 +301,7 @@ void button_action(const unsigned int button, const bool rf_button) {
    * Various button actions to be taken
    * when specific buttons are pressed.
    * Actions are integer numbers.
-    */
+   */
   switch (button) {
     case 1:
       // Action 1, toggle start/stop
@@ -364,7 +359,7 @@ void button_action(const unsigned int button, const bool rf_button) {
 
 /*
  * Away/face control and timers
-  */
+ */
 hw_timer_t *turntimer=NULL, *changetimer=NULL, *beeptimer=NULL;
 volatile SemaphoreHandle_t turnsemaphore, changesemaphore;
 portMUX_TYPE turnmux=portMUX_INITIALIZER_UNLOCKED;
@@ -403,9 +398,9 @@ void starttimer(hw_timer_t *timer, const bool resetturn=false) {
     turncounter=0;
   }
   timerStart(timer);
-#ifdef DEBUG2
+#ifdef DEBUG_TIMER
   Serial.println("Starting timer");
-#endif //DEBUG
+#endif //DEBUG_TIMER
 }
 
 void IRAM_ATTR onturntimer() {
@@ -456,7 +451,7 @@ void turntick() {
 #ifdef DEBUG2
   Serial.print("Timer: ");
   Serial.println(turncount);
-#endif //DEBUG
+#endif //DEBUG2
 
   // Where are we in what part of a stage?
   // Main turning targets logic.
