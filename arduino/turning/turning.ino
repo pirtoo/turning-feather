@@ -88,9 +88,12 @@
 // How long a start beep lasts
 #define BEEP_LENGTH ONE_SECOND
 // How long to keep the motors going on a turn
-#define CHANGE_LENGTH 2*ONE_SECOND
+#define CHANGE_LENGTH 0.4*ONE_SECOND
 // Tenth of a second gives enough repeats to loop properly
 #define TURN_RATE TENTH_SECOND
+
+// Keep the face/away lines high while a stage is running
+#define KEEP_CHANGE_ACTIVE
 
 // Length of beep chirp when RF stage change happens
 // Comment out to disable entirely
@@ -315,7 +318,7 @@ void button_action(const unsigned int button, const bool rf_button) {
 #ifdef DEBUG
       Serial.println("toggle face/away");
 #endif // DEBUG
-      toggle_face();
+      toggle_face(true);
       break;
     case 3:
       // Action 3, decrement stage number
@@ -361,9 +364,8 @@ void button_action(const unsigned int button, const bool rf_button) {
  * Away/face control and timers
  */
 hw_timer_t *turntimer=NULL, *changetimer=NULL, *beeptimer=NULL;
-volatile SemaphoreHandle_t turnsemaphore, changesemaphore;
+volatile SemaphoreHandle_t turnsemaphore;
 portMUX_TYPE turnmux=portMUX_INITIALIZER_UNLOCKED;
-portMUX_TYPE changemux=portMUX_INITIALIZER_UNLOCKED;
 
 // Four timers, 0-3, on esp32
 #define TURN_TIMER 0
@@ -413,8 +415,10 @@ void IRAM_ATTR onturntimer() {
 }
 
 void IRAM_ATTR onchangetimer() {
-  // Give a semaphore that we can check in the loop
-  xSemaphoreGiveFromISR(changesemaphore, NULL);
+  // Setting digital pins is safe in interrupt handling
+  digitalWrite(AWAY_PIN, LOW);
+  digitalWrite(FACE_PIN, LOW);
+  timerStop(changetimer);
 }
 
 void IRAM_ATTR onbeeptimer() {
@@ -429,7 +433,7 @@ void start_stage() {
   // when beep is zero.
 
   if (!face) {
-    toggle_face();
+    toggle_face(false);
   }
   starttimer(turntimer, true);
   if (currentstage->flash > 0) {
@@ -510,7 +514,7 @@ void turntick() {
           in_fudge=false;
           // finished exposure pause
           if (face) {
-            toggle_face();
+            toggle_face(false);
           }
           starttimer(turntimer, true);
           in_stage=IN_FLASH_AWAY;
@@ -527,7 +531,7 @@ void turntick() {
           // Flash away has finished, off to normal face
           starttimer(turntimer, true);
           if (!face) {
-            toggle_face();
+            toggle_face(false);
           }
           in_stage=IN_FACE;
         }
@@ -542,7 +546,7 @@ void turntick() {
           in_fudge=false;
           // finished exposure pause
           if (face) {
-            toggle_face();
+            toggle_face(false);
           }
           starttimer(turntimer, true);
           // if we're at the end, what next?
@@ -572,7 +576,7 @@ void turntick() {
           // finished away pause
           starttimer(turntimer, true);
           if (!face) {
-            toggle_face();
+            toggle_face(false);
           }
           in_stage=IN_FACE;
           in_repeat++;
@@ -644,6 +648,10 @@ void toggle_stop() {
   if (turnstop) {
     onbeeptimer();
     timerStop(turntimer);
+    // In case anything is still running,
+    // set a timer to stop it.
+    timerWrite(changetimer, 0);
+    timerStart(changetimer);
 #ifdef DEBUG
     Serial.println("STOP");
 #endif //DEBUG
@@ -656,7 +664,7 @@ void toggle_stop() {
 
     // Make sure targets go away.
     if (face) {
-      toggle_face();
+      toggle_face(false);
       in_stage=IN_INIT_PAUSE;
     } else {
       in_stage=IN_INIT;
@@ -668,7 +676,7 @@ void toggle_stop() {
   lcd_stagerun_clear();
 }
 
-void toggle_face() {
+void toggle_face(bool use_timer) {
   // Toggle face/away
   face=!face;
   timerStop(changetimer);
@@ -688,9 +696,18 @@ void toggle_face() {
     digitalWrite(FACE_PIN, LOW);
     digitalWrite(AWAY_PIN, HIGH);
   }
-  // Start the timer with an alarm to switch
-  timerWrite(changetimer, 0);
-  timerStart(changetimer);
+#ifdef KEEP_CHANGE_ACTIVE
+  if (use_timer) {
+#endif //KEEP_CHANGE_ACTIVE
+    // Start the timer with an alarm to switch
+#ifdef DEBUG
+    Serial.println("change timer set");
+#endif //DEBUG
+    timerWrite(changetimer, 0);
+    timerStart(changetimer);
+#ifdef KEEP_CHANGE_ACTIVE
+  }
+#endif //KEEP_CHANGE_ACTIVE
 }
 
 void finishchange() {
@@ -803,7 +820,6 @@ void setup() {
   // Timer and face/away setup.
 
   // Semaphores
-  changesemaphore=xSemaphoreCreateBinary();
   turnsemaphore=xSemaphoreCreateBinary();
 
   // Timers, of 4.
@@ -844,10 +860,6 @@ void loop() {
   if (xSemaphoreTake(turnsemaphore, 0) == pdTRUE) {
     // Take the next action if we are running
     turntick();
-  }
-  if (xSemaphoreTake(changesemaphore, 0) == pdTRUE) {
-    // Turn off face/away pins afer a time
-    finishchange();
   }
   // Take screen button press actions
   button_action(lcd_button(), false);
