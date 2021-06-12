@@ -3,7 +3,7 @@
 
 ## Features
 
-* More flexible than an [Auto Duel](http://www.indelfa.co.uk/tt/ttcontruk.html) controller, programs defined in JSON in a text file on a micro SD card. Can have a backup config file flashed to SPI accessed via SPIFFS.
+* More flexible than an [Auto Duel](https://web.archive.org/web/20170504011814/http://www.indelfa.co.uk/tt/ttcontruk.html) controller (and indelfa seem to have vanished), programs defined in JSON in a text file on a micro SD card. Can have a backup config file flashed to SPI accessed via SPIFFS.
 
   * Current maximums of 55 programs and up to 12 stages per program (limited by memory in the controller) but will increase with development and it will be easier to swap between sets of programs.
 
@@ -27,7 +27,7 @@
 
 * Display is a [Featherwing 2.4" TFT](https://www.adafruit.com/product/3405).
 
-* Control/power connector is RJ45, takes ground, +12V power and two signal lines for face and away activation at 12V. As used [here](http://www.indelfa.co.uk/tt/tt_images/relay.jpg).
+* Control/power connector is RJ45, takes ground, +12V power and two signal lines for face and away activation at 12V. As used [here](https://web.archive.org/web/20190102055407/http://www.indelfa.co.uk/tt/tt_images/relay.gif).
 
 ## Current state
 
