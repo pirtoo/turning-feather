@@ -13,7 +13,7 @@
 
 * Touch screen to select program/stage.
 
-* RF remote control via [RF Solutions](https://www.rfsolutions.co.uk/) [ZPT module](https://www.rfsolutions.co.uk/radio-modules-c10/zpt-radio-telemetry-receiver-module-868mhz-smt-p774), compatable with their 4 button [Fobber](https://www.rfsolutions.co.uk/remote-control-systems-c9/fobber-4-button-150m-868mhz-key-fob-transmitter-p447) or longer range [Trap](https://www.rfsolutions.co.uk/remote-control-systems-c9/trap-4-button-2000m-868mhz-handheld-transmitter-p261) remote.
+* RF remote control via [RF Solutions](https://www.rfsolutions.co.uk/) [ZPT module](https://www.rfsolutions.co.uk/radio-modules-c10/zpt-radio-telemetry-receiver-module-868mhz-smt-p774), compatable with their 4 button [Fobber](https://www.rfsolutions.co.uk/remote-control-systems-c9/fobber-4-button-150m-868mhz-key-fob-transmitter-p447) or longer range [Trap](https://www.rfsolutions.co.uk/remote-control-systems-c9/trap-4-button-2000m-868mhz-handheld-transmitter-p869) remote.
 
   Remote buttons give:
   * start/stop
