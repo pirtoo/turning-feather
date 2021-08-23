@@ -25,7 +25,7 @@
 
   ZPT module can be programmed to respond to several different remotes. See the [ZPT datasheet](https://www.rfsolutions.co.uk/downloads/1523289764DS-ZPT-1.pdf) for programming instructions. I keep the learning button internal to the unit so it can't be accidentally activated.
 
-* Display is a [Featherwing 2.4" TFT](https://www.adafruit.com/product/3405).
+* Display is a [Featherwing 2.4" TFT](https://www.adafruit.com/product/3315).
 
 * Control/power connector is RJ45, takes ground, +12V power and two signal lines for face and away activation at 12V. As used [here](https://web.archive.org/web/20190102055407/http://www.indelfa.co.uk/tt/tt_images/relay.gif).
 
