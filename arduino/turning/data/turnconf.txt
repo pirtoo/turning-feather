@@ -189,5 +189,15 @@
        "autonext": true, "nextaway": 10},
       {"beep": 0,  "face": 1, "away": 5, "repeat": 6}
     ]
+  },
+
+  {
+    "name": "Multi Target Countdown",
+    "stages": [
+      {"beep": 6, "face": 6, "autonext": true, "nextaway": 5},
+      {"beep": 0, "face": 5, "autonext": true, "nextaway": 4},
+      {"beep": 0, "face": 4, "autonext": true, "nextaway": 3},
+      {"beep": 0, "face": 3}
+    ]
   }
 ]
