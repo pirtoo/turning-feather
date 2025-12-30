@@ -1,13 +1,12 @@
 /*
  * Write to the featherwing touchscreen LCD and get
  * touch info
-  */
+ */
 
 #include "SPI.h"
 #include <Wire.h>  // this is needed even though we aren't using it
 
 #include "sdcard.h"
-
 #include <TFT_eSPI.h>
 TFT_eSPI tft=TFT_eSPI();
 // Use these when printing or drawing text in GLCD and high rendering speed fonts
@@ -22,8 +21,21 @@ TFT_eSPI tft=TFT_eSPI();
 #define PRETTY_FONT_24 &FreeSans24pt7b
 
 // STMPE610 isn't supported by TFT_eSPI
+// This is the V1 version of the featherwing
 #include <Adafruit_STMPE610.h>
-Adafruit_STMPE610 ts=Adafruit_STMPE610(STMPE_CS);
+// This is the V2 version of the feartherwing
+//#include <Adafruit_TSC2007.h>
+
+#if defined(_ADAFRUIT_STMPE610H_)
+  Adafruit_STMPE610 ts=Adafruit_STMPE610(STMPE_CS);
+#elif defined(_ADAFRUIT_TSC2007_H)
+  // If you're using the TSC2007 there is no CS pin needed, so instead its an IRQ!
+  #define TSC_IRQ STMPE_CS
+  // newer rev 2 touch contoller
+  Adafruit_TSC2007 ts=Adafruit_TSC2007();
+#else
+  #error("You must have either STMPE or TSC2007 headers included!")
+#endif
 
 #include "turn_lcd.h"
 
@@ -421,21 +433,24 @@ void lcd_splash() {
 }
 
 void lcd_setup() {
+  delay(10);
+  #if defined(_ADAFRUIT_STMPE610H_)
+  if (!ts.begin()) {
+    Serial.println("Touchscreen controller init fail");
+    Serial.println(STMPE_CS);
+  }
+#else
+  if (!ts.begin(0x48, &Wire)) {
+    Serial.println("Touchscreen controller init fail");
+  }
+  pinMode(TSC_IRQ, INPUT);
+#endif //_ADAFRUIT_STMPE610H_
+
   tft.begin();
   // Puts the USB port to the lower/right.
   tft.setRotation(3);
   tft.setTextWrap(true);
   tft.fillScreen(ILI9341_BLACK);
-
-  uint8_t i=0;
-  while(!ts.begin()) {
-    if (i>2) {
-      lcd_print("Touchscreen controller");
-      lcd_println(" init fail");
-    }
-    i++;
-    delay(1000);
-  }
 
 #ifdef DEBUG2
   // read diagnostics (optional but can help debug problems)
@@ -466,8 +481,12 @@ void drawBmp(const char *filename, int16_t x, int16_t y) {
 
   fs::File bmpFS;
 
-  // Open requested file on SD card
+  // Open requested file on internal filesystem
+#ifdef LITTLEFS
+  bmpFS = LittleFS.open(filename, "r");
+#else
   bmpFS = SPIFFS.open(filename, "r");
+#endif // LITTLEFS
 
   if (!bmpFS) {
     Serial.print("File not found");

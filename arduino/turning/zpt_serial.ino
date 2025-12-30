@@ -3,7 +3,7 @@
  * Status, signal strength, etc.
  * Also possible to get button presses to detect concurrent buttons
  * and other things.
- *  Packet and serial IO type defined here:
+ * Packet and serial IO type defined here:
  * https://www.rfsolutions.co.uk/downloads/1523289764DS-ZPT-1.pdf
  */
 

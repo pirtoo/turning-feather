@@ -18,11 +18,9 @@
 #define TURN_MAX_PROGRAMS 55
 #endif // TURN_MAX_PROGRAMS
 
-#define TURN_NAME_LENGTH 20
+#define TURN_NAME_LENGTH 25
 
 #define NUM_MULT 10.0
-
-#include <ArduinoJson.h>
 
 // File format:
 // Numbers in the file for times are in seconds, can be floats but

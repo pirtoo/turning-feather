@@ -58,4 +58,4 @@ void lcd_display_set(const ProgramConfig *program, uint8_t prognum, uint8_t stag
 void lcd_splash();
 void lcd_setup();
 
-#endif // TURNING_LCD_U
+#endif // TURNING_LCD_H
