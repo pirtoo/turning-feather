@@ -2,7 +2,7 @@
 
 ## Screen config
 
-To use the TFT_eSPI library config data for the display needs to be installed into the libraary. [The file](libraries-TFT_eSPI-User_Setup-featherwing-2.4.h) needs to be installed as TFT_eSPI_Setups/setup_featherwing_2.4.h in your Arduino libraries directory, alongside the TFT_eSPI library directory.
+To use the TFT_eSPI library config data for the display needs to be installed into the library, not in your sketch directory. [The file](libraries-TFT_eSPI-User_Setup-featherwing-2.4.h) needs to be installed as TFT_eSPI_Setups/setup_featherwing_2.4.h in your Arduino libraries directory, alongside the TFT_eSPI library directory.
 
 See [instructions](https://github.com/Bodmer/TFT_eSPI).
 
