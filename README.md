@@ -27,9 +27,7 @@
 
 * Display is a [Featherwing 2.4" TFT](https://www.adafruit.com/product/3315).
 
-* Control/power connector is RJ45, takes ground, +12V power and two signal lines for face and away activation at 12V. As used [here](https://web.archive.org/web/20190102055407/http://www.indelfa.co.uk/tt/tt_images/relay.gif).
-
-The controls and power connections are exposed to another optional board connector if you do not want to use RJ45.
+* Control/power connector is RJ45, takes ground, +12V power and two signal lines for face and away activation at 12V. As used [here](https://web.archive.org/web/20190102055407/http://www.indelfa.co.uk/tt/tt_images/relay.gif).  The controls and power connections are exposed to another optional board connector if you do not want to use RJ45.
 
 ## Current state
 

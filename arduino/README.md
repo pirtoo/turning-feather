@@ -8,4 +8,4 @@ See [instructions](https://github.com/Bodmer/TFT_eSPI).
 
 ## Internal filesystem
 
-The boot image and the backup configuration live on internal flash, this can be SPIFFS or Little FS. There are tools to upload files to either internal filesystem and the files to upload are in the [data](data/) directory. The configuration is normally loaded from the sdcard and uses the internal filesystem as a backup in case there is no sdcard, the boot image is normally loaded from the internal filesystem.
+The boot image and the backup configuration live on internal flash, this can be SPIFFS or Little FS. There are tools to upload files to either internal filesystem and the files to upload are in the [data](turning/data/) directory. The configuration is normally loaded from the sdcard and uses the internal filesystem as a backup in case there is no sdcard, the boot image is normally loaded from the internal filesystem.
