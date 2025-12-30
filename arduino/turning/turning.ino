@@ -53,11 +53,13 @@
 #define RF_4 34
 
 // Physical buttons pin
-#define BUTTONS_PIN A3 // AKA 39
+#define BUTTONS_PIN 39 // A3
+
+// SPIFFS or LittleFS
+#define LITTLEFS
 
 // Unused currently
-
-// Double the value here for battery voltage
+// Double the value here to get battery voltage
 //#define BATTERY_VOLTAGE A13
 
 // Unused on the HUZZAH32
@@ -66,28 +68,31 @@
 
 // Using these to generate rising edge interrupts
 // fails badly.
-//#define RF_2 36
-//#define RF_2 39
-
+//#define UNUSED_BAD_2 36
+//#define UNUSED_BAD_2 39
 
 // Serial speed
 #define SERIAL_SPEED 115200
-// Clock rate for timer divider
-#define CLOCK_RATE 80
 
-// Extre serial output from the ZPT
+// Extra serial output from the ZPT
 #define USE_ZPT_SERIAL
+// Buttons on RF remote
+#define RF_BUTTONS
+// Physical buttons on case
+#define PHYSICAL_BUTTONS
 
 // Number of times to retry the SD card
-#define SD_RETRIES 3
+#define SD_RETRIES 2
 
 // Constants
-#define ONE_SECOND 1000000
-#define TENTH_SECOND 100000
+// Clock rate for timer
+#define CLOCK_RATE 100000
+#define ONE_SECOND 100000
+#define TENTH_SECOND 10000
 #define TIME_DIV 10.0
 
 // How long a start beep lasts
-#define BEEP_LENGTH ONE_SECOND
+#define BEEP_LENGTH 0.8*ONE_SECOND
 // How long to keep the motors going on a turn
 #define CHANGE_LENGTH 0.4*ONE_SECOND
 // Tenth of a second gives enough repeats to loop properly
@@ -203,6 +208,7 @@ void updatecurrent() {
 /*
  * Analog multi buttons
  */
+#ifdef PHYSICAL_BUTTONS
 #include <AnalogMultiButton.h>
 
 const int buttons_values[2] = {0, 217};
@@ -228,6 +234,7 @@ void buttons_loop() {
     button_action(1, false);
   }
 }
+#endif // PHYSICAL_BUTTONS
 
 
 /*
@@ -369,9 +376,10 @@ volatile SemaphoreHandle_t turnsemaphore;
 portMUX_TYPE turnmux=portMUX_INITIALIZER_UNLOCKED;
 
 // Four timers, 0-3, on esp32
-#define TURN_TIMER 0
-#define CHANGE_TIMER 1
-#define BEEP_TIMER 2
+// -- numbers now automatic?
+//#define TURN_TIMER 0
+//#define CHANGE_TIMER 1
+//#define BEEP_TIMER 2
 
 // Where in the process are we?
 enum stage {
@@ -716,7 +724,7 @@ void beep(const uint32_t length) {
 #ifdef DEBUG
   Serial.println("BEEP");
 #endif //DEBUG
-  timerAlarmWrite(beeptimer, length, true);
+  timerAlarm(beeptimer, length, true, 0);
   starttimer(beeptimer);
 }
 
@@ -742,7 +750,7 @@ void setup() {
   // Serial setup
   Serial.begin(SERIAL_SPEED);
   while (!Serial) {
-    ; // wait for serial port
+    delay(100); // wait for serial port
   }
   Serial.println("\r\n");
 
@@ -754,12 +762,10 @@ void setup() {
   lcd_splash();
   Serial.println("\r\n");
   lcd_println("Turning feather controller");
-  lcd_println("(c) pir 2019");
+  lcd_println("(c) pir 2019-2025");
   Serial.println("");
 
-
   delay(1000);
-
 
   // Get the config file from SD or SPIFFS
   File turnfile=turn_file_init();
@@ -792,9 +798,10 @@ void setup() {
   currentstage=&currentprog->stage[currentstagenum];
 
 
+#ifdef PHYSICAL_BUTTONS
   // Physical buttons setup
   buttons_setup();
-
+#endif //PHYSICAL_BUTTONS
 
   // bravo/ZPT RF setup
   pinMode(RF_1, INPUT);
@@ -814,40 +821,40 @@ void setup() {
   turnsemaphore=xSemaphoreCreateBinary();
 
   // Timers, of 4.
-  changetimer=timerBegin(CHANGE_TIMER, CLOCK_RATE, true);
+  changetimer=timerBegin(CLOCK_RATE);
   timerStop(changetimer);
   timerWrite(changetimer, 0);
-  timerAttachInterrupt(changetimer, &onchangetimer, true);
-  timerAlarmWrite(changetimer, CHANGE_LENGTH, true);
-  timerAlarmEnable(changetimer);
+  timerAttachInterrupt(changetimer, &onchangetimer);
+  timerAlarm(changetimer, CHANGE_LENGTH, true, 0);
+  //timerAlarmEnable(changetimer);
 
-  beeptimer=timerBegin(BEEP_TIMER, CLOCK_RATE, true);
+  beeptimer=timerBegin(CLOCK_RATE);
   timerStop(beeptimer);
   timerWrite(beeptimer, 0);
-  timerAttachInterrupt(beeptimer, &onbeeptimer, true);
-  timerAlarmEnable(beeptimer);
+  timerAttachInterrupt(beeptimer, &onbeeptimer);
+  //timerAlarmEnable(beeptimer);
 
-  turntimer=timerBegin(TURN_TIMER, CLOCK_RATE, true);
+  turntimer=timerBegin(CLOCK_RATE);
   timerStop(turntimer);
   timerWrite(turntimer, 0);
-  timerAttachInterrupt(turntimer, &onturntimer, true);
-  timerAlarmWrite(turntimer, TURN_RATE, true);
-  timerAlarmEnable(turntimer);
+  timerAttachInterrupt(turntimer, &onturntimer);
+  timerAlarm(turntimer, TURN_RATE, true, 0);
+  //timerAlarmEnable(turntimer);
 
   // Display setup on the LCD
   lcd_display_set(currentprog, currentprognum, currentstagenum);
   lcd_stop(turnstop);
 
-#ifdef DEBUG
   Serial.println(F("\r\nSetup finished.\r\n"));
-#endif //DEBUG
 }
 
 void loop() {
+#ifdef RF_BUTTONS
   if (xSemaphoreTake(rf_buttonsemaphore, 0) == pdTRUE) {
     // Take RF button press actions
     button_action(get_rf_button(), true);
   }
+#endif // RF_BUTTONS
   if (xSemaphoreTake(turnsemaphore, 0) == pdTRUE) {
     // Take the next action if we are running
     turntick();
@@ -855,8 +862,10 @@ void loop() {
   // Take screen button press actions
   button_action(lcd_button(), false);
 
+#ifdef PHYSICAL_BUTTONS
   // Physical buttons action
   buttons_loop();
+#endif
 
 #ifdef USE_ZPT_SERIAL
   // ZPT serial handling
