@@ -3,6 +3,7 @@
 ## Parts list to assemble with PCB
 
 | Part | Quantity | Source |
+| ---- | -------- | ------ |
 | Capacitors |
 | 22uF | x1 | |
 | 0.1uF | x1 | |
