@@ -75,9 +75,9 @@
 
 // Extra serial output from the ZPT
 #define USE_ZPT_SERIAL
-// Buttons on RF remote
+// Enable buttons on RF remote
 #define RF_BUTTONS
-// Physical buttons on case
+// Enable physical buttons on case
 #define PHYSICAL_BUTTONS
 
 // Number of times to retry the SD card
@@ -214,7 +214,7 @@ void updatecurrent() {
 #ifdef PHYSICAL_BUTTONS
 #include <AnalogMultiButton.h>
 
-const int buttons_values[2] = {0, 217};
+const int buttons_values[2] = {5, 684};
 AnalogMultiButton buttons(BUTTONS_PIN, 2, buttons_values);
 
 void buttons_setup() {
@@ -378,11 +378,6 @@ hw_timer_t *turntimer=NULL, *changetimer=NULL, *beeptimer=NULL;
 volatile SemaphoreHandle_t turnsemaphore;
 portMUX_TYPE turnmux=portMUX_INITIALIZER_UNLOCKED;
 
-// Four timers, 0-3, on esp32
-// -- numbers now automatic?
-//#define TURN_TIMER 0
-//#define CHANGE_TIMER 1
-//#define BEEP_TIMER 2
 
 // Where in the process are we?
 enum stage {
