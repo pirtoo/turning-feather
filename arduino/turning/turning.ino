@@ -3,6 +3,8 @@
  * Turning feather.
  */
 
+ // GUI TEST VERSION
+
 // TODO: Put fudge times into a config file
 // TODO: Put debug settings into a config file
 // TODO: Put chirp (and chirp time) into config file
