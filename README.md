@@ -49,7 +49,7 @@
 
 ## Future plans
 
-Turning Feather is still very much in beta and under development.
+Turning Feather is still very much in alpha and under development however it has been in use at one club for over 6 years.
 
 - [ ] Config GUI to change system settings.
 
