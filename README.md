@@ -21,7 +21,7 @@
   * stage -
   * stage +
 
-  You can set a program and walk down range without needing to return to the unit to run or change stages.
+  You can set a program and walk down range without needing to return to the unit to run, stop or change stages.
 
   ZPT module can be programmed to respond to several different remotes. See the [ZPT datasheet](https://www.rfsolutions.co.uk/content/download-files/ZPT-3-DATASHEET.pdf) for programming instructions. I keep the learning button internal to the unit so it can't be accidentally activated.
 
