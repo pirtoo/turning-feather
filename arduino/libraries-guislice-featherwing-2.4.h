@@ -133,9 +133,9 @@ extern "C" {
 
   // Touch bus & pinout
   #define ADATOUCH_I2C_ADDR   0x41  // Touch device I2C address (for ADATOUCH_I2C_HW=1)
-#ifdef ESP8266
+#if defined(ESP8266)
   #define ADATOUCH_PIN_CS     D0    // Touch device chip select (for ADATOUCH_SPI_HW=1)
-#elif ESP32
+#elif defined(ESP32)
   #define ADATOUCH_PIN_CS     32    // Touch device chip select (for ADATOUCH_SPI_HW=1)
 #endif
 
@@ -154,7 +154,6 @@ extern "C" {
   //#define ADATOUCH_Y_MAX    3717
   #define ADATOUCH_REMAP_YX 0    // Some touch controllers may swap X & Y coords
 
-  
   //#define ADATOUCH_X_MIN    3935
   //#define ADATOUCH_X_MAX    316
   //#define ADATOUCH_Y_MIN    161

@@ -2,9 +2,15 @@
 
 ## Screen config
 
-To use the TFT_eSPI library config data for the display needs to be installed into the library, not in your sketch directory. [The file](libraries-TFT_eSPI-User_Setup-featherwing-2.4.h) needs to be installed as TFT_eSPI_Setups/setup_featherwing_2.4.h in your Arduino libraries directory, alongside the TFT_eSPI library directory.
+To use the TFT_eSPI library config data for the display needs to be installed into the library, not in your sketch directory. [The file](libraries-TFT_eSPI-User_Setup-featherwing-2.4.h) needs to be installed as `TFT_eSPI_Setups/setup_featherwing_2.4.h` in your Arduino libraries directory, alongside the TFT_eSPI library directory.
 
 See [instructions](https://github.com/Bodmer/TFT_eSPI).
+
+## GUIslice
+
+To use GUIslice for the testing UI you also need to install the config header file. [The file](libraries-guislice-featherwing-2.4.h) needs to be installed as `GUIslice/configs/libraries-guislice-featherwing-2.4.h` in your Arduino libraries directory. The file `GUIslice/src/GUIslice_config.h` needs to be edited to inclide the line `#include "../configs/libraries-guislice-featherwing-2.4.h"`.
+
+This needs to be redone if the library is updated.
 
 ## Internal filesystem
 

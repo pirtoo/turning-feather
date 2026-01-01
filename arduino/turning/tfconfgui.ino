@@ -393,7 +393,7 @@ bool InitGUI()
   // Create listbox
   pElemRef = gslc_ElemXListboxCreate(&m_gui,E_ELEM_WIFI_NET_CHOOSE,E_PG_WIFI_SELECT,&m_sListbox1,
     (gslc_tsRect){10+2,40+4,300-23,130-7},E_FONT_SANS9,
-    (char*)&m_acListboxBuf1,sizeof(m_acListboxBuf1),0);
+    (unsigned char*)&m_acListboxBuf1,sizeof(m_acListboxBuf1),0);
   gslc_ElemXListboxSetSize(&m_gui, pElemRef, 5, 1); // 5 rows, 1 columns
   gslc_ElemXListboxItemsSetSize(&m_gui, pElemRef, XLISTBOX_SIZE_AUTO, XLISTBOX_SIZE_AUTO);
   gslc_ElemSetTxtMarginXY(&m_gui, pElemRef, 5, 0);
@@ -486,7 +486,7 @@ bool InitGUI()
   // Create listbox
   pElemRef = gslc_ElemXListboxCreate(&m_gui,E_ELEM_LISTBOX_CONFIGS,E_PG_CONFIGS,&m_sListbox4,
     (gslc_tsRect){10+2,40+4,300-23,140-7},E_FONT_SANS9,
-    (char*)&m_acListboxBuf4,sizeof(m_acListboxBuf4),0);
+    (unsigned char*)&m_acListboxBuf4,sizeof(m_acListboxBuf4),0);
   gslc_ElemXListboxSetSize(&m_gui, pElemRef, 6, 1);
   gslc_ElemXListboxItemsSetSize(&m_gui, pElemRef, XLISTBOX_SIZE_AUTO, XLISTBOX_SIZE_AUTO);
   gslc_ElemSetTxtMarginXY(&m_gui, pElemRef, 5, 0);
