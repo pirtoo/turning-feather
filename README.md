@@ -43,6 +43,8 @@
 
 * Two physical buttons for face/away and start/stop. Program selection via the touchscreen.
 
+* Spare 5v output for light flash or other features.
+
 ![](images/turning-feather-prod-ext.jpg)
 ![](images/turning-feather-prod-internal.jpg)
 
