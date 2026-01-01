@@ -9,9 +9,9 @@
 | 22uF | x1 | |
 | 470uF | x1 | |
 | Resistors |
-| 10kR | x4 | |
 | 560R | x1 | |
 | 2.2kR | x1 | |
+| 10kR | x4 | |
 | Diodes |
 | 3mm LED | x2 | |
 | 1N5817 | x4 | https://uk.farnell.com/stmicroelectronics/1n5817/diode-schottky-1a-20v-do-41/dp/9801197 |
