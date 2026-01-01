@@ -38,6 +38,7 @@
 | TSR 1-2450 | x1 | https://uk.farnell.com/tracopower/tsr-1-2450/converter-dc-dc-5v-1a-sip/dp/1696320 |
 | 4427 mosfet driver DIP-8 | x2 | https://uk.farnell.com/maxim-integrated-products/max4427epa/mosfet-driver-high-low-side-dip/dp/2516370 |
 | Other |
+| PCB | x1 | https://www.pcbway.com/project/shareproject/Turning_Feather.html |
 | 5v buzzer | x1 | https://thepihut.com/products/buzzer-5v-breadboard-friendly |
 | 2.5mm plastic standoff kit | x1 | https://thepihut.com/products/adafruit-black-nylon-screw-and-stand-off-set-m2-5-thread |
 | Case Grey ABS Box Clear Lid 150x80x76 | x1 | https://thepihut.com/products/small-plastic-project-enclosure-weatherproof-with-clear-top |

@@ -7,7 +7,7 @@
 
   * Current maximums of 55 programs and up to 12 stages per program (limited by memory in the controller) but will increase with development and it will be easier to swap between sets of programs.
 
-  * [Example config](arduino/turning/data/turnconf.txt)
+  * [Example config](arduino/turning/data/turnconf.txt).
 
   * Configs can be checked for JSON validity [here](https://arduinojson.org/v6/assistant/) or on any JSON website.
 
@@ -27,7 +27,9 @@
 
 * Display is a [Featherwing 2.4" TFT](https://www.adafruit.com/product/3315).
 
-* Control/power connector is RJ45, takes ground, +12V power and two signal lines for face and away activation at 12V. As used [here](https://web.archive.org/web/20190102055407/http://www.indelfa.co.uk/tt/tt_images/relay.gif).  The controls and power connections are exposed to another optional board connector if you do not want to use RJ45.
+* Control/power connector is RJ45; takes ground, +12V power and two signal lines for face and away activation at 12V. As used [here](https://web.archive.org/web/20190102055407/http://www.indelfa.co.uk/tt/tt_images/relay.gif).  The controls and power connections are exposed to another optional board connector if you do not want to use an onboard RJ45.
+
+* [Parts list and assembly details](PCBs/README.md).
 
 ## Current state
 
@@ -40,8 +42,6 @@
 * RF interference is still a bit of a problem with the remote at the test range but it is usable. The bigger remote handles this better.
 
 * Two physical buttons for face/away and start/stop. Program selection via the touchscreen.
-
-* [Parts list and assembly details](PCBs/README.md)
 
 ![](images/turning-feather-prod-ext.jpg)
 ![](images/turning-feather-prod-internal.jpg)
