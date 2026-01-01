@@ -8,4 +8,6 @@ See [instructions](https://github.com/Bodmer/TFT_eSPI).
 
 ## Internal filesystem
 
-The boot image and the backup configuration live on internal flash, this can be SPIFFS or Little FS. There are tools to upload files to either internal filesystem and the files to upload are in the [data](turning/data/) directory. The configuration is normally loaded from the sdcard and uses the internal filesystem as a backup in case there is no sdcard, the boot image is normally loaded from the internal filesystem.
+The boot splash image and the backup configuration live on internal flash, this can be SPIFFS or LittleFS. The configuration is normally loaded from the sdcard and uses the internal filesystem as a backup in case there is no sdcard, the boot image is normally loaded from the internal filesystem.
+
+If you use LittleFS the first time the HUZZAH32 is powered on it will format the onboard filesystem then fail to load files from it since it is empty. You can then transfer the files in [data](turning/data/) with [the Arduino IDE uploader](https://randomnerdtutorials.com/arduino-ide-2-install-esp32-littlefs/). There is no SPIFFS uploader for V2 of the Ardino IDE, which is partly why I have migrated to LittleFS, but command line tools exist.
