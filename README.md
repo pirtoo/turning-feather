@@ -61,7 +61,7 @@ Turning Feather is still very much in beta and under development.
 
 - [ ] Ability to change which config file is in use.
 
-- [ ] Updates planned here to provide parts lists, links, etc, to allow others to build their own units.
+- [X] Updates planned here to provide parts lists, links, etc, to allow others to build their own units.
 
 - [ ] Provide a full definition of the config file and what all the options do.
 
