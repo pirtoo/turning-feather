@@ -47,7 +47,7 @@
 
 One of the 1N5817 diodes should be inserted into the 5v supply line in the panel mount extension cable so when the unit has 12v supply, converting to 5V via the TSR 1-2450, this does not feed back to a USB connected device. 5v can be supplied either through the converter or from USB.
 
-Input voltage is stated at 12v since this is what the original system uses. Minimum input voltage via the RJ45 is 6.5v and maxium input voltage is 36v to the TSR 1-2450. Maximum input voltage the MAX4427EPA+ is 18v. Voltage output to the turn/away signals will be the input voltage.
+Input voltage is stated at 12v since this is what the original system uses. Minimum input voltage via the RJ45 is 6.5v and maxium input voltage is 36v to the TSR 1-2450. Maximum input voltage to the MAX4427EPA+ is 18v. Voltage output to the turn/away signals will be the input voltage.
 
 The DPDT toggle switch turns the unit on and off and connects to J1 via the JST-PH 4 way cable. Pins 2 and 3 to each common on the switch, pin 1 to pin 2 in one position and pin 3 to pin 4 in the other position. In the off position 12v from the PCB RJ45 is not supplied back to the board and the enable pin of the Feather is grounded.
 
