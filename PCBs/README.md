@@ -72,3 +72,5 @@ Note that some components (RJ45, LEDs and learn button) are placed on the rear s
 The ZPT antenna is connected via the uFL connector on the ZPT board.
 
 Plastic M2.5 standoffs should be used to mount the Featherwing display and HUZZAH32 to the IO board. Note that two of the mounting holes on the HUZZAH32 are partially obscured by the onboard 2.4GHz antenna so cannot be used.
+
+V2 of the Adafruit ESP32 Feather will likely work but I have not tested it since I do not have any. Pin locations may have changed. An ESP32 is required for the current code since it uses ESP32 timers.
