@@ -41,6 +41,7 @@
 
 * Two physical buttons for face/away and start/stop. Program selection via the touchscreen.
 
+* [Parts list and assembly details](PCBs/README.md)
 
 ![](images/turning-feather-prod-ext.jpg)
 ![](images/turning-feather-prod-internal.jpg)
