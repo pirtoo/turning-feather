@@ -33,15 +33,11 @@
 
 ## Current state
 
-* I have [custom PCB](PCBs/kicad/turning-feather) made for the main board manufactured by [PCBWay](https://www.pcbway.com/project/shareproject/Turning_Feather.html). See [schematic](PCBs/kicad/turning-feather/turning-feather.pdf).
-
-* First production unit is in use at my local club, other ROs seem very happy with it so far since it makes running turning targets much simpler.
+* [Custom PCB](PCBs/kicad/turning-feather) made for the main IO board manufactured by [PCBWay](https://www.pcbway.com/project/shareproject/Turning_Feather.html). See [schematic](PCBs/kicad/turning-feather/turning-feather.pdf).
 
 * Graphics are currently fairly simplistic but functional.
 
-* RF interference is still a bit of a problem with the remote at the test range but it is usable. The bigger remote handles this better.
-
-* Two physical buttons for face/away and start/stop. Program selection via the touchscreen.
+* Two physical buttons for face/away and start/stop. Program selection via the touchscreen. Start/stop, face/away and stage +/- via RF remote.
 
 * Spare 5v output for light flash or other features.
 
