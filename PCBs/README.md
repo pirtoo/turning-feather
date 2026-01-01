@@ -5,8 +5,8 @@
 | Part | Quantity | Source |
 | ---- | -------- | ------ |
 | Capacitors |
-| 22uF | x1 | |
 | 0.1uF | x1 | |
+| 22uF | x1 | |
 | 470uF | x1 | |
 | Resistors |
 | 10kR | x4 | |
@@ -40,7 +40,7 @@
 | Other |
 | PCB | x1 | https://www.pcbway.com/project/shareproject/Turning_Feather.html |
 | 5v buzzer | x1 | https://thepihut.com/products/buzzer-5v-breadboard-friendly |
-| 2.5mm plastic standoff kit | x1 | https://thepihut.com/products/adafruit-black-nylon-screw-and-stand-off-set-m2-5-thread |
+| M2.5 plastic standoff kit | x1 | https://thepihut.com/products/adafruit-black-nylon-screw-and-stand-off-set-m2-5-thread |
 | Case Grey ABS Box Clear Lid 150x80x76 | x1 | https://thepihut.com/products/small-plastic-project-enclosure-weatherproof-with-clear-top |
 | LiPo backup battery | x1 | https://thepihut.com/products/150mah-3-7v-lipo-battery |
 | MicroSD card 1Gb-32Gb | x1 | |
