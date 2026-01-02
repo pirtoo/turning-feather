@@ -59,7 +59,7 @@ With the HUZZAH32 you cannot read analog inputs on ADC #2 once WiFi has started 
 
 The LiPo battery is optional, a small battery is useful for using the controller when not connected to the target system and in case power is temporarily interrupted. A small battery will fit under the Feather board and connect to it.
 
-Instead of using a PCB mounted RJ45 connector the optional J2 connector can be used to connect to 12v, ground, and turn/away signals. The 12v will need to be wired via a switch if needed. If you are not using J2 there is no need to fit a connector.
+Instead of using a PCB mounted RJ45 connector the optional J2 connector can be used to connect to 12v supply, ground, and turn/away signals. If you are not using J2 there is no need to fit a connector.
 
 If you do not need a buzzer then U3 can be left off. The output will still flash the onboard LED by default. J3 pin 2 can be left unconnected.
 
