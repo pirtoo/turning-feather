@@ -3,8 +3,8 @@
  * Status, signal strength, etc.
  * Also possible to get button presses to detect concurrent buttons
  * and other things.
- * Packet and serial IO type defined here:
- * https://www.rfsolutions.co.uk/downloads/1523289764DS-ZPT-1.pdf
+ * Packet and serial IO type defined in ZPT datasheet available from:
+ * https://www.rfsolutions.co.uk/
  */
 
 #ifdef USE_ZPT_SERIAL
@@ -33,15 +33,10 @@ bool zpt_packet_learn(const struct zpt_serial_packet *packet) {
 void zpt_serial_setup() {
   // Note the format for setting a serial port is as follows: Serial2.begin(baud-rate, protocol, RX pin, TX pin);
   Serial2.begin(19200, SERIAL_8N1, RXD2, TXD2);
-  zpt_serial_setup_done=true;
 }
 
 
 void zpt_serial_loop() {
-  // If we haven't done setup, do it.
-  if (!zpt_serial_setup_done) {
-      zpt_serial_setup();
-  }
 
   while (!zpt_serialpacket_ready and Serial2.available()) {
     // Read bytes into the packet struct via pointer

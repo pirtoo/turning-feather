@@ -33,8 +33,11 @@
 //#define DEBUG2
 //#define DEBUG_TIMER
 
+// Using the V2 version of the Adafruit ESP32
+//#define HUZZAH32_V2
+
 // LED_BUILTIN is 13 on the HUZZAH32
-#define BUZZER 13
+#define BUZZER LED_BUILTIN
 
 #define FACE_PIN 25
 #define AWAY_PIN 26
@@ -49,7 +52,11 @@
 //#define SD_CS SS
 
 #define RF_1 4
+#ifdef HUZZAH32_V2
+#define RF_2 37
+#else
 #define RF_2 21
+#endif //HUZZAH32_V2
 #define RF_3 27
 #define RF_4 34
 
@@ -63,13 +70,13 @@
 // Double the value here to get battery voltage
 //#define BATTERY_VOLTAGE A13
 
-// Unused on the HUZZAH32
+// Unused output on the HUZZAH32
 #define UNUSED_1 12 // AKA A11, wired to 5v MOSFET
 //#define UNUSED_2 A4/36
 
 // Using these to generate rising edge interrupts
 // fails badly.
-//#define UNUSED_BAD_2 36
+//#define UNUSED_BAD_1 36
 //#define UNUSED_BAD_2 39
 
 // Serial speed
@@ -254,7 +261,7 @@ volatile SemaphoreHandle_t rf_buttonsemaphore;
 
 void rf_serial_actions() {
   if (zpt_packet_lowbatt(&packetin)) {
-    // Print a red on white '!' if remote barttery low
+    // Print a red on white '!' if remote battery low
     lcd_statusprint('!');
   } else if (!zpt_packet_learn(&packetin)) {
     // Print a red on white '?' if remote not paired
@@ -264,7 +271,7 @@ void rf_serial_actions() {
     lcd_statusclear();
   }
 }
-#endif // USE_ZPT_SERIAL
+#endif //USE_ZPT_SERIAL
 
 uint8_t get_rf_button() {
   uint8_t button;
@@ -825,6 +832,10 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(RF_4), rfbutton4, RISING);
   rf_buttonsemaphore=xSemaphoreCreateBinary();
 
+#ifdef USE_ZPT_SERIAL
+  // ZPT serial setup
+  zpt_serial_setup();
+#endif //USE_ZPT_SERIAL
 
   // Timer and face/away setup.
 

@@ -11,13 +11,24 @@
 #ifndef ZPT_SERIAL_H
 #define ZPT_SERIAL_H
 
-// HUZZAH32 TX/RX pins for Serial2.
+// HUZZAH32 defaults for TX/RX pins for Serial2.
 #ifndef RXD2
+#ifdef RX
+#define RXD2 RX
+#else
 #define RXD2 16
+#endif //RX
 #endif //RXD32
 #ifndef TXD2
+#ifdef RX
+#define TXD2 TX
+#else
 #define TXD2 17
+#endif //RX
 #endif //RXD32
+
+//#define RXD2 RX
+//#define TXD2 TX
 
 struct zpt_serial_packet {
   // Serial number of the transmitter, largest byte first
@@ -40,11 +51,14 @@ struct zpt_serial_packet {
 
 struct zpt_serial_packet packetin;
 uint8_t *packetin_p=(uint8_t *)&packetin;
-bool zpt_serialpacket_ready=false, zpt_serial_setup_done=false;
+bool zpt_serialpacket_ready=false;
 
 uint32_t zpt_packet_serialnum(const struct zpt_serial_packet *packet);
 bool zpt_packet_lowbatt(const struct zpt_serial_packet *packet);
 bool zpt_packet_learn(const struct zpt_serial_packet *packet);
+// include in setup()
+void zpt_serial_setup();
+// include in loop() and then use the packet contents via above
 void zpt_serial_loop();
 
 #endif // ZPT_SERIAL_H
