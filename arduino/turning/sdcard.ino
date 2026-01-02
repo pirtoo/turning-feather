@@ -1,6 +1,6 @@
 /* 
  * SD card setup
-  */
+ */
 #include "sdcard.h"
 
 File checksdfile(const char *filename) {
