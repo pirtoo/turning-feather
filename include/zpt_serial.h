@@ -15,13 +15,18 @@
 #ifndef RXD2
 #ifdef RX
 #define RXD2 RX
+#elif defined(RX1)
+#define RXD2 RX1
 #else
 #define RXD2 16
 #endif //RX
 #endif //RXD32
+
 #ifndef TXD2
 #ifdef RX
 #define TXD2 TX
+#elif defined(TX1)
+#define TXD2 TX1
 #else
 #define TXD2 17
 #endif //RX
@@ -49,17 +54,16 @@ struct zpt_serial_packet {
   uint8_t lf;
 };
 
-struct zpt_serial_packet packetin;
-uint8_t *packetin_p=(uint8_t *)&packetin;
-bool zpt_serialpacket_ready=false;
-
-uint32_t zpt_packet_serialnum(const struct zpt_serial_packet *packet);
-bool zpt_packet_lowbatt(const struct zpt_serial_packet *packet);
-bool zpt_packet_learn(const struct zpt_serial_packet *packet);
+uint32_t zpt_packet_serialnum(void);
+bool zpt_packet_lowbatt(void);
+bool zpt_packet_learn(void);
+bool zpt_packet_isready(void);
+void zpt_packet_getnew(void);
 // include in setup()
-void zpt_serial_setup();
+void zpt_serial_setup(void);
 // include in loop() and then use the packet contents via above
-void zpt_serial_loop();
+void zpt_serial_loop(void);
+
 
 #endif // ZPT_SERIAL_H
 #endif // USE_ZPT_SERIAL

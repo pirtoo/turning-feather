@@ -5,11 +5,25 @@
 #ifndef TURNING_SDCARD_H
 #define TURNING_SDCARD_H
 
-#include <Arduino.h>
+#include "turning.h"
+
+// 33 on the logger featherwing
+//#define SD_CS_PIN SS
+
+#ifndef SD_CS_PIN
+// Pin for SD on 2.4" TFT featherwing V1 and V2
+#define SD_CS_PIN 14
+#endif //SD_CS_PIN
+
+#ifndef SD_RETRIES
+// Number of times to retry the SD card
+#define SD_RETRIES 2
+#endif //SD_RETRIES
+
 #include <SPI.h>
 #include <SD.h>
-#define FS_NO_GLOBALS
-#include <FS.h>
+//#define FS_NO_GLOBALS
+//#include <FS.h>
 #ifdef LITTLEFS
 #include <esp_littlefs.h>
 #include <LittleFS.h>
@@ -18,8 +32,6 @@
 #endif // LITTLEFS
 
 void storage_init();
-File turn_file_init();
-
-bool sd_init_ok=false, localfs_init_ok=false;
+File turn_file_init(const char *turnconf_file);
 
 #endif //TURNING_SDCARD_H

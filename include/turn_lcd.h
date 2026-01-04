@@ -1,13 +1,15 @@
 /*
  * Write to the featherwing touchscreen LCD and get
  * touch info
-  */
+ */
 
 #ifndef TURNING_LCD_H
 #define TURNING_LCD_H
 
+#include "turning.h"
 #include "TurnConfig.h"
-
+#include "sdcard.h"
+ 
 // featherwing pindefs
 #ifndef TFT_DC
 #define TFT_DC 33
@@ -18,21 +20,30 @@
 #ifndef STMPE_CS
 #define STMPE_CS 32
 #endif // STMPE_CS
-#ifndef SD_CS
-#define SD_CS 14
-#endif // SD_CS
 
 // This is calibration data for the raw touch
 // data to the screen coordinates
+#ifdef TFT_FW_24_V2
+#define TS_MINX 3800
+#define TS_MAXX 300
+#define TS_MINY 185
+#define TS_MAXY 3700
+#else
 #define TS_MINX 100
 #define TS_MAXX 3800
 #define TS_MINY 100
 #define TS_MAXY 3750
+#endif //TFT_FW_24_V2
 
 // Try to not have calibration data for each screen
 #define TOUCH_FUDGE 20
 
 #define SCREEN_DEBOUNCE 400
+#define TIME_DIV 10.0
+
+// Use these when printing or drawing nicer text
+#define PRETTY_FONT_12 &FreeSans12pt7b
+#define PRETTY_FONT_24 &FreeSans24pt7b
 
 struct point {
   uint16_t x;
@@ -48,14 +59,22 @@ void lcd_face(const bool isface);
 void lcd_stop(const bool isstop);
 void lcd_prog(const char *progname, const uint8_t prognum);
 void lcd_stage(const StageConfig *stage, const uint8_t stagenum);
-void lcd_stagerun(const StageConfig *stage);
+void lcd_stagerun(const uint16_t num, const uint8_t pos, const uint8_t repeat);
 void lcd_stagerun_clear();
 void lcd_statusprint(const char ch);
+void lcd_statusclear();
+void lcd_stagerun_clear_top(void);
+void lcd_stagerun_clear_bottom(void);
+void lcd_stagerun_repeat_top(const uint8_t rep);
 void lcd_print(const char *str);
 void lcd_println(const char *str);
+void lcd_drawString(char *text, uint16_t x, uint16_t y);
 void lcd_clear();
 void lcd_display_set(const ProgramConfig *program, uint8_t prognum, uint8_t stagenum);
-void lcd_splash();
-void lcd_setup();
+void lcd_splash(const char *filename);
+void lcd_drawBmp(fs::File &f, int16_t x, int16_t y);
+void lcd_setup(void);
+
+bool ts_read_ready(void);
 
 #endif // TURNING_LCD_H

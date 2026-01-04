@@ -1,7 +1,11 @@
 /* 
  * SD card setup
  */
+#include "turning.h"
+#include "turn_lcd.h"
 #include "sdcard.h"
+
+bool sd_init_ok=false, localfs_init_ok=false;
 
 File checksdfile(const char *filename) {
   File file;
@@ -39,15 +43,18 @@ void storage_init() {
   // SD card and spiffs or littlefs setup
   uint8_t count=0;
 
-  while (!SD.begin(SD_CS) and count <= SD_RETRIES) {
+  while (!SD.begin(SD_CS_PIN) and count <= SD_RETRIES) {
     delay(500);
     count++;
   }
 
   if (count <= SD_RETRIES) {
     sd_init_ok=true;
+    Serial.println("SD Init OK");
   } else {
     lcd_println("SD card init failed");
+    Serial.print("Trying to connect to SD on pin ");
+    Serial.println(SD_CS_PIN);
   }
 
 #ifdef LITTLEFS
@@ -67,7 +74,7 @@ void storage_init() {
 #endif // LITTLEFS
 }
 
-File turn_file_init() {
+File turn_file_init(const char *turnconf_file) {
   // Config file load
   Serial.print(F("Reading config from: "));
   Serial.println(turnconf_file);

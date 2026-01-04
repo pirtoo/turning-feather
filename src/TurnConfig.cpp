@@ -3,13 +3,6 @@
  */
 #include "TurnConfig.h"
 
-const int turn_capacity=\
-  JSON_ARRAY_SIZE(TURN_MAX_PROGRAMS) + \
-  TURN_MAX_PROGRAMS*JSON_ARRAY_SIZE(TURN_MAX_STAGES) + \
-  TURN_MAX_PROGRAMS*JSON_OBJECT_SIZE(2) + \
-  TURN_MAX_STAGES*TURN_MAX_PROGRAMS*JSON_OBJECT_SIZE(8) + \
-  TURN_MAX_PROGRAMS*241;
-
 void StageConfig::save(JsonObject obj) const {
   obj["beep"]=beep / NUM_MULT;
   obj["face"]=face / NUM_MULT;
@@ -57,10 +50,10 @@ void ProgramConfig::save(JsonObject obj) const {
   obj["name"]=longname;
 
   // Add "stages" array
-  JsonArray sts=obj.createNestedArray("stages");
+  JsonArray sts=obj["stages"].to<JsonArray>();
   // Add each stage in the array
   for (uint8_t i=0; i<stages; i++)
-    stage[i].save(sts.createNestedObject());
+    stage[i].save(sts.add<JsonObject>());
 }
 
 void ProgramConfig::load(JsonObjectConst obj) {
@@ -102,11 +95,11 @@ void TurnConfig::load(JsonArrayConst obj) {
 void TurnConfig::save(JsonArray obj) const {
   // Add each program to the array
   for (uint8_t i=0; i<programs; i++)
-    program[i].save(obj.createNestedObject());
+    program[i].save(obj.add<JsonObject>());
 }
 
 bool serializeTurnConfig(const TurnConfig &config, Print &dst) {
-  DynamicJsonDocument doc(turn_capacity);
+  JsonDocument doc;
 
   // Create an array at the root
   JsonArray rootarr = doc.to<JsonArray>();
@@ -118,7 +111,7 @@ bool serializeTurnConfig(const TurnConfig &config, Print &dst) {
 }
 
 bool deserializeTurnConfig(Stream &src, TurnConfig &config) {
-  DynamicJsonDocument doc(turn_capacity);
+  JsonDocument doc;
 
   // Parse the JSON object in the file
   DeserializationError err=deserializeJson(doc, src);

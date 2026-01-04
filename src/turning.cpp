@@ -1,6 +1,8 @@
 /*
  * Turning target controller.
  * Turning feather.
+ * 
+ * Migrated to PlatformIO
  */
 
 // TODO: Put fudge times into a config file
@@ -21,140 +23,39 @@
 //       - requires CD pin to be soldered on wing
 // TODO: Mode to show ZPT signal strength
 
-/*
- * Hardware pins and other definitions
- * Definitions for the Feather HUZZAH32
- */
 
-// Extra debugging to the serial port while running
-//#define DEBUG
-//#define DEBUG2
-//#define DEBUG_TIMER
+// General includes
+#include "turning.h"
 
-// Using the V2 version of the Adafruit ESP32
-//#define HUZZAH32_V2
-
-// LED_BUILTIN is 13 on the HUZZAH32
-#define BUZZER LED_BUILTIN
-
-#define FACE_PIN 25
-#define AWAY_PIN 26
-
-// featherwing TFT/TS display
-#define TFT_DC 33
-#define TFT_CS 15
-#define STMPE_CS 32
-#define SD_CS 14
-
-// 33 on the logger featherwing
-//#define SD_CS SS
-
-#define RF_1 4
-#ifdef HUZZAH32_V2
-#define RF_2 37
-#else
-#define RF_2 21
-#endif //HUZZAH32_V2
-#define RF_3 27
-#define RF_4 34
-
-// Physical buttons pin
-#define BUTTONS_PIN 39 // A3
-
-// SPIFFS or LittleFS
-#define LITTLEFS
-
-// Unused currently
-// Double the value here to get battery voltage
-//#define BATTERY_VOLTAGE A13
-
-// Unused output on the HUZZAH32
-#define UNUSED_1 12 // AKA A11, wired to 5v MOSFET
-//#define UNUSED_2 A4/36
-
-// Using these to generate rising edge interrupts
-// fails badly.
-//#define UNUSED_BAD_1 36
-//#define UNUSED_BAD_2 39
-
-// Serial speed
-#define SERIAL_SPEED 115200
-
-// Extra serial output from the ZPT
-#define USE_ZPT_SERIAL
-// Enable buttons on RF remote
-#define RF_BUTTONS
-// Enable physical buttons on case
-#define PHYSICAL_BUTTONS
-
-// Number of times to retry the SD card
-#define SD_RETRIES 2
-
-// Constants
-// Clock rate for timer
-#define CLOCK_RATE 100000
-#define ONE_SECOND 100000
-#define TENTH_SECOND 10000
-#define TIME_DIV 10.0
-
-// How long a start beep lasts
-#define BEEP_LENGTH 0.8*ONE_SECOND
-// How long to keep the motors going on a turn
-#define CHANGE_LENGTH 0.4*ONE_SECOND
-// Tenth of a second gives enough repeats to loop properly
-#define TURN_RATE TENTH_SECOND
-
-// Keep the face/away lines high while a stage is running
-#define KEEP_CHANGE_ACTIVE
-
-// Length of beep chirp when RF stage change happens
-// Comment out to disable entirely
-#define STAGE_CHANGE_CHIRP 0.4*TENTH_SECOND
-
-// Fudge to allow time for targets to turn
-// in 10ths of a second
-#define FACE_FUDGE 3
-#define AWAY_FUDGE 3
-
-// Number of tenths of seconds (TURN_RATE) from start
-// until the targets are faced or the beep, depending
-// on config.
-#define INIT_PAUSE 6
-
+#ifdef USE_ZPT_SERIAL
+#include "zpt_serial.h"
+#endif //USE_ZPT_SERIAL
 
 /*
  * Definitions that need to be early
  */
+
 // Are the targets facing (or in the process of facing)
 // vs away or in the process of turning away.
 // Are we in a running program or stopped.
 bool face=true, turnstop=true;
 
 
-/*
- * Adafruit featherwing LCD display
- */
+// Adafruit featherwing LCD display
 #include "turn_lcd.h"
 uint8_t lcd_button_num=0;
 
-
-/*
- * SD card and config file
- */
+// SD card and config file
 #include "sdcard.h"
 
-
-/*
- * Config file
- */
+// Config file
 #include "TurnConfig.h"
-
 struct TurnConfig turnconfig;
 struct ProgramConfig *currentprog;
 struct StageConfig *currentstage;
 struct StageConfig runningstage;
+const char *turnconf_file=TURNCONF;
 
-const char *turnconf_file="/turnconf.txt";
 uint8_t currentstagenum=0, currentprognum=0;
 
 
@@ -243,21 +144,20 @@ void buttons_loop() {
 #endif // PHYSICAL_BUTTONS
 
 
+#ifdef RF_BUTTONS
 /*
- * RF bravo/ZPT radio control
+ * RF ZPT radio control
  */
 volatile uint8_t rf_button=0;
 portMUX_TYPE rf_buttonmux=portMUX_INITIALIZER_UNLOCKED;
 volatile SemaphoreHandle_t rf_buttonsemaphore;
 
 #ifdef USE_ZPT_SERIAL
-#include "zpt_serial.h"
-
 void rf_serial_actions() {
-  if (zpt_packet_lowbatt(&packetin)) {
+  if (zpt_packet_lowbatt()) {
     // Print a red on white '!' if remote battery low
     lcd_statusprint('!');
-  } else if (!zpt_packet_learn(&packetin)) {
+  } else if (!zpt_packet_learn()) {
     // Print a red on white '?' if remote not paired
     lcd_statusprint('?');
   } else {
@@ -312,6 +212,7 @@ void IRAM_ATTR rfbutton4() {
   Serial.println(F("RF button 4"));
 #endif // DEBUG2
 }
+#endif //RF_BUTTONS
 
 void button_action(const unsigned int button, const bool rf_button) {
   /*
@@ -382,17 +283,6 @@ volatile SemaphoreHandle_t turnsemaphore;
 portMUX_TYPE turnmux=portMUX_INITIALIZER_UNLOCKED;
 
 
-// Where in the process are we?
-enum stage {
-  IN_INIT,
-  IN_BEEP,
-  IN_FACE,
-  IN_AWAY,
-  IN_NEXT,
-  IN_FLASH,
-  IN_FLASH_AWAY,
-  IN_INIT_PAUSE
-};
 enum stage in_stage=IN_INIT;
 
 uint8_t in_repeat=0;
@@ -489,6 +379,8 @@ void turntick() {
       lcd_stagerun(turncount, in_stage, in_repeat);
     }
 
+    // If using an ESP32 V2 set the neopixel to a different colour
+    // depending on which case we are in
     switch(in_stage) {
       case IN_INIT_PAUSE:
         // Gap from start if we were facing
@@ -689,6 +581,7 @@ void toggle_stop() {
 void toggle_face(bool use_timer) {
   // Toggle face/away
   face=!face;
+  // Work out how to check if the timer is running before stopping it
   timerStop(changetimer);
   lcd_face(face);
   if (face) {
@@ -753,23 +646,41 @@ void setup() {
   while (!Serial) {
     delay(100); // wait for serial port
   }
-  Serial.println("\r\n");
+  delay(1000);
+#ifdef DEBUG
+  Serial.println("\r\nStart\r\n");
+#endif //DEBUG
 
+  // Keep this before the lcd_setup();
+  //SPI.begin(SCK, MISO, MOSI, SD_CS_PIN);
+  //pinMode(SD_CS_PIN, OUTPUT);
+  //SPI.setDataMode(SPI_MODE0);
 
+#ifdef DEBUG
+  Serial.println("Calling lcd_setup");
+#endif //DEBUG
   // Basic LCD setup
   lcd_setup();
+
+#ifdef DEBUG
+  Serial.println("Calling storage_init");
+#endif //DEBUG
   storage_init();
 
-  lcd_splash();
+#ifdef DEBUG
+  Serial.println("Calling lcd_splash");
+#endif //DEBUG
+  lcd_splash(SPLASH_BMP);
   Serial.println("\r\n");
   lcd_println("Turning feather controller");
-  lcd_println("(c) pir 2019-2025");
+  lcd_println("(c) pir 2019-2026         ");
+  lcd_println("tf@pir.net                ");
   Serial.println("");
 
-  delay(1000);
+  delay(3000);
 
   // Get the config file from SD or SPIFFS
-  File turnfile=turn_file_init();
+  File turnfile=turn_file_init(turnconf_file);
 
   // This may fail if the JSON is invalid
   if (!deserializeTurnConfig(turnfile, turnconfig)) {
@@ -875,10 +786,10 @@ void loop() {
 #ifdef USE_ZPT_SERIAL
   // ZPT serial handling
   zpt_serial_loop();
-  if (zpt_serialpacket_ready) {
+  if (zpt_packet_isready()) {
     rf_serial_actions();
     // Signal ready for another packet.
-    zpt_serialpacket_ready=false;
+    zpt_packet_getnew();
   }
 #endif //USE_ZPT_SERIAL
 

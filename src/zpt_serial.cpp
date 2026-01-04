@@ -7,27 +7,40 @@
  * https://www.rfsolutions.co.uk/
  */
 
-#ifdef USE_ZPT_SERIAL
+#include "turning.h"
 
+#ifdef USE_ZPT_SERIAL
 #include "zpt_serial.h"
 
 uint8_t c=0;
+struct zpt_serial_packet packetin;
+uint8_t *packetin_p=(uint8_t *)&packetin;
+bool zpt_serialpacket_ready=false;
 
-uint32_t zpt_packet_serialnum(const struct zpt_serial_packet *packet) {
+bool zpt_packet_isready() {
+  // Return if there is a packet ready
+  return zpt_serialpacket_ready;
+}
+void zpt_packet_getnew() {
+  // Done with packet, get a new one 
+  zpt_serialpacket_ready=false;
+}
+
+uint32_t zpt_packet_serialnum() {
   // Assemble the serial number array into one number
-  return packet->serialnum[2] +
-         (packet->serialnum[1]<<8) +
-         (packet->serialnum[0]<<16);
+  return packetin.serialnum[2] +
+         (packetin.serialnum[1]<<8) +
+         (packetin.serialnum[0]<<16);
 }
 
-bool zpt_packet_lowbatt(const struct zpt_serial_packet *packet) {
+bool zpt_packet_lowbatt() {
   // Extract low battery state
-  return bitRead(packet->learn_lowbatt, 0) == 1;
+  return bitRead(packetin.learn_lowbatt, 0) == 1;
 }
 
-bool zpt_packet_learn(const struct zpt_serial_packet *packet) {
+bool zpt_packet_learn() {
   // Extract learned button state
-  return bitRead(packet->learn_lowbatt, 1) == 1;
+  return bitRead(packetin.learn_lowbatt, 1) == 1;
 }
 
 void zpt_serial_setup() {
@@ -67,7 +80,7 @@ void zpt_serial_loop() {
   if (zpt_serialpacket_ready) {
     // Print available packet.
     Serial.print("Serialnum=");
-    Serial.println(zpt_packet_serialnum(&packetin));
+    Serial.println(zpt_packet_serialnum());
     Serial.print("inputs_low=");
     Serial.println(packetin.inputs_low);
     Serial.print("inputs_high=");
@@ -75,9 +88,9 @@ void zpt_serial_loop() {
     Serial.print("tx_battery=");
     Serial.println(packetin.tx_battery);
     Serial.print("lowbatt=");
-    Serial.println(zpt_packet_lowbatt(&packetin) ? 'Y' : 'N');
+    Serial.println(zpt_packet_lowbatt() ? 'Y' : 'N');
     Serial.print("learn=");
-    Serial.println(zpt_packet_learn(&packetin) ? 'Y' : 'N');
+    Serial.println(zpt_packet_learn() ? 'Y' : 'N');
     Serial.print("rssi=");
     Serial.println(packetin.rssi);
     Serial.println("");
