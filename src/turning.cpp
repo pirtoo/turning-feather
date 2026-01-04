@@ -27,6 +27,14 @@
 // General includes
 #include "turning.h"
 
+
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#include <Adafruit_NeoPixel.h>
+Adafruit_NeoPixel strip(1, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
+void np(uint32_t c);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+
+
 #ifdef USE_ZPT_SERIAL
 #include "zpt_serial.h"
 #endif //USE_ZPT_SERIAL
@@ -343,6 +351,9 @@ void start_stage() {
     // No flash, go straight to face
     in_stage=IN_FACE;
   }
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+      np(0x003300);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
   in_repeat=1;
 }
 
@@ -363,6 +374,10 @@ void turntick() {
   if (turnstop) {
     // We are not running, stop the timer
     timerStop(turntimer);
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+    np(0);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+  
   } else {
     // We are running
 #ifdef DEBUG2
@@ -381,6 +396,7 @@ void turntick() {
 
     // If using an ESP32 V2 set the neopixel to a different colour
     // depending on which case we are in
+
     switch(in_stage) {
       case IN_INIT_PAUSE:
         // Gap from start if we were facing
@@ -405,10 +421,16 @@ void turntick() {
           // finished beep pause
           start_stage();
         }
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+        np(0x550000);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         break;
 
       case IN_FLASH:
         // Do a single flash exposure.
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+        np(0x003300);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->flash <= turncount) {
           in_fudge=true;
         }
@@ -425,6 +447,9 @@ void turntick() {
 
       case IN_FLASH_AWAY:
         // Targets are in a flash away time
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+        np(0x000033);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->flashaway <= turncount) {
           in_fudge=true;
         }
@@ -441,6 +466,9 @@ void turntick() {
 
       case IN_FACE:
         // Targets are in an exposure.
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+        np(0x003300);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->face <= turncount) {
           in_fudge=true;
         }
@@ -469,6 +497,9 @@ void turntick() {
 
       case IN_AWAY:
         // Targets are in an away time.
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+        np(0x000033);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         uint8_t c;
         if (currentstage->away <= turncount ) {
           in_fudge=true;
@@ -498,6 +529,9 @@ void turntick() {
           Serial.println("AUTONEXT");
 #endif //DEBUG
         }
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+        np(0x550000);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->nextaway <= turncount) {
           in_fudge=true;
         }
@@ -548,6 +582,9 @@ void toggle_stop() {
   lcd_stop(turnstop);
 
   if (turnstop) {
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+    np(0);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
     onbeeptimer();
     timerStop(turntimer);
     // In case anything is still running,
@@ -622,6 +659,15 @@ void beep(const uint32_t length) {
   starttimer(beeptimer);
 }
 
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+void np(uint32_t c) {
+  if (c==0)
+    strip.clear();
+  else
+    strip.setPixelColor(0, c);
+  strip.show();
+}
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
 
 /*
  * Setup and loop
@@ -650,6 +696,13 @@ void setup() {
 #ifdef DEBUG
   Serial.println("\r\nStart\r\n");
 #endif //DEBUG
+
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+  Serial.println("Setting up Neopixel");
+  strip.begin(); // Initialize NeoPixel strip object (REQUIRED)
+  strip.setBrightness(180);
+  np(0x222222);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
 
   // Keep this before the lcd_setup();
   //SPI.begin(SCK, MISO, MOSI, SD_CS_PIN);
@@ -762,6 +815,9 @@ void setup() {
   lcd_stop(turnstop);
 
   Serial.println(F("\r\nSetup finished.\r\n"));
+#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+  np(0);
+#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
 }
 
 void loop() {

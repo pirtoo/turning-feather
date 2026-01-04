@@ -461,7 +461,6 @@ void lcd_splash(const char *filename) {
     Serial.println("Splash done");
 #endif //DEBUG
   }
-
 }
 
 void lcd_setup() {
@@ -502,6 +501,10 @@ if (ts.begin(0x48, &Wire)) {
   tft.setTextWrap(true);
   tft.cp437(true);
   tft.fillScreen(ILI9341_BLACK);
+
+#ifdef DEBUG
+  Serial.println("Display setup done");
+#endif //DEBUG
 
 #ifdef DEBUG2
   // read diagnostics (optional but can help debug problems)
