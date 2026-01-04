@@ -1,5 +1,5 @@
 # turning-feather
-## Turning controller based on an Adafruit [Feather HUZZAH32](https://www.adafruit.com/product/3405).
+## Turning controller based on an Adafruit [Feather HUZZAH32](https://www.adafruit.com/product/3405) or [Feather ESP32 V2](https://www.adafruit.com/product/5400)
 
 ## Features
 
@@ -7,9 +7,9 @@
 
   * Current maximums of 55 programs and up to 12 stages per program (limited by memory in the controller) but will increase with development and it will be easier to swap between sets of programs.
 
-  * [Example config](arduino/turning/data/turnconf.txt).
+  * [Example config](data/turnconf.txt).
 
-  * Configs can be checked for JSON validity [here](https://arduinojson.org/v6/assistant/) or on any JSON website.
+  * Configs can be checked for JSON validity [here](https://arduinojson.org/v7/assistant/) or on any JSON website with a checker.
 
 * Touch screen to select program/stage.
 
@@ -25,13 +25,15 @@
 
   ZPT module can be programmed to respond to several different remotes. See the [ZPT datasheet](https://www.rfsolutions.co.uk/content/download-files/ZPT-3-DATASHEET.pdf) for programming instructions. I keep the learning button internal to the unit so it can't be accidentally activated.
 
-* Display is a [Featherwing 2.4" TFT](https://www.adafruit.com/product/3315).
+* Display is a [Featherwing 2.4" TFT](https://www.adafruit.com/product/3315) or [Featherwing 2.4" TFT V2](https://www.adafruit.com/product/3315).
 
-* Control/power connector is RJ45; takes ground, +12V power and two signal lines for face and away activation at 12V. As used [here](https://web.archive.org/web/20190102055407/http://www.indelfa.co.uk/tt/tt_images/relay.gif).  The controls and power connections are exposed to another optional board connector if you do not want to use an onboard RJ45.
+* Control/power connector is RJ45; takes ground, +12V power and two signal lines for face and away activation at 12V. As used [here](https://web.archive.org/web/20190102055407/http://www.indelfa.co.uk/tt/tt_images/relay.gif).  The control and power connections are exposed to another optional board connector if you do not want to use a PCB mounted RJ45.
 
 * [Parts list and assembly details](PCBs/README.md).
 
 ## Current state
+
+* Software build and flash [managed by PlatformIO](platformio.md) for different versions of ESP32 and display boards.
 
 * [Custom PCB](PCBs/kicad/turning-feather) made for the main IO board manufactured by [PCBWay](https://www.pcbway.com/project/shareproject/Turning_Feather.html). See [schematic](PCBs/kicad/turning-feather/turning-feather.pdf).
 
@@ -67,7 +69,7 @@ Turning Feather is still very much in alpha and under development however it has
 
 Other TODOs in the code are noted in the [main ino file](arduino/turning/turning.ino).
 
-No plans to sell pre-made units.
+No plans to sell pre-made units in any volume but I may have one spare to sell that has not been installed in a case.
 
 ## Pull requests invited.
 

@@ -31,3 +31,7 @@ tramp
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# VSC and platformio
+.pio
+.vscode
