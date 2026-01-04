@@ -3,48 +3,50 @@
  * touch info
  */
 
+#include <Arduino.h>
 #include "SPI.h"
-#include <Wire.h>  // this is needed even though we aren't using it
-
-#include "sdcard.h"
-#include <TFT_eSPI.h>
-TFT_eSPI tft=TFT_eSPI();
-// Use these when printing or drawing text in GLCD and high rendering speed fonts
-#define GFXFF 1
-#define GLCD  0
-#define FONT2 2
-#define FONT4 4
-#define FONT6 6
-#define FONT7 7
-#define FONT8 8
-#define PRETTY_FONT_12 &FreeSans12pt7b
-#define PRETTY_FONT_24 &FreeSans24pt7b
-
-// STMPE610 isn't supported by TFT_eSPI
-// This is the V1 version of the featherwing
-#include <Adafruit_STMPE610.h>
-// This is the V2 version of the feartherwing
-//#include <Adafruit_TSC2007.h>
-
-#if defined(_ADAFRUIT_STMPE610H_)
-  Adafruit_STMPE610 ts=Adafruit_STMPE610(STMPE_CS);
-#elif defined(_ADAFRUIT_TSC2007_H)
-  // If you're using the TSC2007 there is no CS pin needed, so instead its an IRQ!
-  #define TSC_IRQ STMPE_CS
-  // newer rev 2 touch contoller
-  Adafruit_TSC2007 ts=Adafruit_TSC2007();
-#else
-  #error("You must have either STMPE or TSC2007 headers included!")
-#endif
+#include <Wire.h> // this is needed even though we aren't using it
 
 #include "turn_lcd.h"
+
+#include <Adafruit_GFX.h>
+#include <Adafruit_ILI9341.h>
+#include <Fonts/FreeSans12pt7b.h>
+// This font could be stripped down to only include the letters for
+// STOP START FACE AWAY == 10 characters
+// to save space.
+#include <Fonts/FreeSans24pt7b.h>
+// Graphics display driver
+Adafruit_ILI9341 tft=Adafruit_ILI9341(TFT_CS, TFT_DC);
+
+
+// Touchscreen driver changes depending on V1 or V2 of Featherwing display
+#ifdef TFT_FW_24_V2
+// This is the V2 version of the feartherwing
+#include <Adafruit_TSC2007.h>
+// If you're using the TSC2007 there is no CS pin needed, so instead its an IRQ
+#define TSC_IRQ STMPE_CS
+// V2 display touch contoller
+Adafruit_TSC2007 ts=Adafruit_TSC2007();
+uint16_t z1, z2;
+#else
+// This is the V1 version of the featherwing
+#include <Adafruit_STMPE610.h>
+Adafruit_STMPE610 ts=Adafruit_STMPE610(STMPE_CS);
+TS_Point p;
+#endif //TFT_FW_24_V2
 
 
 // format line for printing the program name
 #define LCD_PROG_FORMAT "%-" STR(TURN_NAME_LENGTH) "." STR(TURN_NAME_LENGTH) "s"
 
 // Active screen area
+#ifdef TFT_FW_24_V2
+// touch screen coords are reflected in X in the V2
+static const struct rect screen={{TS_MAXX, TS_MINY}, {TS_MINX, TS_MAXY}};
+#else
 static const struct rect screen={{TS_MINX, TS_MINY}, {TS_MAXX, TS_MAXY}};
+#endif //TFT_FW_24_V2
 
 
 // Co-ords for printing timings
@@ -58,7 +60,7 @@ static const uint16_t timing_y_6=120;
 static const uint16_t prognum_x=5;
 static const uint16_t stagenum_x=279;
 static const uint16_t psnum_y=30;
-static const uint16_t pslabeltop_y=72;
+static const uint16_t pslabeltop_y=71;
 static const uint16_t pslabelbot_y=176;
 
 // Button rectangles
@@ -73,17 +75,17 @@ static const rect facerect={{53, 197}, {263, 243}};
 
 // Used for the input point, keep around
 struct point t;
-TS_Point p;
 
 // Screen button presses
 uint32_t screen_button_time=0;
 uint8_t last_screen_button=0;
 
-// Clearing text when screen full.
-uint8_t lcd_print_lines=0;
+// snprintf buffer
+#define BUFF_LEN TURN_NAME_LENGTH+1
+char buff[BUFF_LEN];
 
-// sprintf buffer
-char buff[TURN_NAME_LENGTH +1];
+uint16_t read16(fs::File &f);
+uint32_t read32(fs::File &f);
 
 bool between(const uint16_t num, const uint16_t low, const uint16_t high, const uint8_t fudge) {
   return (num > low - fudge) and (num < high + fudge);
@@ -126,15 +128,19 @@ uint8_t screen_button_num(const struct point *t) {
 }
 
 uint8_t lcd_button() {
-  // Loop function to handle screen presses
-  boolean pressed = ts.touched();
-  
+  // Handle the correct touchscreen type "button" push
+
+#ifdef TFT_FW_24_V2
+  if (! digitalRead(TSC_IRQ)) {
+    if (ts.read_touch(&t.x, &t.y, &z1, &z2) && (z1 > 100)) {
+#else
   if (ts.touched()) {
     while (!ts.bufferEmpty()) {
       // Retrieve a point
       p=ts.getPoint();
       t.x=p.x;
       t.y=p.y;
+#endif //TFT_FW_24_V2
       if (in_rect(&t, &screen, 0)) {
         ts_remap(&t);
         uint8_t button=screen_button_num(&t);
@@ -158,23 +164,28 @@ uint8_t lcd_button() {
 }
 
 void lcd_prettyfont(const uint8_t fsize) {
-  tft.setTextDatum(TL_DATUM);
   tft.setTextSize(1);
   switch (fsize) {
     case 24:
-      tft.setFreeFont(PRETTY_FONT_24);
+      tft.setFont(PRETTY_FONT_24);
       break;
     default:
-      tft.setFreeFont(PRETTY_FONT_12);
+      tft.setFont(PRETTY_FONT_12);
       break;
   }
 }
 
 void lcd_defaultfont() {
-  tft.setFreeFont();
+  tft.setFont();
+}
+
+void lcd_drawString(char *text, uint16_t x, uint16_t y) {
+  tft.setCursor(x, y);
+  tft.print(text);
 }
 
 void lcd_buttons() {
+  // Draw the buttons and text on them
   fill_rect(&p_up, ILI9341_GREEN);
   draw_rect(&p_up, ILI9341_WHITE);
   fill_rect(&p_do, ILI9341_GREEN);
@@ -193,44 +204,41 @@ void lcd_buttons() {
 
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   lcd_prettyfont(12);
-  tft.setTextPadding(25);
-  tft.drawString("P+", prognum_x +3, pslabeltop_y +1, GFXFF);
-  tft.drawString("P-", prognum_x +3, pslabelbot_y +1, GFXFF);
-
+  lcd_drawString("P+", prognum_x +3, pslabeltop_y +18);
+  lcd_drawString("P-", prognum_x +3, pslabelbot_y +18);
+ 
   tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
-  tft.drawString("S+", stagenum_x +3, pslabeltop_y +1, GFXFF);
-  tft.drawString("S-", stagenum_x +3, pslabelbot_y +1, GFXFF);
+  lcd_drawString("S+", stagenum_x +3, pslabeltop_y +18);
+  lcd_drawString("S-", stagenum_x +3, pslabelbot_y +18);
   lcd_defaultfont();
 }
 
 void lcd_face(const bool isface) {
   // Write to the LCD face/away
   lcd_prettyfont(24);
-  tft.setTextPadding(0);
   if (isface) {
     tft.setTextColor(ILI9341_YELLOW);
     fill_rect(&facerect, ILI9341_NAVY);
-    tft.drawString("FACE", 98, 200, GFXFF);
+    lcd_drawString("FACE", 95, 235);
   } else {
     tft.setTextColor(ILI9341_CYAN);
     fill_rect(&facerect, ILI9341_RED);
-    tft.drawString("AWAY", 91, 200, GFXFF);
+    lcd_drawString("AWAY", 88, 234);
   }
   lcd_defaultfont();
 }
 
 void lcd_stop(const bool isstop) {
-  // Write to the LCD face/away
+  // Write to the LCD start/stop
   lcd_prettyfont(24);
-  tft.setTextPadding(0);
   if (isstop) {
     tft.setTextColor(ILI9341_CYAN);
     fill_rect(&runrect, ILI9341_RED);
-    tft.drawString("STOP", 97, 149, GFXFF);
+    lcd_drawString("STOP", 91, 183);
   } else {
     tft.setTextColor(ILI9341_YELLOW);
     fill_rect(&runrect, ILI9341_NAVY);
-    tft.drawString("RUN", 108, 149, GFXFF);
+    lcd_drawString("RUN", 103, 183);
   }
   lcd_defaultfont();
 }
@@ -239,12 +247,16 @@ void lcd_prog(const char *progname, const uint8_t prognum) {
   lcd_statusclear();
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   lcd_prettyfont(12);
-  sprintf(buff, LCD_PROG_FORMAT, progname);
-  tft.setTextPadding(tft.width());
-  tft.drawString(buff, 3, 0, GFXFF);
-  sprintf(buff, "%02d", prognum +1);
-  tft.setTextPadding(25);
-  tft.drawString(buff, prognum_x +4, psnum_y +1, GFXFF);
+
+  // Program name at top of screen
+  snprintf(buff, BUFF_LEN, LCD_PROG_FORMAT, progname);
+  tft.fillRect(0, 0, tft.width(), 23, ILI9341_BLACK);
+  lcd_drawString(buff, 2, 17);
+
+  // Program number
+  snprintf(buff, 3, "%02d", prognum +1);
+  text_background(prognum_x, psnum_y, ILI9341_BLACK);
+  lcd_drawString(buff, prognum_x +4, psnum_y +17);
   lcd_defaultfont();
 }
 
@@ -252,8 +264,8 @@ void lcd_stage(const struct StageConfig *stage, const uint8_t stagenum) {
   tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
   lcd_prettyfont(12);
   sprintf(buff, "%02d", stagenum +1);
-  tft.setTextPadding(25);
-  tft.drawString(buff, stagenum_x +4, psnum_y +1, GFXFF);
+  text_background(stagenum_x, psnum_y, ILI9341_BLACK);
+  lcd_drawString(buff, stagenum_x +4, psnum_y +17);
   lcd_defaultfont();
   
   tft.setTextSize(2);
@@ -404,12 +416,12 @@ void lcd_statusclear() {
 void lcd_clear() {
   tft.fillScreen(ILI9341_BLACK);
   tft.setCursor(0, 0);
-  lcd_print_lines=0;
 }
 
 void lcd_print(const char *str) {
   // Output a string to both LCD and serial
   Serial.print(str);
+  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
   tft.setTextSize(2);
   tft.print(str);
 }
@@ -417,39 +429,78 @@ void lcd_print(const char *str) {
 void lcd_println(const char *str) {
   // Output a string to both LCD and serial
   // with a newline
-  if (lcd_print_lines >= 15) {
-    lcd_clear();
-  }
+
   Serial.println(str);
+  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
   tft.setTextSize(2);
   tft.println(str);
-  lcd_print_lines++;
 }
 
-void lcd_splash() {
-  lcd_clear();
-  drawBmp("/pp1-320x240.bmp", 0, 0);
-  delay(2000);
+void lcd_splash(const char *filename) {
+  fs::File bmp;
+
+//  lcd_clear();
+#ifdef LITTLEFS
+  bmp = LittleFS.open(filename, FILE_READ);
+#else
+  bmp = SPIFFS.open(filename, FILE_READ);
+#endif //LITTLEFS
+
+  if (! bmp) {
+    Serial.println("Splash file open failed");
+  } else {
+#ifdef DEBUG
+    Serial.println("Splash file open OK");
+#endif //DEBUG
+
+    // Display the bmp file to the screen and pause
+    lcd_drawBmp(bmp, 0, 0);
+    bmp.close();
+//    stat = reader.drawBMP(filename, tft, 0, 0);
+#ifdef DEBUG
+    Serial.println("Splash done");
+#endif //DEBUG
+  }
+
 }
 
 void lcd_setup() {
   delay(10);
-  #if defined(_ADAFRUIT_STMPE610H_)
-  if (!ts.begin()) {
-    Serial.println("Touchscreen controller init fail");
-    Serial.println(STMPE_CS);
-  }
-#else
-  if (!ts.begin(0x48, &Wire)) {
-    Serial.println("Touchscreen controller init fail");
-  }
-  pinMode(TSC_IRQ, INPUT);
-#endif //_ADAFRUIT_STMPE610H_
 
+#ifdef DEBUG
+    Serial.println("Starting touchscreen controller init");
+    Serial.println("Trying Featherwing V1 - STMPE610H");
+#endif //DEBUG
+
+#ifndef TFT_FW_24_V2
+  if (ts.begin()) {
+#ifdef DEBUG
+    Serial.println("Touchscreen controller STMPE610H OK");
+#endif //DEBUG
+#else //TFT_FW_24_V2
+if (ts.begin(0x48, &Wire)) { 
+    pinMode(TSC_IRQ, INPUT);
+#ifdef DEBUG
+    Serial.println("Touchscreen controller TSC2007 OK");
+#endif //DEBUG
+#endif //TFT_FW_24_V2
+  } else {
+    Serial.println("Touchscreen controller init fail");
+  }
+
+#ifdef DEBUG
+  Serial.println("Start display init");
+#endif //DEBUG
   tft.begin();
+
+#ifdef DEBUG
+  Serial.println("Display init done");
+#endif //DEBUG
+  
   // Puts the USB port to the lower/right.
   tft.setRotation(3);
   tft.setTextWrap(true);
+  tft.cp437(true);
   tft.fillScreen(ILI9341_BLACK);
 
 #ifdef DEBUG2
@@ -471,55 +522,33 @@ void lcd_setup() {
 #endif //DEBUG2
 }
 
-
-/*
- * Bodmers BMP image rendering function
- * See https://github.com/Bodmer/TFT_eSPI/tree/master/examples/Generic/TFT_SPIFFS_BMP
- */
-void drawBmp(const char *filename, int16_t x, int16_t y) {
-  if ((x >= tft.width()) || (y >= tft.height())) return;
-
-  fs::File bmpFS;
-
-  // Open requested file on internal filesystem
-#ifdef LITTLEFS
-  bmpFS = LittleFS.open(filename, "r");
-#else
-  bmpFS = SPIFFS.open(filename, "r");
-#endif // LITTLEFS
-
-  if (!bmpFS) {
-    Serial.print("File not found");
-    return;
-  }
+void lcd_drawBmp(fs::File &f, int16_t x, int16_t y) {
+  // Hacked from Bodmer's TFT_eSPI utility to take an already opened
+  // file and use standard AdaFruit_GFX primatives.
 
   uint32_t seekOffset;
   uint16_t w, h, row, col;
   uint8_t  r, g, b;
-
 #ifdef DEBUG
   uint32_t startTime = millis();
 #endif //DEBUG
 
-  if (read16(bmpFS) == 0x4D42) {
-    read32(bmpFS);
-    read32(bmpFS);
-    seekOffset = read32(bmpFS);
-    read32(bmpFS);
-    w = read32(bmpFS);
-    h = read32(bmpFS);
+  if (read16(f) == 0x4D42) {
+    read32(f);
+    read32(f);
+    seekOffset = read32(f);
+    read32(f);
+    w = read32(f);
+    h = read32(f);
 
-    if ((read16(bmpFS) == 1) && (read16(bmpFS) == 24) && (read32(bmpFS) == 0)){
+    if ((read16(f) == 1) && (read16(f) == 24) && (read32(f) == 0)) {
       y += h - 1;
-
-      tft.setSwapBytes(true);
-      bmpFS.seek(seekOffset);
-
+      f.seek(seekOffset);
       uint16_t padding = (4 - ((w * 3) & 3)) & 3;
       uint8_t lineBuffer[w * 3 + padding];
 
       for (row = 0; row < h; row++) {
-        bmpFS.read(lineBuffer, sizeof(lineBuffer));
+        f.read(lineBuffer, sizeof(lineBuffer));
         uint8_t*  bptr = lineBuffer;
         uint16_t* tptr = (uint16_t*)lineBuffer;
         // Convert 24 to 16 bit colours
@@ -532,16 +561,16 @@ void drawBmp(const char *filename, int16_t x, int16_t y) {
 
         // Push the pixel row to screen, pushImage will crop the line if needed
         // y is decremented as the BMP image is drawn bottom up
-        tft.pushImage(x, y--, w, 1, (uint16_t*)lineBuffer);
+        tft.drawRGBBitmap(x, y--, (uint16_t*)lineBuffer, w, 1);
       }
-#ifdef DEBUG
-      Serial.print("Loaded in "); Serial.print(millis() - startTime);
-      Serial.println(" ms");
-#endif //DEBUG
     }
-    else Serial.println("BMP format not recognized.");
+#ifdef DEBUG
+    Serial.print("BMP loaded in "); Serial.print(millis() - startTime);
+    Serial.println(" ms");
+#endif //DEBUG
+  } else {
+    Serial.println("BMP format not recognized.");
   }
-  bmpFS.close();
 }
 
 // These read 16- and 32-bit types from the SD card file.
