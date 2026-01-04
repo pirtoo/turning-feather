@@ -32,6 +32,9 @@
 #include <Adafruit_NeoPixel.h>
 Adafruit_NeoPixel strip(1, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 void np(uint32_t c);
+#ifndef ESP_V2_NEOPIXEL_BRIGHTNESS
+#define ESP_V2_NEOPIXEL_BRIGHTNESS 128
+#endif //ESP_V2_NEOPIXEL_BRIGHTNESS
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
 
 
@@ -352,7 +355,7 @@ void start_stage() {
     in_stage=IN_FACE;
   }
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-      np(0x003300);
+      np(0x00FF00);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
   in_repeat=1;
 }
@@ -422,14 +425,14 @@ void turntick() {
           start_stage();
         }
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-        np(0x550000);
+        np(0xFF0000);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         break;
 
       case IN_FLASH:
         // Do a single flash exposure.
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-        np(0x003300);
+        np(0x00FF00);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->flash <= turncount) {
           in_fudge=true;
@@ -448,7 +451,7 @@ void turntick() {
       case IN_FLASH_AWAY:
         // Targets are in a flash away time
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-        np(0x000033);
+        np(0x0000FF);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->flashaway <= turncount) {
           in_fudge=true;
@@ -467,7 +470,7 @@ void turntick() {
       case IN_FACE:
         // Targets are in an exposure.
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-        np(0x003300);
+        np(0x00FF00);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->face <= turncount) {
           in_fudge=true;
@@ -498,7 +501,7 @@ void turntick() {
       case IN_AWAY:
         // Targets are in an away time.
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-        np(0x000033);
+        np(0x0000FF);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         uint8_t c;
         if (currentstage->away <= turncount ) {
@@ -530,7 +533,7 @@ void turntick() {
 #endif //DEBUG
         }
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-        np(0x550000);
+        np(0xFF0000);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->nextaway <= turncount) {
           in_fudge=true;
@@ -700,8 +703,8 @@ void setup() {
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
   Serial.println("Setting up Neopixel");
   strip.begin(); // Initialize NeoPixel strip object (REQUIRED)
-  strip.setBrightness(180);
-  np(0x222222);
+  strip.setBrightness(ESP_V2_NEOPIXEL_BRIGHTNESS);
+  np(0xFFFFFF);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
 
   // Keep this before the lcd_setup();

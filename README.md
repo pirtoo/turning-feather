@@ -43,6 +43,8 @@
 
 * If `USE_ZPT_SERIAL` is enabled the controller detects when it receives a packet from a remote that is not paired with the comntroller and displays a `?` character in the top right hand corner of the display. Similarly if the battery in the transmitter is low then it will display a `!` character. 
 
+* With an ESP32 V2 there is a Neopixel LED on the board, if enabled by default this will light up white during initial setup and Red/Green/Blue for beep/face/away during stages. It points backwards but if using the case with a mostly clear front it should be visible to see what part of a stage the unit is in and if it has finished from further away. This can be enabled/disabled with the `ESP_V2_NEOPIXEL` macro and the overall brightness set with `ESP_V2_NEOPIXEL_BRIGHTNESS`
+
 * Spare 5v output for light flash or other features.
 
 ![](images/turning-feather-prod-ext.jpg)
