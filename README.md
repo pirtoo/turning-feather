@@ -41,10 +41,13 @@
 
 * Two physical buttons for face/away and start/stop. Program selection via the touchscreen. Start/stop, face/away and stage +/- via RF remote.
 
+* If `USE_ZPT_SERIAL` is enabled the controller detects when it receives a packet from a remote that is not paired with the comntroller and displays a `?` character in the top right hand corner of the display. Similarly if the battery in the transmitter is low then it will display a `!` character. 
+
 * Spare 5v output for light flash or other features.
 
 ![](images/turning-feather-prod-ext.jpg)
 ![](images/turning-feather-prod-internal.jpg)
+![](images/unpaired-remote.jpg)
 
 
 ## Future plans
