@@ -3,7 +3,6 @@
  * Turning feather.
  */
 
-
 // General includes
 #include <cstddef>
 #include "turning.h"
@@ -16,12 +15,7 @@
 /*
  * Definitions that need to be early
  */
-/*
-void IRAM_ATTR rfbutton1(void);
-void IRAM_ATTR rfbutton2(void);
-void IRAM_ATTR rfbutton3(void);
-void IRAM_ATTR rfbutton4(void);
-*/
+
 // Are the targets facing (or in the process of facing)
 // vs away or in the process of turning away.
 // Are we in a running program or stopped.
