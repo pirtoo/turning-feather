@@ -9,7 +9,7 @@
   The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-#include "tf_wifi.h"
+#include "turn_wifi.h"
 
 
 // Store wifi settings in Preferences
@@ -129,7 +129,7 @@ void removeIf(char *name) {
 void resetWifi(void) {
   // Reset settings in prefs to empty.
   // Open prefs R/W
-  prefs.begin(TF_WIFI_PREFS, false);
+  prefs.begin(TURN_WIFI_PREFS, false);
   prefs.clear();
   prefs.end();
 }
@@ -171,7 +171,7 @@ String processor(const String& var) {
       return "value=\"" + gateway + "\"";
     return "placeholder=\"" + localGateway.toString() + "\"";
   } else if (var == "PASSLEN") {
-    return String(TF_WIFI_PASS_MIN);
+    return String(TURN_WIFI_PASS_MIN);
   }
   // Default is empty string
   return String();
@@ -245,7 +245,7 @@ void initWifi() {
 
 
   // Init Preferences R/O
-  prefs.begin(TF_WIFI_PREFS, true);
+  prefs.begin(TURN_WIFI_PREFS, true);
 
   ssid=getStringIf("ssid");
   pass=getStringIf("pass");
@@ -260,7 +260,7 @@ void initWifi() {
 #ifdef DEBUG    
     Serial.println("Using default AP SSID");
 #endif //DEBUG
-    ap_ssid=TF_WIFI_DEFAULT_AP;
+    ap_ssid=TURN_WIFI_DEFAULT_AP;
   }
   // Close prefs
   prefs.end();
@@ -343,7 +343,7 @@ void initWifi() {
       if(p->isPost()){
         // HTTP POST values
         // Open prefs R/W
-        prefs.begin(TF_WIFI_PREFS, false);
+        prefs.begin(TURN_WIFI_PREFS, false);
 
         if (p->name() == "ssid") {
           ssid = p->value().c_str();
@@ -368,7 +368,7 @@ void initWifi() {
 #endif //DEBUG
           if (pass == "") {
             removeIf("pass");
-          } else if (pass.length() >= TF_WIFI_PASS_MIN) {
+          } else if (pass.length() >= TURN_WIFI_PASS_MIN) {
             prefs.putString("pass", pass);
           }
         }
@@ -379,7 +379,7 @@ void initWifi() {
           Serial.print("AP SSID set to: ");
           Serial.println(ap_ssid);
 #endif //DEBUG
-          if (ap_ssid != "" && ap_ssid != TF_WIFI_DEFAULT_AP) {
+          if (ap_ssid != "" && ap_ssid != TURN_WIFI_DEFAULT_AP) {
             prefs.putString("ap_ssid", ap_ssid);
           } else {
             removeIf("ap_ssid");
@@ -395,7 +395,7 @@ void initWifi() {
 #endif //DEBUG
           if (ap_pass == "") {
             removeIf("ap_pass");
-          } else if (ap_pass.length() >= TF_WIFI_PASS_MIN) {
+          } else if (ap_pass.length() >= TURN_WIFI_PASS_MIN) {
             prefs.putString("ap_pass", ap_pass);
           }
         }
@@ -453,10 +453,10 @@ void initWifi() {
     prefs.end();
 
 
-    if (pass != "" && pass.length() < TF_WIFI_PASS_MIN) {
-      request->send(200, "text/plain", "Password too short. Minimum length=" + String(TF_WIFI_PASS_MIN));
-    } else if (ap_pass != "" && ap_pass.length() < TF_WIFI_PASS_MIN) {
-      request->send(200, "text/plain", "AP password too short. Minimum length=" + String(TF_WIFI_PASS_MIN));
+    if (pass != "" && pass.length() < TURN_WIFI_PASS_MIN) {
+      request->send(200, "text/plain", "Password too short. Minimum length=" + String(TURN_WIFI_PASS_MIN));
+    } else if (ap_pass != "" && ap_pass.length() < TURN_WIFI_PASS_MIN) {
+      request->send(200, "text/plain", "AP password too short. Minimum length=" + String(TURN_WIFI_PASS_MIN));
     } else {
       request->send(200, "text/plain", "Done. Restart controller to use new settings.");
       //stopWifi();

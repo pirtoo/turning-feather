@@ -10,6 +10,7 @@
 
 #include <Arduino.h>
 #include "main.h"
+#include "TurnConfig.h"
 
 // Where in the process are we?
 enum stage {
@@ -30,6 +31,8 @@ void button_action(const unsigned int button, const bool rf_button);
 void toggle_stop(void);
 void toggle_face(bool use_timer);
 void prog_init(void);
+TurnConfig *turnconfig_ptr(void);
+
 void turntick(void);
 void turntick_loop(void);
 

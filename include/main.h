@@ -23,7 +23,7 @@
 //#define TFT_FW_24_V2
 
 // To use ESP32 WiFi
-//#define TF_WIFI_ENABLE
+//#define TURN_WIFI_ENABLE
 
 // SPIFFS or LittleFS, default is SPIFFS
 #define LITTLEFS

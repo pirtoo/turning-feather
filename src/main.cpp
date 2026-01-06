@@ -38,9 +38,9 @@
 #endif //USE_ZPT_SERIAL
 
 // WiFi
-#ifdef TF_WIFI_ENABLE
-#include "tf_wifi.h"
-#endif //TF_WIFI_ENABLE
+#ifdef TURN_WIFI_ENABLE
+#include "turn_wifi.h"
+#endif //TURN_WIFI_ENABLE
 
 // SD card and config file
 #include "sdcard.h"
@@ -178,9 +178,9 @@ void setup() {
   // Timer and face/away setup.
 
   // If enabled bring up WiFi
-#ifdef TF_WIFI_ENABLE
+#ifdef TURN_WIFI_ENABLE
   initWifi();
-#endif //TF_WIFI_ENABLE
+#endif //TURN_WIFI_ENABLE
 
 
   Serial.println(F("\r\nSetup finished.\r\n"));

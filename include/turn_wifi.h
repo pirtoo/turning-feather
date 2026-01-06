@@ -2,8 +2,8 @@
  * Wifi utils for TurningFeather
  */
 
-#ifndef TF_WIFI_H
-#define TF_WIFI_H
+#ifndef TURN_WIFI_H
+#define TURN_WIFI_H
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -12,9 +12,9 @@
 #include <Preferences.h>
 #include "LittleFS.h"
 
-#define TF_WIFI_PREFS "TFWifi"
-#define TF_WIFI_DEFAULT_AP "TurningFeather"
-#define TF_WIFI_PASS_MIN 12
+#define TURN_WIFI_PREFS "TFWifi"
+#define TURN_WIFI_DEFAULT_AP "TurningFeather"
+#define TURN_WIFI_PASS_MIN 12
 
 // Debug HTTP POST requests
 //#define DEBUG_POST

@@ -87,6 +87,11 @@ void setup_turnconfig() {
   lcd_stop(turnstop);
 }
 
+TurnConfig *turnconfig_ptr(void) {
+  // Return a pointer to the turnconfig object
+  return &turnconfig;
+}
+
 bool checkstagechange(const int change) {
   // Check if a stage change can be made
   return ((currentstagenum + change < currentprog->stages) and
