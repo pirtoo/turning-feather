@@ -25,7 +25,7 @@
 // To use ESP32 WiFi
 //#define TURN_WIFI_ENABLE
 
-// SPIFFS or LittleFS, default is SPIFFS
+// SPIFFS or LittleFS, default is SPIFFS but this will go away
 #define LITTLEFS
 
 // Default config file, json
@@ -63,21 +63,12 @@
 // on config.
 #define INIT_PAUSE 6
 
-
 // LED_BUILTIN is 13 on the HUZZAH32
 #define BUZZER LED_BUILTIN
 
+// Pins thst go to the mosfets to drive 12V turn/away
 #define FACE_PIN 25
 #define AWAY_PIN 26
-
-#define RF_1 4
-#ifdef HUZZAH32_V2
-#define RF_2 37
-#else
-#define RF_2 21
-#endif //HUZZAH32_V2
-#define RF_3 27
-#define RF_4 34
 
 // Physical buttons pin
 #define BUTTONS_PIN 39 // A3

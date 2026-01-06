@@ -2,6 +2,9 @@
  * Wifi utils for TurningFeather
  */
 
+#include "main.h"
+
+#ifdef TURN_WIFI_ENABLE
 #ifndef TURN_WIFI_H
 #define TURN_WIFI_H
 
@@ -25,3 +28,4 @@ void initWifi(void);
 void resetWifi(void);
 
 #endif //IF_WIFI_H
+#endif //TURN_WIFI_ENABLE

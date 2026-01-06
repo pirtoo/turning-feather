@@ -33,6 +33,10 @@
 #include "turn_neopixel.h"
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
 
+#ifdef RF_BUTTONS
+#include "turn_rfbuttons.h"
+#endif //RF_BUTTONS
+
 #ifdef USE_ZPT_SERIAL
 #include "zpt_serial.h"
 #endif //USE_ZPT_SERIAL
@@ -190,7 +194,6 @@ void setup() {
 }
 
 void loop() {
-  // TODO move this to an rf buttons file
 #ifdef RF_BUTTONS
   rf_buttons_loop();
 #endif // RF_BUTTONS

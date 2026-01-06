@@ -10,7 +10,7 @@
 */
 
 #include "turn_wifi.h"
-
+#ifdef TURN_WIFI_ENABLE
 
 // Store wifi settings in Preferences
 Preferences prefs;
@@ -466,5 +466,4 @@ void initWifi() {
   server.serveStatic("/", LittleFS, "/www/");
   server.begin();
 }
-
-
+#endif //TURN_WIFI_ENABLE
