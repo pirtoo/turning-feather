@@ -56,6 +56,7 @@ String ledState;
 bool startWiFiClient();
 void stopWifi();
 String processor(const String& var);
+String getStringIf(char *name);
 void removeIf(char *name);
 void initLittleFS();
 String readFile(fs::FS &fs, const char * path);
@@ -67,7 +68,7 @@ void initLittleFS() {
   if (! LittleFS.begin(true)) {
     Serial.println("An error has occurred while mounting LittleFS");
   } else {
-    Serial.println("LittleFS mounted successfully");
+    Serial.println("LittleFS mounted successfully for wifi");
   }
 }
 
@@ -109,6 +110,13 @@ void writeFile(fs::FS &fs, const char * path, const char * message) {
     Serial.println("- file written");
 #endif //DEBUG
   }
+}
+
+String getStringIf(char *name) {
+  // Return a string if it exists otherwise empty
+  if (prefs.isKey(name))
+    return prefs.getString(name);
+  return String();
 }
 
 // Remove pref if it exists
@@ -235,16 +243,16 @@ void initWifi() {
 
   initLittleFS();
 
-  //String getStringIf(char *n);
 
   // Init Preferences R/O
   prefs.begin(TF_WIFI_PREFS, true);
-  if (prefs.isKey("ssid")) {
-    ssid=prefs.getString("ssid");
-  }
-  if (prefs.isKey("pass")) {
-    pass=prefs.getString("pass");
-  }
+
+  ssid=getStringIf("ssid");
+  pass=getStringIf("pass");
+  ap_pass=getStringIf("ap_pass");
+  ip=getStringIf("ip");
+  subnet=getStringIf("subnet");
+  gateway=getStringIf("gateway");
 
   if (prefs.isKey("ap_ssid")) {
     ap_ssid=prefs.getString("ap_ssid");
@@ -253,19 +261,6 @@ void initWifi() {
     Serial.println("Using default AP SSID");
 #endif //DEBUG
     ap_ssid=TF_WIFI_DEFAULT_AP;
-  }
-  if (prefs.isKey("ap_pass")) {
-    ap_pass=prefs.getString("ap_pass");
-  }
-
-  if (prefs.isKey("ip")) {
-    ip=prefs.getString("ip");
-  }
-  if (prefs.isKey("subnet")) {
-    subnet=prefs.getString("subnet");
-  }
-  if (prefs.isKey("gateway")) {
-    gateway=prefs.getString("gateway");
   }
   // Close prefs
   prefs.end();
