@@ -229,15 +229,13 @@ bool startWiFiClient() {
 void initWifi() {
   // Work out how we are setting up, AP or client, and do it.
 
-  // Set GPIO 2 as an OUTPUT
+  // Set LED pin as an OUTPUT
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
 
   initLittleFS();
 
-  String getStringIf(char *n);
-
-    String getStringIf(char *n);
+  //String getStringIf(char *n);
 
   // Init Preferences R/O
   prefs.begin(TF_WIFI_PREFS, true);

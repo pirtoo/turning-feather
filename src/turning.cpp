@@ -1,69 +1,31 @@
 /*
  * Turning target controller.
  * Turning feather.
- * 
- * Migrated to PlatformIO
  */
-
-// TODO: Put fudge times into a config file
-// TODO: Put debug settings into a config file
-// TODO: Put chirp (and chirp time) into config file
-// TODO: WIFI/web server
-//       - edit device config file
-//       - watch current state, provide buttons
-//       - ability to edit extra configs
-// TODO: add extra turning configs, concat them from
-//         main file, write out seperately?
-// TODO: Have a directory on SD let you choose config?
-//       - or boot with face/away held down to choose
-//         files?
-// TODO: Text for stage use, eg: "GRCF stage 1"?
-//       - will this make the file too large for json?
-// TODO: Add SD card insertion detection?
-//       - requires CD pin to be soldered on wing
-// TODO: Mode to show ZPT signal strength
 
 
 // General includes
+#include <cstddef>
 #include "turning.h"
-
+#include "turn_lcd.h"
 
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-#include <Adafruit_NeoPixel.h>
-Adafruit_NeoPixel strip(1, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
-void np(uint32_t c);
-#ifndef ESP_V2_NEOPIXEL_BRIGHTNESS
-#define ESP_V2_NEOPIXEL_BRIGHTNESS 128
-#endif //ESP_V2_NEOPIXEL_BRIGHTNESS
+#include "turn_neopixel.h"
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
-
-
-#ifdef USE_ZPT_SERIAL
-#include "zpt_serial.h"
-#endif //USE_ZPT_SERIAL
 
 /*
  * Definitions that need to be early
  */
-
+/*
+void IRAM_ATTR rfbutton1(void);
+void IRAM_ATTR rfbutton2(void);
+void IRAM_ATTR rfbutton3(void);
+void IRAM_ATTR rfbutton4(void);
+*/
 // Are the targets facing (or in the process of facing)
 // vs away or in the process of turning away.
 // Are we in a running program or stopped.
 bool face=true, turnstop=true;
-
-
-// Adafruit featherwing LCD display
-#include "turn_lcd.h"
-uint8_t lcd_button_num=0;
-
-// SD card and config file
-#include "sdcard.h"
-
-// WiFi
-#ifdef TF_WIFI_ENABLE
-#include "tf_wifi.h"
-#endif //TF_WIFI_ENABLE
-
 
 // Config file
 #include "TurnConfig.h"
@@ -75,6 +37,55 @@ const char *turnconf_file=TURNCONF;
 
 uint8_t currentstagenum=0, currentprognum=0;
 
+enum stage in_stage=IN_INIT;
+
+uint8_t in_repeat=0;
+// Are we in the turning fudge time
+bool in_fudge=false;
+
+// How many seconds since the turn counter started.
+volatile uint32_t turncounter=0;
+
+
+void setup_turnconfig() {
+  // Get the config file from SD/SPIFFS/LittleFS
+  char line[4];
+  File turnfile=turn_file_init(turnconf_file);
+
+  // This may fail if the JSON is invalid
+  if (!deserializeTurnConfig(turnfile, turnconfig)) {
+    lcd_clear();
+    lcd_println("Config file not valid");
+    while (1) {
+      delay(100);
+    }
+  }
+
+  // Set pointer to initial program and stage
+  currentprog=&turnconfig.program[currentprognum];
+  currentstage=&currentprog->stage[currentstagenum];
+
+  // Does this get seen on screen?
+  // Add a delay after?
+  lcd_print("Loaded ");
+  snprintf(line, 3, "%d", turnconfig.programs);
+  lcd_print(line);
+  lcd_println(" programs");
+#ifdef DEBUG
+  for (uint8_t i=0; i<turnconfig.programs; i++) {
+    Serial.print("  ");
+    // Program number displayed from 1 not 0
+    Serial.print(i+1);
+    Serial.print(" ");
+    Serial.println(turnconfig.program[i].longname);
+  }
+  Serial.println();
+#endif
+
+  // Display setup on the LCD
+  lcd_display_set(currentprog, currentprognum, currentstagenum);
+  lcd_stop(turnstop);
+}
 
 bool checkstagechange(const int change) {
   // Check if a stage change can be made
@@ -128,39 +139,7 @@ void updatecurrent() {
   currentstage=&currentprog->stage[currentstagenum];
 }
 
-
-/*
- * Analog multi buttons
- */
-#ifdef PHYSICAL_BUTTONS
-#include <AnalogMultiButton.h>
-
-const int buttons_values[2] = {5, 684};
-AnalogMultiButton buttons(BUTTONS_PIN, 2, buttons_values);
-
-void buttons_setup() {
-  // Make sure all analog systems read the same
-  analogReadResolution(10);
-}
-
-void buttons_loop() {
-  buttons.update();
-  if (buttons.onPress(0)) {
-#ifdef DEBUG2
-    Serial.println("Physical 0 has been pressed");
-#endif //DEBUG2
-    button_action(2, false);
-  }
-  if (buttons.onPress(1)) {
-#ifdef DEBUG2
-    Serial.println("Physical 1 has been pressed");
-#endif //DEBUG2
-    button_action(1, false);
-  }
-}
-#endif // PHYSICAL_BUTTONS
-
-
+// TODO Move RF buttons to their own file
 #ifdef RF_BUTTONS
 /*
  * RF ZPT radio control
@@ -169,22 +148,14 @@ volatile uint8_t rf_button=0;
 portMUX_TYPE rf_buttonmux=portMUX_INITIALIZER_UNLOCKED;
 volatile SemaphoreHandle_t rf_buttonsemaphore;
 
-#ifdef USE_ZPT_SERIAL
-void rf_serial_actions() {
-  if (zpt_packet_lowbatt()) {
-    // Print a red on white '!' if remote battery low
-    lcd_statusprint('!');
-  } else if (!zpt_packet_learn()) {
-    // Print a red on white '?' if remote not paired
-    lcd_statusprint('?');
-  } else {
-    // Clear status
-    lcd_statusclear();
+void rf_buttons_loop(void) {
+  if (xSemaphoreTake(rf_buttonsemaphore, 0) == pdTRUE) {
+    // Take RF button press actions
+    button_action(get_rf_button(), true);
   }
 }
-#endif //USE_ZPT_SERIAL
 
-uint8_t get_rf_button() {
+uint8_t get_rf_button(void) {
   uint8_t button;
   portENTER_CRITICAL(&rf_buttonmux);
   button=rf_button;
@@ -193,7 +164,7 @@ uint8_t get_rf_button() {
   return button;
 }
 
-void IRAM_ATTR rfbutton1() {
+void IRAM_ATTR rfbutton1(void) {
   portENTER_CRITICAL(&rf_buttonmux);
   rf_button=1;
   portEXIT_CRITICAL(&rf_buttonmux);
@@ -202,7 +173,7 @@ void IRAM_ATTR rfbutton1() {
   Serial.println(F("RF button 1"));
 #endif // DEBUG2
 }
-void IRAM_ATTR rfbutton2() {
+void IRAM_ATTR rfbutton2(void) {
   portENTER_CRITICAL(&rf_buttonmux);
   rf_button=2;
   portEXIT_CRITICAL(&rf_buttonmux);
@@ -211,7 +182,7 @@ void IRAM_ATTR rfbutton2() {
   Serial.println(F("RF button 2"));
 #endif // DEBUG2
 }
-void IRAM_ATTR rfbutton3() {
+void IRAM_ATTR rfbutton3(void) {
   portENTER_CRITICAL(&rf_buttonmux);
   rf_button=3;
   portEXIT_CRITICAL(&rf_buttonmux);
@@ -220,7 +191,7 @@ void IRAM_ATTR rfbutton3() {
   Serial.println(F("RF button 3"));
 #endif // DEBUG2
 }
-void IRAM_ATTR rfbutton4() {
+void IRAM_ATTR rfbutton4(void) {
   portENTER_CRITICAL(&rf_buttonmux);
   rf_button=4;
   portEXIT_CRITICAL(&rf_buttonmux);
@@ -229,12 +200,23 @@ void IRAM_ATTR rfbutton4() {
   Serial.println(F("RF button 4"));
 #endif // DEBUG2
 }
+
+void rf_buttons_setup() {
+  pinMode(RF_1, INPUT);
+  pinMode(RF_2, INPUT);
+  pinMode(RF_3, INPUT);
+  pinMode(RF_4, INPUT);
+  attachInterrupt(digitalPinToInterrupt(RF_1), rfbutton1, RISING);
+  attachInterrupt(digitalPinToInterrupt(RF_2), rfbutton2, RISING);
+  attachInterrupt(digitalPinToInterrupt(RF_3), rfbutton3, RISING);
+  attachInterrupt(digitalPinToInterrupt(RF_4), rfbutton4, RISING);
+  rf_buttonsemaphore=xSemaphoreCreateBinary();
+}
 #endif //RF_BUTTONS
 
 void button_action(const unsigned int button, const bool rf_button) {
   /*
-   * Various button actions to be taken
-   * when specific buttons are pressed.
+   * Various button actions to be taken when specific buttons are pressed.
    * Actions are integer numbers.
    */
   switch (button) {
@@ -291,7 +273,6 @@ void button_action(const unsigned int button, const bool rf_button) {
   }
 }
 
-
 /*
  * Away/face control and timers
  */
@@ -299,18 +280,7 @@ hw_timer_t *turntimer=NULL, *changetimer=NULL, *beeptimer=NULL;
 volatile SemaphoreHandle_t turnsemaphore;
 portMUX_TYPE turnmux=portMUX_INITIALIZER_UNLOCKED;
 
-
-enum stage in_stage=IN_INIT;
-
-uint8_t in_repeat=0;
-// Are we in the turning fudge time
-bool in_fudge=false;
-
-// How many seconds since the turn counter
-// started.
-volatile uint32_t turncounter=0;
-
-void starttimer(hw_timer_t *timer, const bool resetturn=false) {
+void starttimer(hw_timer_t *timer, const bool resetturn) {
   timerStop(timer);
   timerWrite(timer, 0);
   if (resetturn) {
@@ -322,7 +292,7 @@ void starttimer(hw_timer_t *timer, const bool resetturn=false) {
 #endif //DEBUG_TIMER
 }
 
-void IRAM_ATTR onturntimer() {
+void IRAM_ATTR onturntimer(void) {
   // Increment the counter
   portENTER_CRITICAL_ISR(&turnmux);
   turncounter++;
@@ -331,17 +301,50 @@ void IRAM_ATTR onturntimer() {
   xSemaphoreGiveFromISR(turnsemaphore, NULL);
 }
 
-void IRAM_ATTR onchangetimer() {
+void IRAM_ATTR onchangetimer(void) {
   // Setting digital pins is safe in interrupt handling
   digitalWrite(AWAY_PIN, LOW);
   digitalWrite(FACE_PIN, LOW);
   timerStop(changetimer);
 }
 
-void IRAM_ATTR onbeeptimer() {
+void IRAM_ATTR onbeeptimer(void) {
   // Setting digital pins is safe in interrupt handling
   digitalWrite(BUZZER, LOW);
   timerStop(beeptimer);
+}
+
+void timer_setup() {
+  // Semaphores
+  turnsemaphore=xSemaphoreCreateBinary();
+
+  // Timers, of 4.
+  changetimer=timerBegin(CLOCK_RATE);
+  timerStop(changetimer);
+  timerWrite(changetimer, 0);
+  timerAttachInterrupt(changetimer, &onchangetimer);
+  timerAlarm(changetimer, CHANGE_LENGTH, true, 0);
+  //timerAlarmEnable(changetimer);
+
+  beeptimer=timerBegin(CLOCK_RATE);
+  timerStop(beeptimer);
+  timerWrite(beeptimer, 0);
+  timerAttachInterrupt(beeptimer, &onbeeptimer);
+  //timerAlarmEnable(beeptimer);
+
+  turntimer=timerBegin(CLOCK_RATE);
+  timerStop(turntimer);
+  timerWrite(turntimer, 0);
+  timerAttachInterrupt(turntimer, &onturntimer);
+  timerAlarm(turntimer, TURN_RATE, true, 0);
+  //timerAlarmEnable(turntimer);
+}
+
+void turntick_loop() {
+  if (xSemaphoreTake(turnsemaphore, 0) == pdTRUE) {
+    // Take the next action if we are running
+    turntick();
+  }
 }
 
 void start_stage() {
@@ -665,206 +668,5 @@ void beep(const uint32_t length) {
   Serial.println("BEEP");
 #endif //DEBUG
   timerAlarm(beeptimer, length, true, 0);
-  starttimer(beeptimer);
-}
-
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-void np(uint32_t c) {
-  if (c==0)
-    strip.clear();
-  else
-    strip.setPixelColor(0, c);
-  strip.show();
-}
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
-
-/*
- * Setup and loop
- */
-void setup() {
-  // outputs setup
-  // Make aure the 12v mosfet drivers are off
-  pinMode(FACE_PIN, OUTPUT);
-  digitalWrite(FACE_PIN, LOW);
-  pinMode(AWAY_PIN, OUTPUT);
-  digitalWrite(AWAY_PIN, LOW);
-  // Set up other general pins
-  pinMode(BUZZER, OUTPUT);
-  pinMode(UNUSED_1, OUTPUT);
-  digitalWrite(BUZZER, LOW);
-  digitalWrite(UNUSED_1, LOW);
-  pinMode(BUTTONS_PIN, INPUT);
-
-
-  // Serial setup
-  Serial.begin(SERIAL_SPEED);
-  while (!Serial) {
-    delay(100); // wait for serial port
-  }
-  delay(1000);
-#ifdef DEBUG
-  Serial.println("\r\nStart\r\n");
-#endif //DEBUG
-
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-  Serial.println("Setting up Neopixel");
-  strip.begin(); // Initialize NeoPixel strip object (REQUIRED)
-  strip.setBrightness(ESP_V2_NEOPIXEL_BRIGHTNESS);
-  np(0xFFFFFF);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
-
-  // Keep this before the lcd_setup();
-  //SPI.begin(SCK, MISO, MOSI, SD_CS_PIN);
-  //pinMode(SD_CS_PIN, OUTPUT);
-  //SPI.setDataMode(SPI_MODE0);
-
-#ifdef DEBUG
-  Serial.println("Calling lcd_setup");
-#endif //DEBUG
-  // Basic LCD setup
-  lcd_setup();
-
-#ifdef DEBUG
-  Serial.println("Calling storage_init");
-#endif //DEBUG
-  storage_init();
-
-#ifdef DEBUG
-  Serial.println("Calling lcd_splash");
-#endif //DEBUG
-  lcd_splash(SPLASH_BMP);
-  Serial.println("\r\n");
-  lcd_println("Turning feather controller");
-  lcd_println("(c) pir 2019-2026         ");
-  lcd_println("tf@pir.net                ");
-  Serial.println("");
-
-  delay(3000);
-
-  // Get the config file from SD or SPIFFS
-  File turnfile=turn_file_init(turnconf_file);
-
-  // This may fail if the JSON is invalid
-  if (!deserializeTurnConfig(turnfile, turnconfig)) {
-    lcd_clear();
-    lcd_println("Config file not valid");
-    while (1) {
-      delay(100);
-    }
-  }
-
-  char line[4];
-  lcd_print("Loaded ");
-  sprintf(line, "%d", turnconfig.programs);
-  lcd_print(line);
-  lcd_println(" programs");
-#ifdef DEBUG
-  for (uint8_t i=0; i<turnconfig.programs; i++) {
-    Serial.print("  ");
-    // Program number displayed from 1 not 0
-    Serial.print(i+1);
-    Serial.print(" ");
-    Serial.println(turnconfig.program[i].longname);
-  }
-  Serial.println();
-#endif
-
-  // Set pointer to initial program and stage
-  currentprog=&turnconfig.program[currentprognum];
-  currentstage=&currentprog->stage[currentstagenum];
-
-
-#ifdef PHYSICAL_BUTTONS
-  // Physical buttons setup
-  buttons_setup();
-#endif //PHYSICAL_BUTTONS
-
-  // bravo/ZPT RF setup
-  pinMode(RF_1, INPUT);
-  pinMode(RF_2, INPUT);
-  pinMode(RF_3, INPUT);
-  pinMode(RF_4, INPUT);
-  attachInterrupt(digitalPinToInterrupt(RF_1), rfbutton1, RISING);
-  attachInterrupt(digitalPinToInterrupt(RF_2), rfbutton2, RISING);
-  attachInterrupt(digitalPinToInterrupt(RF_3), rfbutton3, RISING);
-  attachInterrupt(digitalPinToInterrupt(RF_4), rfbutton4, RISING);
-  rf_buttonsemaphore=xSemaphoreCreateBinary();
-
-#ifdef USE_ZPT_SERIAL
-  // ZPT serial setup
-  zpt_serial_setup();
-#endif //USE_ZPT_SERIAL
-
-  // Timer and face/away setup.
-
-  // Semaphores
-  turnsemaphore=xSemaphoreCreateBinary();
-
-  // Timers, of 4.
-  changetimer=timerBegin(CLOCK_RATE);
-  timerStop(changetimer);
-  timerWrite(changetimer, 0);
-  timerAttachInterrupt(changetimer, &onchangetimer);
-  timerAlarm(changetimer, CHANGE_LENGTH, true, 0);
-  //timerAlarmEnable(changetimer);
-
-  beeptimer=timerBegin(CLOCK_RATE);
-  timerStop(beeptimer);
-  timerWrite(beeptimer, 0);
-  timerAttachInterrupt(beeptimer, &onbeeptimer);
-  //timerAlarmEnable(beeptimer);
-
-  turntimer=timerBegin(CLOCK_RATE);
-  timerStop(turntimer);
-  timerWrite(turntimer, 0);
-  timerAttachInterrupt(turntimer, &onturntimer);
-  timerAlarm(turntimer, TURN_RATE, true, 0);
-  //timerAlarmEnable(turntimer);
-
-  // Display setup on the LCD
-  lcd_display_set(currentprog, currentprognum, currentstagenum);
-  lcd_stop(turnstop);
-
-  // If enabled bring up WiFi
-#ifdef TF_WIFI_ENABLE
-  initWifi();
-#endif //TF_WIFI_ENABLE
-
-
-  Serial.println(F("\r\nSetup finished.\r\n"));
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-  np(0);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
-}
-
-void loop() {
-#ifdef RF_BUTTONS
-  if (xSemaphoreTake(rf_buttonsemaphore, 0) == pdTRUE) {
-    // Take RF button press actions
-    button_action(get_rf_button(), true);
-  }
-#endif // RF_BUTTONS
-  if (xSemaphoreTake(turnsemaphore, 0) == pdTRUE) {
-    // Take the next action if we are running
-    turntick();
-  }
-  // Take screen button press actions
-  button_action(lcd_button(), false);
-
-#ifdef PHYSICAL_BUTTONS
-  // Physical buttons action
-  buttons_loop();
-#endif
-
-#ifdef USE_ZPT_SERIAL
-  // ZPT serial handling
-  zpt_serial_loop();
-  if (zpt_packet_isready()) {
-    rf_serial_actions();
-    // Signal ready for another packet.
-    zpt_packet_getnew();
-  }
-#endif //USE_ZPT_SERIAL
-
-  yield();
+  starttimer(beeptimer, false);
 }
