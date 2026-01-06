@@ -23,6 +23,9 @@
 // Using the V2 version of the Adafruit TFT 2.4" featherwing
 //#define TFT_FW_24_V2
 
+// To use ESP32 WiFi
+//#define TF_WIFI_ENABLE
+
 // SPIFFS or LittleFS, default is SPIFFS
 #define LITTLEFS
 

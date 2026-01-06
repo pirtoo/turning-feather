@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WiFi config</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Pragma" content="no-cache">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body>
+  <div class="topnav">
+    <h1>WiFi config</h1>
+  </div>
+  <div class="content">
+    <div class="card-grid">
+      <div class="card">
+        <p>
+          If SSID is set controller will attempt to connect to that Wifi network.<br>
+          If SSID is empty controller will create a local network.<br>
+          If AP SSID is set controller will use that name for a local network.<br>
+          Minimum password length is %PASSLEN% characters.<br>
+          Trailing spaces will be removed from text fields.<br>
+        </p>
+        <p>
+          Other options are used for a static IP when connecting to a WiFi network
+          and are not normally used.<br>
+          Grey text shows the current DHCP values, these are not saved.
+        </p>
+        <p>Controller MAC is %MAC%</p>
+        <form action="/wifisetup.html" method="POST">
+          <p>
+            <label for="ssid">SSID</label><br>
+            <input type="text" id="ssid" name="ssid" value="%SSID%"><br>
+
+            <label for="pass">Password</label><br>
+            <input type="text" id="pass" name="pass" value="%PASS%"><br>
+
+            <label for="ap_ssid">AP SSID</label><br>
+            <input type="text" id="ap_ssid" name="ap_ssid" value="%AP_SSID%"><br>
+
+            <label for="ap_pass">AP Password</label><br>
+            <input type="text" id="ap_pass" name="ap_pass" value="%AP_PASS%"><br>
+
+            <label for="ip">IP Address</label><br>
+            <input type="text" id="ip" name="ip" %IP%><br>
+
+            <label for="subnet">Netmask</label><br>
+            <input type="text" id="subnet" name="subnet" %SUBNET%><br>
+
+            <label for="gateway">Gateway IP</label><br>
+            <input type="text" id ="gateway" name="gateway" %GATEWAY%><br>
+
+            <input type="submit" value="Submit">
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

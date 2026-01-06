@@ -59,6 +59,12 @@ uint8_t lcd_button_num=0;
 // SD card and config file
 #include "sdcard.h"
 
+// WiFi
+#ifdef TF_WIFI_ENABLE
+#include "tf_wifi.h"
+#endif //TF_WIFI_ENABLE
+
+
 // Config file
 #include "TurnConfig.h"
 struct TurnConfig turnconfig;
@@ -818,6 +824,12 @@ void setup() {
   // Display setup on the LCD
   lcd_display_set(currentprog, currentprognum, currentstagenum);
   lcd_stop(turnstop);
+
+  // If enabled bring up WiFi
+#ifdef TF_WIFI_ENABLE
+  initWifi();
+#endif //TF_WIFI_ENABLE
+
 
   Serial.println(F("\r\nSetup finished.\r\n"));
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
