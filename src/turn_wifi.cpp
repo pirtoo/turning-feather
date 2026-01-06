@@ -11,6 +11,7 @@
 
 #include "turn_wifi.h"
 #ifdef TURN_WIFI_ENABLE
+#include "turning.h"
 
 // Store wifi settings in Preferences
 Preferences prefs;
@@ -55,9 +56,13 @@ String ledState;
 // Local functions
 bool startWiFiClient();
 void stopWifi();
+
 String processor(const String& var);
+String programs_processor(const String& var);
+
 String getStringIf(char *name);
 void removeIf(char *name);
+
 void initLittleFS();
 String readFile(fs::FS &fs, const char * path);
 void writeFile(fs::FS &fs, const char * path, const char * message);
@@ -134,7 +139,7 @@ void resetWifi(void) {
   prefs.end();
 }
 
-// Replaces placeholders with values
+// Replaces placeholders with values in most pages
 String processor(const String& var) {
   if (var == "STATE") {
     if (digitalRead(ledPin)) {
@@ -176,6 +181,27 @@ String processor(const String& var) {
   // Default is empty string
   return String();
 }
+
+// Replaces placeholders with values in basetemplate.html for programs
+String programs_processor(const String& var) {
+  if (var == "TITLE") {
+    return String("Select program");
+  } else if (var == "TOPHEADER") {
+    return String("Select program");
+  } else if (var == "BASE_BODY") {
+    // Get a pointer to the turning config array
+    TurnConfig *tc=turnconfig_ptr();
+    String body="<div><label for=\"programs\">Select program:</label>\n";
+    body+="<select name=\"programs\" id=\"programs\">";
+    for (uint8_t i=0; i<tc->programs; i++) {
+      body+="<option value=\"" + String(i) + "\">" + String(tc->program[i].longname) + "</option>\n";
+    }
+    body+="</select\n";
+    return body;
+  }
+  return String();
+}
+
 
 // Shut down web and wifi
 void stopWifi() {
@@ -247,6 +273,8 @@ void initWifi() {
   // Init Preferences R/O
   prefs.begin(TURN_WIFI_PREFS, true);
 
+  // TODO Add a pref to disable WiFi entirely once there is a way
+  // reset WiFi config from the physical controller.
   ssid=getStringIf("ssid");
   pass=getStringIf("pass");
   ap_pass=getStringIf("ap_pass");
@@ -320,6 +348,10 @@ void initWifi() {
   server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request) {
     digitalWrite(ledPin, LOW);
     request->send(LittleFS, "/www/index.html", "text/html", false, processor);
+  });
+
+  server.on("/programs.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(LittleFS, "/www/basetemplate.html", "text/html", false, programs_processor);
   });
 
   // Reset all WiFi configs
