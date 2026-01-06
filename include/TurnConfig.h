@@ -6,7 +6,6 @@
 #pragma once
 
 #include <ArduinoJson.h>
-#include "utils.h"
 
 // maximum stages per program
 #ifndef TURN_MAX_STAGES

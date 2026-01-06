@@ -106,5 +106,13 @@
 // Enable physical buttons on case
 #define PHYSICAL_BUTTONS
 
+#define STR_IMPL_(x) #x
+#define STR(x) STR_IMPL_(x)
+
+// For core 3.0.0 and higher
+#if ESP_ARDUINO_VERSION_MAJOR >= 3 && defined(ESP32)
+  #include <driver/gpio.h>
+  #include <rom/ets_sys.h>
+#endif //ESP_ARDUINO_VERSION_MAJOR >= 3 && defined(ESP32)
 
 #endif //TF_MAIN_H

@@ -8,6 +8,7 @@
 #include <Wire.h> // this is needed even though we aren't using it
 
 #include "turn_lcd.h"
+#include "TurnConfig.h"
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_ILI9341.h>
