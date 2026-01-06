@@ -96,7 +96,7 @@ bool checkstagechange(const int change) {
           (currentstagenum + change >= 0));
 }
 
-bool changestagenum(const int change, const bool rf_button) {
+bool changestagenum(const int change, const bool chirp) {
   // Alter the current stage num within parameters
   if (not checkstagechange(change)) {
     return false;
@@ -107,8 +107,8 @@ bool changestagenum(const int change, const bool rf_button) {
   Serial.println(currentstagenum);
 #endif //DEBUG
 #ifdef STAGE_CHANGE_CHIRP
-  if (rf_button) {
-    // If changing stages from the remote, chirp
+  if (chirp) {
+    // A stage change is happening, make the buzzer chirp
     beep(STAGE_CHANGE_CHIRP);
   }
 #endif //STAGE_CHANGE_CHIRP
@@ -142,10 +142,12 @@ void updatecurrent() {
   currentstage=&currentprog->stage[currentstagenum];
 }
 
-void button_action(const unsigned int button, const bool rf_button) {
+void button_action(const unsigned int button, const bool chirp) {
   /*
    * Various button actions to be taken when specific buttons are pressed.
    * Actions are integer numbers.
+   * If chirp is true and the buzzer is enabled it will chirp if a
+   * stage change actually happens.
    */
   switch (button) {
     case 1:
@@ -168,7 +170,7 @@ void button_action(const unsigned int button, const bool rf_button) {
       Serial.println("stage--");
 #endif // DEBUG
       if (turnstop) {
-        changestagenum(-1, rf_button);
+        changestagenum(-1, chirp);
       }
       break;
     case 4:
@@ -177,7 +179,7 @@ void button_action(const unsigned int button, const bool rf_button) {
       Serial.println("stage++");
 #endif // DEBUG
       if (turnstop) {
-        changestagenum(1, rf_button);
+        changestagenum(1, chirp);
       }
       break;
     case 5:

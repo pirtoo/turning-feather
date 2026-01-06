@@ -27,8 +27,7 @@ enum stage {
 void setup_turnconfig(void);
 void updatecurrent(void);
 void beep(const uint32_t length);
-// TODO change rf_button to chirp
-void button_action(const unsigned int button, const bool rf_button);
+void button_action(const unsigned int button, const bool chirp);
 void toggle_stop(void);
 void toggle_face(bool use_timer);
 void prog_init(void);
