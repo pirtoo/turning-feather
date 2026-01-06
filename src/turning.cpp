@@ -742,7 +742,9 @@ void setup() {
   if (!deserializeTurnConfig(turnfile, turnconfig)) {
     lcd_clear();
     lcd_println("Config file not valid");
-    while (1);
+    while (1) {
+      delay(100);
+    }
   }
 
   char line[4];
