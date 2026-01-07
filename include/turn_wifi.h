@@ -24,7 +24,7 @@
 
 // Initialise wifi in setup()
 void initWifi(void);
-// Set wifi back to defaults
+// Set all wifi settings back to defaults
 void resetWifi(void);
 
 #endif //IF_WIFI_H

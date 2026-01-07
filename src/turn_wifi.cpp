@@ -350,16 +350,17 @@ void initWifi() {
     request->send(LittleFS, "/www/index.html", "text/html", false, processor);
   });
 
-  server.on("/programs.html", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(LittleFS, "/www/basetemplate.html", "text/html", false, programs_processor);
-  });
-
   // Reset all WiFi configs
   server.on("/WIFIRESET", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("Resetting WiFi configuration and restarting.");
     resetWifi();
     request->send(200, "text/plain", "Done. Restart controller then connect to default WiFi.");
     stopWifi();
+  });
+
+  // TODO This needs a POST method which selects the program on the controller
+  server.on("/programs.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(LittleFS, "/www/basetemplate.html", "text/html", false, programs_processor);
   });
 
   // Setup page with values to save
