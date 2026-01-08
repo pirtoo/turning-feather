@@ -219,7 +219,6 @@ bool startWiFiClient() {
 
   // Connect as a station/client to a WiFi network
   WiFi.mode(WIFI_STA);
-  WiFi.setHostname(ap_ssid.c_str());
   localIP.fromString(ip.c_str());
   localGateway.fromString(gateway.c_str());
   localSubnet.fromString(subnet.c_str());
@@ -306,13 +305,15 @@ void initWifi() {
   Serial.println("##");
 #endif //DEBUG
 
+  // Before doing anything with WiFi set the hostname as seen in DHCP
+  // or it will not be used.
+  WiFi.setHostname(ap_ssid.c_str());
   // If we don't have a configured wifi network to join
   // then start up as an access point.
   if(! startWiFiClient()) {
     // No configured wifi to join or joining failed.
     Serial.print("Setting AP as ");
     Serial.println(ap_ssid);
-    WiFi.softAPsetHostname(ap_ssid.c_str());
     // If ap_pass is empty then open access point
     if (ap_pass == "") {
       WiFi.softAP(ap_ssid);
