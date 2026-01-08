@@ -140,6 +140,24 @@ bool changeprognum(const int change) {
 void updatecurrent() {
   currentprog=&turnconfig.program[currentprognum];
   currentstage=&currentprog->stage[currentstagenum];
+#ifdef DEBUG2
+  Serial.print("Stage: beep=");
+  Serial.print(currentstage->beep);
+  Serial.print(" face=");
+  Serial.print(currentstage->face);
+  Serial.print(" away=");
+  Serial.print(currentstage->away);
+  Serial.print(" repeat=");
+  Serial.print(currentstage->repeat);
+  Serial.print(" flash=");
+  Serial.print(currentstage->flash);
+  Serial.print(" flashaway=");
+  Serial.print(currentstage->flashaway);
+  Serial.print(" autonext=");
+  Serial.print(currentstage->autonext);
+  Serial.print(" nextaway=");
+  Serial.println(currentstage->nextaway);
+#endif //DEBUG2
 }
 
 void button_action(const unsigned int button, const bool chirp) {
@@ -481,7 +499,7 @@ void turntick() {
           in_fudge=false;
           // Start the next program
           changestagenum(1, false);
-          prog_init();
+          updatecurrent();
           if (currentstage->beep > 0) {
             in_stage=IN_BEEP;
             beep(BEEP_LENGTH);
@@ -493,29 +511,6 @@ void turntick() {
 
     }
   }
-}
-
-
-void prog_init() {
-  updatecurrent();
-#ifdef DEBUG
-  Serial.print("Stage: beep=");
-  Serial.print(currentstage->beep);
-  Serial.print(" face=");
-  Serial.print(currentstage->face);
-  Serial.print(" away=");
-  Serial.print(currentstage->away);
-  Serial.print(" repeat=");
-  Serial.print(currentstage->repeat);
-  Serial.print(" flash=");
-  Serial.print(currentstage->flash);
-  Serial.print(" flashaway=");
-  Serial.print(currentstage->flashaway);
-  Serial.print(" autonext=");
-  Serial.print(currentstage->autonext);
-  Serial.print(" nextaway=");
-  Serial.println(currentstage->nextaway);
-#endif //DEBUG
 }
 
 void toggle_stop() {
@@ -550,7 +545,7 @@ void toggle_stop() {
     } else {
       in_stage=IN_INIT;
     }
-    prog_init();
+    updatecurrent();
     starttimer(turntimer, true);
   }
   // To stop or start, clear the run times
