@@ -202,7 +202,6 @@ String programs_processor(const String& var) {
   return String();
 }
 
-
 // Shut down web and wifi
 void stopWifi() {
   server.end();
@@ -488,9 +487,9 @@ void initWifi() {
 
 
     if (pass != "" && pass.length() < TURN_WIFI_PASS_MIN) {
-      request->send(200, "text/plain", "Password too short. Minimum length=" + String(TURN_WIFI_PASS_MIN));
+      request->send(400, "text/plain", "Password too short. Minimum length=" + String(TURN_WIFI_PASS_MIN));
     } else if (ap_pass != "" && ap_pass.length() < TURN_WIFI_PASS_MIN) {
-      request->send(200, "text/plain", "AP password too short. Minimum length=" + String(TURN_WIFI_PASS_MIN));
+      request->send(400, "text/plain", "AP password too short. Minimum length=" + String(TURN_WIFI_PASS_MIN));
     } else {
       request->send(200, "text/plain", "Done. Restart controller to use new settings.");
       //stopWifi();
