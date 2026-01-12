@@ -30,7 +30,6 @@ bool face=true, turnstop=true;
 struct TurnConfig turnconfig;
 struct ProgramConfig *currentprog;
 struct StageConfig *currentstage;
-struct StageConfig runningstage;
 const char *turnconf_file=TURNCONF;
 
 uint8_t currentstagenum=0, currentprognum=0;
@@ -43,6 +42,12 @@ bool in_fudge=false;
 
 // How many seconds since the turn counter started.
 volatile uint32_t turncounter=0;
+
+TurnConfig *turnconfig_ptr(void) {
+  // Return a pointer to the turnconfig object
+  return &turnconfig;
+}
+
 
 
 void setup_turnconfig() {
@@ -83,11 +88,6 @@ void setup_turnconfig() {
   // Display setup on the LCD
   lcd_display_set(currentprog, currentprognum, currentstagenum);
   lcd_stop(turnstop);
-}
-
-TurnConfig *turnconfig_ptr(void) {
-  // Return a pointer to the turnconfig object
-  return &turnconfig;
 }
 
 bool checkstagechange(const int change) {
