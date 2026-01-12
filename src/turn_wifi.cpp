@@ -352,10 +352,10 @@ void initWifi() {
 
   // Reset all WiFi configs
   server.on("/WIFIRESET", HTTP_GET, [](AsyncWebServerRequest *request) {
-    Serial.println("Resetting WiFi configuration and restarting.");
+    Serial.println("Resetting WiFi configuration.");
     resetWifi();
     request->send(200, "text/plain", "Done. Restart controller then connect to default WiFi.");
-    stopWifi();
+    //stopWifi();
   });
 
   // TODO This needs a POST method which selects the program on the controller
