@@ -441,11 +441,7 @@ void lcd_splash(const char *filename) {
   fs::File bmp;
 
 //  lcd_clear();
-#ifdef LITTLEFS
   bmp = LittleFS.open(filename, FILE_READ);
-#else
-  bmp = SPIFFS.open(filename, FILE_READ);
-#endif //LITTLEFS
 
   if (! bmp) {
     Serial.println("Splash file open failed");
@@ -457,7 +453,6 @@ void lcd_splash(const char *filename) {
     // Display the bmp file to the screen and pause
     lcd_drawBmp(bmp, 0, 0);
     bmp.close();
-//    stat = reader.drawBMP(filename, tft, 0, 0);
 #ifdef DEBUG
     Serial.println("Splash done");
 #endif //DEBUG

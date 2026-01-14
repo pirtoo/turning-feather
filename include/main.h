@@ -25,9 +25,6 @@
 // To use ESP32 WiFi
 //#define TURN_WIFI_ENABLE
 
-// SPIFFS or LittleFS, default is SPIFFS but this will go away
-#define LITTLEFS
-
 // Default config file, json
 #define TURNCONF "/turnconf.txt"
 // Default splash image, bmp

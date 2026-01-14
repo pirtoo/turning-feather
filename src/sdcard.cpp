@@ -26,11 +26,7 @@ File checksdfile(const char *filename) {
 }
 
 File checkfsfile(const char *filename) {
-#ifdef LITTLEFS
   File file = LittleFS.open(filename);
-#else
-  File file = SPIFFS.open(filename);
-#endif // LITTLEFS
   if (!file || file.isDirectory()) {
     lcd_print("Config file ");
     lcd_print(filename);
@@ -40,7 +36,7 @@ File checkfsfile(const char *filename) {
 }
 
 void storage_init() {
-  // SD card and spiffs or littlefs setup
+  // SD card and littlefs setup
   uint8_t count=0;
 
   while (!SD.begin(SD_CS_PIN) and count <= SD_RETRIES) {
@@ -57,21 +53,12 @@ void storage_init() {
     Serial.println(SD_CS_PIN);
   }
 
-#ifdef LITTLEFS
   if (!LittleFS.begin(true)) {
     lcd_println("LittleFS storage:");
     lcd_println("  mount failed");    
   } else {
     localfs_init_ok=true;
   }
-#else
-  if (!SPIFFS.begin(true)) {
-    lcd_println("SPIFFS storage:");
-    lcd_println("  init failed");
-  } else {
-    localfs_init_ok=true;
-  }
-#endif // LITTLEFS
 }
 
 File turn_file_init(const char *turnconf_file) {

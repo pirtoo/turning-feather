@@ -64,7 +64,7 @@ TurnConfig *turnconfig_ptr(void) {
 }
 
 void setup_turnconfig() {
-  // Get the config file from SD/SPIFFS/LittleFS
+  // Get the config file from SD/LittleFS
   char line[4];
   File turnfile=turn_file_init(turnconf_file);
 

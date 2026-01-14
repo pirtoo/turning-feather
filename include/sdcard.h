@@ -24,12 +24,8 @@
 #include <SD.h>
 //#define FS_NO_GLOBALS
 //#include <FS.h>
-#ifdef LITTLEFS
 #include <esp_littlefs.h>
 #include <LittleFS.h>
-#else
-#include <SPIFFS.h>
-#endif // LITTLEFS
 
 void storage_init();
 File turn_file_init(const char *turnconf_file);
