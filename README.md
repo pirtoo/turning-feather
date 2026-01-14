@@ -27,6 +27,8 @@
 
 * Display is a [Featherwing 2.4" TFT](https://www.adafruit.com/product/3315) or [Featherwing 2.4" TFT V2](https://www.adafruit.com/product/3315).
 
+* Optional WiFi control, with no configuration and enabled WiFi the controller will create a WiFi network called `TurningFeather`. Connecting to that network and connecting to `http://192.168.4.1/` will get you to the control page. `http://192.168.4.1/wifisetup.html` will allow you to change setup of network names and joining an existing WiFi network. The MAC address for the controller is displayed on the setup page and also over serial console while booting.
+
 * Control/power connector is RJ45; takes ground, +12V power and two signal lines for face and away activation at 12V. As used [here](https://web.archive.org/web/20190102055407/http://www.indelfa.co.uk/tt/tt_images/relay.gif).  The control and power connections are exposed to another optional board connector if you do not want to use a PCB mounted RJ45.
 
 * [Parts list and assembly details](PCBs/README.md).
@@ -62,7 +64,7 @@ Turning Feather is still very much in alpha and under development however it has
 
 - [ ] Add a stage name/comment to describe what each stage is for.
 
-- [ ] The [Feather HUZZAH32](https://www.adafruit.com/product/3405) microcontroller includes wifi, this will be used for setup, programming and control.
+- [X] The [Feather HUZZAH32](https://www.adafruit.com/product/3405) microcontroller includes wifi, this will be used for setup, programming and control.
 
 - [ ] Ability to change which config file is in use.
 
