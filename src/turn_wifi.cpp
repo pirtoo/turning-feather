@@ -17,6 +17,10 @@
 Preferences prefs;
 
 // Variables to save values from HTML form
+// Setting that disabled WiFi completely
+bool wifi_disabled=false;
+// Admin password for wifi setup
+String a_pass="";
 // ssid to connect to as a client
 String ssid="";
 // Password for auth for client ssid
@@ -36,6 +40,8 @@ String MAC="";
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
+// Allow for auth
+static AsyncAuthenticationMiddleware basicAuth;
 
 // These are used for local IP when connecting/connected
 IPAddress localIP;
@@ -51,13 +57,14 @@ const long interval = 10000;  // interval to wait for Wi-Fi connection (millisec
 bool loopToggleStop=false, loopToggleFace=false;
 
 // Local functions
-bool startWiFiClient();
-void stopWifi();
+bool startWiFiClient(void);
+void stopWifi(void);
 
 String processor(const String& var);
 String select_processor(const String& var);
 
-String getStringIf(char *name);
+String getStringIf(char *name, String st_default);
+bool getBoolIf(char *name, bool bo_default);
 void removeIf(char *name);
 
 void initLittleFS();
@@ -85,11 +92,11 @@ String readFile(fs::FS &fs, const char * path) {
     Serial.println("- failed to open file for reading");
     return String();
   }
-  
+
   String fileContent;
   while (file.available()) {
     fileContent = file.readStringUntil('\n');
-    break;     
+    break;
   }
   return fileContent;
 }
@@ -114,11 +121,18 @@ void writeFile(fs::FS &fs, const char * path, const char * message) {
   }
 }
 
-String getStringIf(char *name) {
+String getStringIf(char *name, String st_default) {
   // Return a string if it exists otherwise empty
   if (prefs.isKey(name))
     return prefs.getString(name);
-  return String();
+  return st_default;
+}
+
+bool getBoolIf(char *name, bool bo_default) {
+  // Return a bool if it exists otherwise false
+  if (prefs.isKey(name))
+    return prefs.getBool(name);
+  return bo_default;
 }
 
 // Remove pref if it exists
@@ -165,6 +179,13 @@ String processor(const String& var) {
       // If a static gateway has been set
       return "value=\"" + gateway + "\"";
     return "placeholder=\"" + localGateway.toString() + "\"";
+  } else if (var == "A_PASS") {
+    if (a_pass != "") {
+      // If an admin password has been set put a message in
+      return "placeholder=\"Password is set\"";
+    } else {
+      return "";
+    }
   } else if (var == "PASSLEN") {
     return String(TURN_WIFI_PASS_MIN);
   }
@@ -249,41 +270,35 @@ bool startWiFiClient() {
   Serial.print("Client WiFi subnet: ");
   Serial.println(localSubnet);
   Serial.print("Client WiFi gateway: ");
-  Serial.println(localGateway);  
+  Serial.println(localGateway);
   return true;
 }
 
-void initWifi() {
+bool initWifi() {
   // Work out how we are setting up, AP or client, and do it.
 
-  // We need file storage
-  initLittleFS();
   // Init Preferences R/O
   prefs.begin(TURN_WIFI_PREFS, true);
 
-  // TODO Add a pref to disable WiFi entirely once there is a way
-  // reset WiFi config from the physical controller.
-  ssid=getStringIf("ssid");
-  pass=getStringIf("pass");
-  ap_pass=getStringIf("ap_pass");
-  ip=getStringIf("ip");
-  subnet=getStringIf("subnet");
-  gateway=getStringIf("gateway");
+  wifi_disabled=getBoolIf("wifi_disabled", false);
+  ap_ssid=getStringIf("ap_ssid", TURN_WIFI_DEFAULT_AP);
+  a_pass=getStringIf("a_pass", "");
+  ssid=getStringIf("ssid", "");
+  ssid=getStringIf("ssid", "");
+  pass=getStringIf("pass", "");
+  ap_pass=getStringIf("ap_pass", "");
+  ip=getStringIf("ip", "");
+  subnet=getStringIf("subnet", "");
+  gateway=getStringIf("gateway", "");
 
-  if (prefs.isKey("ap_ssid")) {
-    ap_ssid=prefs.getString("ap_ssid");
-  } else {
-#ifdef DEBUG    
-    Serial.println("Using default AP SSID");
-#endif //DEBUG
-    ap_ssid=TURN_WIFI_DEFAULT_AP;
-  }
   // Close prefs
   prefs.end();
 
-#ifdef DEBUG  
+#ifdef DEBUG
   Serial.println("Values from Prefs: ");
   Serial.println("##");
+  Serial.println(wifi_disabled);
+  Serial.println(a_pass);
   Serial.println(ssid);
   Serial.println(pass);
   Serial.println(ap_ssid);
@@ -293,6 +308,14 @@ void initWifi() {
   Serial.println(gateway);
   Serial.println("##");
 #endif //DEBUG
+
+  if (wifi_disabled) {
+    Serial.println("WiFi disabled via Preferences");
+    return false;
+  }
+
+  // We need file storage to serve pages for web server
+  initLittleFS();
 
   // Before doing anything with WiFi set the hostname as seen in DHCP
   // or it will not be used.
@@ -322,6 +345,16 @@ void initWifi() {
   MAC=WiFi.macAddress();
   Serial.print("WiFi MAC: ");
   Serial.println(MAC);
+
+  // basic authentication
+  basicAuth.setUsername(TURN_WIFI_DEFAULT_ADMIN);
+  basicAuth.setRealm(ap_ssid.c_str());
+  basicAuth.setAuthFailureMessage("Authentication failed");
+  if (a_pass != "") {
+    basicAuth.setPassword(a_pass.c_str());
+    basicAuth.generateHash();  // precompute hash (optional but recommended)
+    basicAuth.setAuthType(AsyncAuthType::AUTH_BASIC);
+  }
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(LittleFS, "/www/index.html", "text/html", false, select_processor);
@@ -389,19 +422,22 @@ void initWifi() {
   });
 
   // Reset all WiFi configs
+  // This needs authentication when it is enabled.
   server.on("/WIFIRESET", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("Resetting WiFi configuration.");
     resetWifi();
     // TODO return this over basetemplate.html
     request->send(200, "text/plain", "Done. Restart controller then connect to default WiFi.");
     //stopWifi();
-  });
+  }).addMiddleware(&basicAuth);
 
   // Setup page with values to save
+  // This needs authentication when it is enabled.
   server.on("/wifisetup.html", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(LittleFS, "/www/wifisetup.html", "text/html", false, processor);
-  });
+  }).addMiddleware(&basicAuth);
 
+  // This needs authentication when it is enabled.
   server.on("/wifisetup.html", HTTP_POST, [](AsyncWebServerRequest *request) {
     // Set WiFi Preferences
     int params = request->params();
@@ -412,7 +448,26 @@ void initWifi() {
         // Open prefs R/W
         prefs.begin(TURN_WIFI_PREFS, false);
 
-        if (p->name() == "ssid") {
+        if (p->name() == "a_pass") {
+          a_pass = p->value().c_str();
+          a_pass.trim();
+#ifdef DEBUG
+          Serial.print("Admin password set to: ");
+          Serial.println(a_pass);
+#endif //DEBUG
+          if (a_pass == "REMOVE") {
+            removeIf("a_pass");
+            a_pass="";
+            basicAuth.setAuthType(AsyncAuthType::AUTH_NONE);
+          } else if (a_pass != "") {
+            removeIf("a_pass");
+            prefs.putString("a_pass", a_pass);
+            basicAuth.setPassword(a_pass.c_str());
+            basicAuth.generateHash();  // precompute hash (optional but recommended)
+            basicAuth.setAuthType(AsyncAuthType::AUTH_BASIC);
+          }
+
+        } else if (p->name() == "ssid") {
           ssid = p->value().c_str();
           ssid.trim();
 #ifdef DEBUG
@@ -424,6 +479,7 @@ void initWifi() {
           } else {
             removeIf("ssid");
           }
+
         } else if (p->name() == "pass") {
           pass = p->value().c_str();
           pass.trim();
@@ -436,6 +492,7 @@ void initWifi() {
           } else if (pass.length() >= TURN_WIFI_PASS_MIN) {
             prefs.putString("pass", pass);
           }
+
         } else if (p->name() == "ap_ssid") {
           ap_ssid = p->value().c_str();
           ap_ssid.trim();
@@ -448,6 +505,7 @@ void initWifi() {
           } else {
             removeIf("ap_ssid");
           }
+
         } else if (p->name() == "ap_pass") {
           ap_pass = p->value().c_str();
           ap_pass.trim();
@@ -460,6 +518,7 @@ void initWifi() {
           } else if (ap_pass.length() >= TURN_WIFI_PASS_MIN) {
             prefs.putString("ap_pass", ap_pass);
           }
+
         } else if (p->name() == "ip") {
           ip = p->value().c_str();
           ip.replace(" ", "");
@@ -473,6 +532,7 @@ void initWifi() {
           } else {
             removeIf("ip");
           }
+
         } else if (p->name() == "subnet") {
           subnet = p->value().c_str();
           subnet.replace(" ", "");
@@ -486,6 +546,7 @@ void initWifi() {
           } else {
             removeIf("subnet");
           }
+
         } else if (p->name() == "gateway") {
           gateway = p->value().c_str();
           gateway.replace(" ", "");
@@ -517,9 +578,12 @@ void initWifi() {
       request->send(200, "text/plain", "Done. Restart controller to use new settings.");
       //stopWifi();
     }
-  });
+  }).addMiddleware(&basicAuth);
+
   // Serve a subdirectory to make sure we do not expose anything else
   server.serveStatic("/", LittleFS, "/www/");
   server.begin();
+
+  return true;
 }
 #endif //TURN_WIFI_ENABLE

@@ -16,10 +16,13 @@
     <div class="card-grid">
       <div class="card">
         <p>
-          If SSID is set controller will attempt to connect to that Wifi network.<br>
-          If SSID is empty controller will create a local network.<br>
+          Admin password is used for this page and the wifi options reset page.
+          To remove admin password enter REMOVE and submit.<br>
+          If SSID to join is set controller will attempt to connect to that Wifi network.<br>
+          If SSID to joim is empty controller will create a local network.<br>
           If AP SSID is set controller will use that name for a local network.<br>
-          Minimum password length is %PASSLEN% characters.<br>
+          Minimum WiFi password length is %PASSLEN% characters.<br>
+          Note all passwords are being transmitted over unencrypted HTTP.<br>
           Trailing spaces will be removed from text fields.<br>
         </p>
         <p>
@@ -30,16 +33,19 @@
         <p>Controller MAC is %MAC%</p>
         <form action="/wifisetup.html" method="POST">
           <p>
-            <label for="ssid">SSID</label><br>
+            <label for="a_pass">Admin password</label><br>
+            <input type="text" id="a_pass" name="a_pass" value="" %A_PASS%><br>
+
+            <label for="ssid">SSID to join</label><br>
             <input type="text" id="ssid" name="ssid" value="%SSID%"><br>
 
-            <label for="pass">Password</label><br>
+            <label for="pass">WiFi password to join with</label><br>
             <input type="text" id="pass" name="pass" value="%PASS%"><br>
 
             <label for="ap_ssid">AP SSID</label><br>
             <input type="text" id="ap_ssid" name="ap_ssid" value="%AP_SSID%"><br>
 
-            <label for="ap_pass">AP Password</label><br>
+            <label for="ap_pass">AP WiFi Password</label><br>
             <input type="text" id="ap_pass" name="ap_pass" value="%AP_PASS%"><br>
 
             <label for="ip">IP Address</label><br>
@@ -49,7 +55,7 @@
             <input type="text" id="subnet" name="subnet" %SUBNET%><br>
 
             <label for="gateway">Gateway IP</label><br>
-            <input type="text" id ="gateway" name="gateway" %GATEWAY%><br>
+            <input type="text" id="gateway" name="gateway" %GATEWAY%><br>
 
             <input type="submit" value="Submit">
           </p>

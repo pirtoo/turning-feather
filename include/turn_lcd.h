@@ -9,7 +9,7 @@
 #include "turning.h"
 #include "TurnConfig.h"
 #include "sdcard.h"
- 
+
 // featherwing pindefs
 #ifndef TFT_DC
 #define TFT_DC 33

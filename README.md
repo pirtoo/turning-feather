@@ -27,7 +27,8 @@
 
 * Display is a [Featherwing 2.4" TFT](https://www.adafruit.com/product/3315) or [Featherwing 2.4" TFT V2](https://www.adafruit.com/product/3315).
 
-* Optional WiFi control, with no configuration and enabled WiFi the controller will create a WiFi network called `TurningFeather`. Connecting to that network and connecting to `http://192.168.4.1/` will get you to the control page. `http://192.168.4.1/wifisetup.html` will allow you to change setup of network names and joining an existing WiFi network. The MAC address for the controller is displayed on the setup page and also over serial console while booting.
+* Optional WiFi control, with no configuration and with WiFi enabled the controller will create a WiFi network called `TurningFeather`. Connecting to that network with no password and connecting to `http://192.168.4.1/` will get you to the control page. `http://192.168.4.1/wifisetup.html` will allow you to change setup of network names and joining an existing WiFi network. The MAC address for the controller is displayed on the setup page and also over serial console while booting for setting ststic
+IP addresses on your router or IP can be set on the device (not recommended). Pages like `wifisetup.html` can be protected by an admin password (default username is `admin`) but this is all sent over unencrypted HTTP so is not high security, just to keep prying fingers out.
 
 * Control/power connector is RJ45; takes ground, +12V power and two signal lines for face and away activation at 12V. As used [here](https://web.archive.org/web/20190102055407/http://www.indelfa.co.uk/tt/tt_images/relay.gif).  The control and power connections are exposed to another optional board connector if you do not want to use a PCB mounted RJ45.
 
@@ -39,7 +40,7 @@
 
 * [Custom PCB](PCBs/kicad/turning-feather) made for the main IO board manufactured by [PCBWay](https://www.pcbway.com/project/shareproject/Turning_Feather.html). See [schematic](PCBs/kicad/turning-feather/turning-feather.pdf).
 
-* Graphics are currently fairly simplistic but functional.
+* Graphics are currently fairly simple but functional.
 
 * Two physical buttons for face/away and start/stop. Program selection via the touchscreen. Start/stop, face/away and stage +/- via RF remote.
 
@@ -73,6 +74,8 @@ Turning Feather is still very much in alpha and under development however it has
 - [ ] Provide a full definition of the config file and what all the options do.
 
 - [ ] Add the ability to use cheaper 433MHz radio transmitters (there are some nice 4/6 button units available) as an option but getting reliable detection of events with debouncing is hard to do well, unlike with the [RF Solutions](https://www.rfsolutions.co.uk/) units.
+
+- [X] Support for the V2 versions of Adafruit Feather/Featherwing products used.
 
 Other TODOs in the code are noted in the [main ino file](arduino/turning/turning.ino).
 

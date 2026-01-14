@@ -57,7 +57,7 @@ With the HUZZAH32/ESP32 you cannot read analog inputs on ADC #2 once WiFi has st
 
 ## Options
 
-The LiPo battery is optional, a small battery is useful for using the controller when not connected to the target system and in case power is temporarily interrupted. A small battery will fit under the Feather board and connect to it.
+The LiPo battery to connect to the Feather is optional, a small battery is useful for using the controller when not connected to the target system and in case power is temporarily interrupted. A small battery will fit under the Feather board and connect to it.
 
 Instead of using a PCB mounted RJ45 connector the optional J2 connector can be used to connect to 12v supply, ground, and turn/away signals. If you are not using J2 there is no need to fit a connector.
 
@@ -73,4 +73,4 @@ The ZPT antenna is connected via the uFL connector on the ZPT board.
 
 Plastic M2.5 standoffs should be used to mount the Featherwing display and HUZZAH32 to the IO board. Note that two of the mounting holes on the HUZZAH32 are partially obscured by the onboard 2.4GHz antenna so cannot be used.
 
-V2 of the Adafruit ESP32 Feather will likely work but I have not tested it since I do not have any. Pin locations may have changed. An ESP32 is required for the current code since it uses ESP32 timers.
+V2 of the Adafruit ESP32 Feather is now supported as are V2 Adafruit display Featherwings, make sure to build the correct version for the hardware revisions you have. An ESP32 is required for the current code since it uses ESP32 timers.

@@ -1,7 +1,7 @@
 /*
  * Turning target controller.
  * Turning feather.
- * 
+ *
  * Set up for PlatformIO
  */
 
@@ -135,7 +135,7 @@ void setup() {
   np_setup();
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
 
-  // If microsd doesn't work 
+  // If microsd doesn't work
   // Keep this before the lcd_setup();
   //SPI.begin(SCK, MISO, MOSI, SD_CS_PIN);
   //pinMode(SD_CS_PIN, OUTPUT);
@@ -164,7 +164,11 @@ void setup() {
 
   // If enabled bring up WiFi
 #ifdef TURN_WIFI_ENABLE
-  initWifi();
+  if (! initWifi()) {
+    // WiFi init failed
+    lcd_println("WiFi disabled             ");
+    delay(2000);
+  }
 #else
   delay(2000);
 #endif //TURN_WIFI_ENABLE

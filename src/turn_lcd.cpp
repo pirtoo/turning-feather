@@ -207,7 +207,7 @@ void lcd_buttons() {
   lcd_prettyfont(12);
   lcd_drawString("P+", prognum_x +3, pslabeltop_y +18);
   lcd_drawString("P-", prognum_x +3, pslabelbot_y +18);
- 
+
   tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
   lcd_drawString("S+", stagenum_x +3, pslabeltop_y +18);
   lcd_drawString("S-", stagenum_x +3, pslabelbot_y +18);
@@ -268,7 +268,7 @@ void lcd_stage(const struct StageConfig *stage, const uint8_t stagenum) {
   text_background(stagenum_x, psnum_y, ILI9341_BLACK);
   lcd_drawString(buff, stagenum_x +4, psnum_y +17);
   lcd_defaultfont();
-  
+
   tft.setTextSize(2);
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
   tft.setCursor(timing_x, timing_y_1);
@@ -374,7 +374,7 @@ void lcd_stagerun_clear_top() {
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
   tft.setTextSize(2);
   tft.setCursor(timing_x, timing_y_3);
-  tft.print("                   ");  
+  tft.print("                   ");
 }
 
 void lcd_stagerun_repeat_top(const uint8_t rep) {
@@ -388,7 +388,7 @@ void lcd_stagerun_clear_bottom() {
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
   tft.setTextSize(2);
   tft.setCursor(timing_x, timing_y_6);
-  tft.print("                   ");  
+  tft.print("                   ");
 }
 
 void lcd_display_set(const struct ProgramConfig *program, uint8_t prognum, uint8_t stagenum) {
@@ -472,7 +472,7 @@ void lcd_setup() {
     Serial.println("Touchscreen controller STMPE610H OK");
 #endif //DEBUG
 #else //TFT_FW_24_V2
-if (ts.begin(0x48, &Wire)) { 
+if (ts.begin(0x48, &Wire)) {
     pinMode(TSC_IRQ, INPUT);
 #ifdef DEBUG
     Serial.println("Touchscreen controller TSC2007 OK");
@@ -490,7 +490,7 @@ if (ts.begin(0x48, &Wire)) {
 #ifdef DEBUG
   Serial.println("Display init done");
 #endif //DEBUG
-  
+
   // Puts the USB port to the lower/right.
   tft.setRotation(3);
   tft.setTextWrap(true);
@@ -512,7 +512,7 @@ if (ts.begin(0x48, &Wire)) {
   x = tft.readcommand8(ILI9341_RDIMGFMT);
   Serial.print("Image Format: 0x"); Serial.println(x, HEX);
   x = tft.readcommand8(ILI9341_RDSELFDIAG);
-  Serial.print("Self Diagnostic: 0x"); Serial.println(x, HEX); 
+  Serial.print("Self Diagnostic: 0x"); Serial.println(x, HEX);
   Serial.print("Screen width: ");
   Serial.println(tft.width());
   Serial.print("Screen height: ");
