@@ -21,7 +21,7 @@
   * stage -
   * stage +
 
-  You can set a program and walk down range without needing to return to the unit to run, stop or change stages.
+  You can set a program and walk down range without needing to return to the unit to run, stop or change stages. The buzzer chirps briefly by default when changing stage from the RF remote so if you are unsure which stage you are in you can go to the first or last stage (when it cannot go further so will not chirp) to establish what stage is set.
 
   ZPT module can be programmed to respond to several different remotes. See the [ZPT datasheet](https://www.rfsolutions.co.uk/content/download-files/ZPT-3-DATASHEET.pdf) for programming instructions. I keep the learning button internal to the unit so it can't be accidentally activated.
 
