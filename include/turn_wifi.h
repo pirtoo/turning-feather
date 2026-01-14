@@ -5,7 +5,7 @@
 #include "main.h"
 
 #ifdef TURN_WIFI_ENABLE
-#ifndef TURN_WIFI_H
+#ifndef TF_WIFI_H
 #define TURN_WIFI_H
 
 #include <Arduino.h>
@@ -29,5 +29,5 @@ void resetWifi(void);
 // Tasks to do in the loop
 void wifiloop(void);
 
-#endif //IF_WIFI_H
+#endif //TF_WIFI_H
 #endif //TURN_WIFI_ENABLE

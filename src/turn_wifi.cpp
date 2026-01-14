@@ -16,7 +16,6 @@
 // Store wifi settings in Preferences
 Preferences prefs;
 
-
 // Variables to save values from HTML form
 // ssid to connect to as a client
 String ssid="";
@@ -173,7 +172,7 @@ String processor(const String& var) {
   return String();
 }
 
-// Replaces placeholders with values in basetemplate.html for programs
+// Replaces placeholders with values in index.html for program select
 String select_processor(const String& var) {
   if (var == "PROG_OPTIONS") {
     String body;
@@ -209,7 +208,7 @@ void stopWifi() {
 // Try to initialize WiFi as a station/client to a WiFi network
 bool startWiFiClient() {
   if (ssid == "") {
-    Serial.println("No remote SSID set so not connecting as client");
+    Serial.println("No remote SSID set, not connecting as client");
     return false;
   }
 
@@ -219,7 +218,6 @@ bool startWiFiClient() {
   localGateway.fromString(gateway.c_str());
   localSubnet.fromString(subnet.c_str());
 
-  //WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)
   if (!WiFi.config(localIP, localGateway, localSubnet)) {
     Serial.println("WiFi station Failed to configure");
     return false;
@@ -394,6 +392,7 @@ void initWifi() {
   server.on("/WIFIRESET", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("Resetting WiFi configuration.");
     resetWifi();
+    // TODO return this over basetemplate.html
     request->send(200, "text/plain", "Done. Restart controller then connect to default WiFi.");
     //stopWifi();
   });
@@ -509,6 +508,7 @@ void initWifi() {
     // Close Preferences
     prefs.end();
 
+    // TODO return messages over basetemplate.html
     if (pass != "" && pass.length() < TURN_WIFI_PASS_MIN) {
       request->send(400, "text/plain", "Password too short. Minimum length=" + String(TURN_WIFI_PASS_MIN));
     } else if (ap_pass != "" && ap_pass.length() < TURN_WIFI_PASS_MIN) {

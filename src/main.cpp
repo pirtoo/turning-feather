@@ -124,6 +124,7 @@ void setup() {
   while (!Serial) {
     delay(100); // wait for serial port
   }
+  // some delay before dealing with SPI, let it settle
   delay(1000);
 #ifdef DEBUG
   Serial.println("\r\nStart\r\n");
@@ -134,6 +135,7 @@ void setup() {
   np_setup();
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
 
+  // If microsd doesn't work 
   // Keep this before the lcd_setup();
   //SPI.begin(SCK, MISO, MOSI, SD_CS_PIN);
   //pinMode(SD_CS_PIN, OUTPUT);
@@ -200,16 +202,13 @@ void loop() {
   turntick_loop();
   // Take screen button press actions
   button_action(lcd_button(), false);
-
 #ifdef PHYSICAL_BUTTONS
   // Physical buttons action
   buttons_loop();
 #endif
-
 #ifdef TURN_WIFI_ENABLE
   wifiloop();
 #endif //TURN_WIFI_ENABLE
-
 #ifdef USE_ZPT_SERIAL
   // ZPT serial handling
   zpt_serial_loop();
@@ -219,6 +218,5 @@ void loop() {
     zpt_packet_getnew();
   }
 #endif //USE_ZPT_SERIAL
-
   yield();
 }

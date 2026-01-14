@@ -25,9 +25,9 @@
 // To use ESP32 WiFi
 //#define TURN_WIFI_ENABLE
 
-// Default config file, json
+// Default config file, json, sdcard
 #define TURNCONF "/turnconf.txt"
-// Default splash image, bmp
+// Default splash image, bmp, sdcard
 #define SPLASH_BMP "/pp1-320x240.bmp"
 
 // Constants

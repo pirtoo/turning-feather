@@ -5,8 +5,8 @@
  * General defines and main functions.
  */
 
-#ifndef TURNING_H
-#define TURNING_H
+#ifndef TF_TURNING_H
+#define TF_TURNING_H
 
 #include <Arduino.h>
 #include "main.h"
@@ -46,4 +46,4 @@ void turntick_loop(void);
 void timer_setup(void);
 void starttimer(hw_timer_t *timer, const bool resetturn);
 
-#endif //TURNING_H
+#endif //TF_TURNING_H

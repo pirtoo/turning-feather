@@ -22,7 +22,6 @@
           GetStage();
         }
         GetState();
-        GetStage();
       }
       function SendSet(value) {
         var req=new XMLHttpRequest();
@@ -38,6 +37,12 @@
           req.onerror=() => {
             button_updates.value= +button_updates.value +1;
           }
+          req.ontimeout=() => {
+            button_updates.value= +button_updates.value +1;
+          }
+          req.onabort=() => {
+            button_updates.value= +button_updates.value +1;
+          }
           req.onload=() => {
             if (req.readyState === req.DONE && req.status === 200) {
               var jsonResponse=req.response;
@@ -45,8 +50,7 @@
                 programs.value=jsonResponse['prognum'];
                 GetStage();
               }
-              var stagemax=jsonResponse['stagemax'];
-              if (stages.options.length !== stagemax) {
+              if (stages.options.length !== jsonResponse['stagemax']) {
                 var values="";
                 for (let i=0; i<jsonResponse['stagemax']; i++) {
                   values+=`<option value="${i}">${i+1}</option>\n`;
@@ -99,7 +103,7 @@
         req.send();
       }
       function ToggleUpdates() {
-        if (+button_updates.value < 20) {
+        if (button_updates.innerText === "Updates ON") {
           button_updates.value=50;
           button_updates.innerText="Updates OFF";
         } else {

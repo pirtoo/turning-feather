@@ -58,6 +58,32 @@ label {
   font-size: 1.2rem;
   color: #1282A2;
 }
+input[type=submit] {
+  border: none;
+  color: #FEFCFB;
+  background-color: #034078;
+  padding: 10px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  width: 100px;
+  margin-right: 6px;
+  border-radius: 4px;
+  transition-duration: 0.4s;
+}
+input[type=submit]:hover {
+  background-color: #1282A2;
+}
+input[type=text], input[type=number] {
+  width: 50%;
+  padding: 12px 20px;
+  margin: 12px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
 input[type=button],button {
   border: 2px solid white;
   color: #FEFCFB;

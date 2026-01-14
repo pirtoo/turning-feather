@@ -5,7 +5,7 @@
 
 #include <Arduino.h>
 #include "SPI.h"
-#include <Wire.h> // this is needed even though we aren't using it
+#include <Wire.h> // this is needed even though we aren't using it directly
 
 #include "turn_lcd.h"
 #include "TurnConfig.h"
@@ -15,7 +15,7 @@
 #include <Fonts/FreeSans12pt7b.h>
 // This font could be stripped down to only include the letters for
 // STOP START FACE AWAY == 10 characters
-// to save space.
+// to save flash space.
 #include <Fonts/FreeSans24pt7b.h>
 // Graphics display driver
 Adafruit_ILI9341 tft=Adafruit_ILI9341(TFT_CS, TFT_DC);
@@ -264,7 +264,7 @@ void lcd_prog(const char *progname, const uint8_t prognum) {
 void lcd_stage(const struct StageConfig *stage, const uint8_t stagenum) {
   tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
   lcd_prettyfont(12);
-  sprintf(buff, "%02d", stagenum +1);
+  snprintf(buff, 3, "%02d", stagenum +1);
   text_background(stagenum_x, psnum_y, ILI9341_BLACK);
   lcd_drawString(buff, stagenum_x +4, psnum_y +17);
   lcd_defaultfont();
@@ -440,7 +440,6 @@ void lcd_println(const char *str) {
 void lcd_splash(const char *filename) {
   fs::File bmp;
 
-//  lcd_clear();
   bmp = LittleFS.open(filename, FILE_READ);
 
   if (! bmp) {
@@ -450,7 +449,7 @@ void lcd_splash(const char *filename) {
     Serial.println("Splash file open OK");
 #endif //DEBUG
 
-    // Display the bmp file to the screen and pause
+    // Display the bmp file to the screen
     lcd_drawBmp(bmp, 0, 0);
     bmp.close();
 #ifdef DEBUG

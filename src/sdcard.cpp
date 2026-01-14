@@ -13,7 +13,7 @@ File checksdfile(const char *filename) {
   if (!SD.exists(filename)) {
     lcd_print("Config file ");
     lcd_print(filename);
-    lcd_println(" does not exist");
+    lcd_println(" does not exist on SD");
     return file;
   }
   // Open file for reading
@@ -72,10 +72,12 @@ File turn_file_init(const char *turnconf_file) {
     conffile=checkfsfile(turnconf_file);
     if (!conffile) {
       lcd_println("File not found on internal fs");
-      while (1);
+      while (1) {
+        delay(100);
+      }
     } else {
       lcd_println("Using backup file from internal fs.");
-      delay(5000);
+      delay(4000);
     }
   }
   return conffile;

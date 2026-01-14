@@ -36,7 +36,6 @@ volatile uint32_t turncounter=0;
 
 // After a program/stage changes update pointers
 void updatecurrent(void);
-
 bool checknewprognum(const int num);
 bool checknewstagenum(const int num);
 
@@ -91,6 +90,7 @@ void setup_turnconfig() {
 
   // Does this get seen on screen?
   // Add a delay after?
+  // Move lcd print to after splash and info print?
   lcd_print("Loaded ");
   snprintf(line, 3, "%d", turnconfig.programs);
   lcd_print(line);
@@ -295,20 +295,17 @@ void timer_setup() {
   timerWrite(changetimer, 0);
   timerAttachInterrupt(changetimer, &onchangetimer);
   timerAlarm(changetimer, CHANGE_LENGTH, true, 0);
-  //timerAlarmEnable(changetimer);
 
   beeptimer=timerBegin(CLOCK_RATE);
   timerStop(beeptimer);
   timerWrite(beeptimer, 0);
   timerAttachInterrupt(beeptimer, &onbeeptimer);
-  //timerAlarmEnable(beeptimer);
 
   turntimer=timerBegin(CLOCK_RATE);
   timerStop(turntimer);
   timerWrite(turntimer, 0);
   timerAttachInterrupt(turntimer, &onturntimer);
   timerAlarm(turntimer, TURN_RATE, true, 0);
-  //timerAlarmEnable(turntimer);
 }
 
 void turntick_loop() {
@@ -335,7 +332,7 @@ void start_stage() {
     in_stage=IN_FACE;
   }
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
-      np(0x00FF00);
+  np(0x00FF00);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
   in_repeat=1;
 }
@@ -383,9 +380,8 @@ void turntick() {
     switch(in_stage) {
       case IN_INIT_PAUSE:
         // Gap from start if we were facing
-        if (INIT_PAUSE > turncount) {
+        if (INIT_PAUSE > turncount)
           break;
-        }
         // FALLTHROUGH
       case IN_INIT:
         // Initial stage setup/start.
@@ -400,10 +396,9 @@ void turntick() {
 
       case IN_BEEP:
         // Are we ready to face targets?
-        if (currentstage->beep <= turncount) {
+        if (currentstage->beep <= turncount)
           // finished beep pause
           start_stage();
-        }
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0xFF0000);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
@@ -414,15 +409,13 @@ void turntick() {
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0x00FF00);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
-        if (currentstage->flash <= turncount) {
+        if (currentstage->flash <= turncount)
           in_fudge=true;
-        }
         if (currentstage->flash + FACE_FUDGE <= turncount) {
           in_fudge=false;
           // finished exposure pause
-          if (current.face) {
+          if (current.face)
             toggle_face(false);
-          }
           starttimer(turntimer, true);
           in_stage=IN_FLASH_AWAY;
         }
@@ -433,16 +426,14 @@ void turntick() {
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0x0000FF);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
-        if (currentstage->flashaway <= turncount) {
+        if (currentstage->flashaway <= turncount)
           in_fudge=true;
-        }
         if (currentstage->flashaway + AWAY_FUDGE <= turncount) {
           in_fudge=false;
           // Flash away has finished, off to normal face
           starttimer(turntimer, true);
-          if (! current.face) {
+          if (! current.face)
             toggle_face(false);
-          }
           in_stage=IN_FACE;
         }
         break;
@@ -452,15 +443,13 @@ void turntick() {
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0x00FF00);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
-        if (currentstage->face <= turncount) {
+        if (currentstage->face <= turncount)
           in_fudge=true;
-        }
         if (currentstage->face + FACE_FUDGE <= turncount) {
           in_fudge=false;
           // finished exposure pause
-          if (current.face) {
+          if (current.face)
             toggle_face(false);
-          }
           starttimer(turntimer, true);
           // if we're at the end, what next?
           // do we have an automatic next stage?
@@ -484,16 +473,14 @@ void turntick() {
         np(0x0000FF);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
         uint8_t c;
-        if (currentstage->away <= turncount ) {
+        if (currentstage->away <= turncount )
           in_fudge=true;
-        }
         if (currentstage->away + AWAY_FUDGE <= turncount ) {
           in_fudge=false;
           // finished away pause
           starttimer(turntimer, true);
-          if (! current.face) {
+          if (! current.face)
             toggle_face(false);
-          }
           in_stage=IN_FACE;
           in_repeat++;
         }
@@ -515,9 +502,8 @@ void turntick() {
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0xFF0000);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
-        if (currentstage->nextaway <= turncount) {
+        if (currentstage->nextaway <= turncount)
           in_fudge=true;
-        }
         if (currentstage->nextaway + AWAY_FUDGE <= turncount) {
           in_fudge=false;
           // Start the next program

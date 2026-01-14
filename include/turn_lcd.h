@@ -3,8 +3,8 @@
  * touch info
  */
 
-#ifndef TURNING_LCD_H
-#define TURNING_LCD_H
+#ifndef TF_LCD_H
+#define TF_LCD_H
 
 #include "turning.h"
 #include "TurnConfig.h"
@@ -77,4 +77,4 @@ void lcd_setup(void);
 
 bool ts_read_ready(void);
 
-#endif // TURNING_LCD_H
+#endif //TF_LCD_H

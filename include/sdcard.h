@@ -2,8 +2,8 @@
  * SD card and config file 
  */
 
-#ifndef TURNING_SDCARD_H
-#define TURNING_SDCARD_H
+#ifndef TF_SDCARD_H
+#define TF_SDCARD_H
 
 #include "turning.h"
 
@@ -22,12 +22,10 @@
 
 #include <SPI.h>
 #include <SD.h>
-//#define FS_NO_GLOBALS
-//#include <FS.h>
 #include <esp_littlefs.h>
 #include <LittleFS.h>
 
 void storage_init();
 File turn_file_init(const char *turnconf_file);
 
-#endif //TURNING_SDCARD_H
+#endif //TF_SDCARD_H
