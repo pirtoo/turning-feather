@@ -11,12 +11,12 @@
         return JKey in JObject ? JObject[JKey] : Default;
       }
       function Start() {
-        document.getElementById('programs').onchange = function() {
+        programs.onchange = function() {
           var index=this.selectedIndex;
           SendSet(`prognum=${index}`);
           GetStage();
         }
-        document.getElementById('stages').onchange = function() {
+        stages.onchange = function() {
           var index=this.selectedIndex;
           SendSet(`stagenum=${index}`);
           GetStage();
@@ -36,7 +36,7 @@
           req.open('GET', 'state.json');
 
           req.onerror=() => {
-            button_updates.value=+button_updates.value +1;
+            button_updates.value= +button_updates.value +1;
           }
           req.onload=() => {
             if (req.readyState === req.DONE && req.status === 200) {
@@ -49,8 +49,7 @@
               if (stages.options.length !== stagemax) {
                 var values="";
                 for (let i=0; i<jsonResponse['stagemax']; i++) {
-                  j=i+1;
-                  values+=`<option value="${i}">${j}</option>\n`;
+                  values+=`<option value="${i}">${i+1}</option>\n`;
                 }
                 stages.innerHTML=values;
               }
