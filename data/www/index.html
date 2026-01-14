@@ -77,7 +77,7 @@
           }
           req.send();
         }
-        if (+button_updates.value > 19 && +button_updates.value < 50) {
+        if (button_updates.innerText === "Updates ON" && +button_updates.value > 19) {
           button_updates.value=50;
           button_updates.innerText="Updates OFF";
         }
