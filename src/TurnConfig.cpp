@@ -46,6 +46,17 @@ void StageConfig::clearnext() {
   nextaway=0;
 }
 
+bool serializeStageConfig(const StageConfig *config, char *dst, const size_t dst_len) {
+  JsonDocument doc;
+  bool result;
+  JsonObject rootobj=doc.to<JsonObject>();
+  config->save(rootobj);
+  result=serializeJson(doc, dst, dst_len);
+  if (! result)
+    Serial.println("Failed to serialise status json");
+  return result;
+}
+
 void ProgramConfig::save(JsonObject obj) const {
   obj["name"]=longname;
 
@@ -61,7 +72,6 @@ void ProgramConfig::load(JsonObjectConst obj) {
 
   // Get a reference to the stages array
   JsonArrayConst sts=obj["stages"];
-
   // Extract each stage
   stages=0;
   for (JsonObjectConst st : sts) {
@@ -72,7 +82,6 @@ void ProgramConfig::load(JsonObjectConst obj) {
     if (stages >= maxstages)
       break;
   }
-
   // The last stage should not have autonext or nextaway set
   // because there is nothing to move on to.
   stage[stages -1].clearnext();
@@ -120,4 +129,37 @@ bool deserializeTurnConfig(Stream &src, TurnConfig &config) {
 
   config.load(doc.as<JsonArray>());
   return true;
+}
+
+void ControlStatus::save(JsonObject obj) const {
+  obj["prognum"]=prognum;
+  obj["stagenum"]=stagenum;
+  obj["stagemax"]=stagemax;
+  obj["stop"]=stop;
+  obj["face"]=face;
+  obj["status"]=status;
+}
+
+bool serializeControlStatus(ControlStatus status, char *dst, size_t dst_len) {
+  JsonDocument doc;
+  bool result;
+  JsonObject rootobj=doc.to<JsonObject>();
+  status.save(rootobj);
+  result=serializeJson(doc, dst, dst_len);
+  if (! result)
+    Serial.println("Failed to serialise status json");
+  return result;
+}
+
+bool serializeProgList(TurnConfig *tc, char *dst, const size_t dst_len) {
+  JsonDocument doc;
+  bool result;
+  JsonArray rootobj=doc.to<JsonArray>();
+  for (uint8_t i=0; i<tc->programs; i++) {
+    rootobj.add(tc->program[i].longname);
+  }
+  result=serializeJson(doc, dst, dst_len);
+  if (! result)
+    Serial.println("Failed to serialise prog list json");
+  return result;
 }

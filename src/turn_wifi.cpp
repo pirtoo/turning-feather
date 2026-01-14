@@ -48,17 +48,15 @@ IPAddress localSubnet(255, 255, 255, 0);
 unsigned long previousMillis = 0;
 const long interval = 10000;  // interval to wait for Wi-Fi connection (milliseconds)
 
-// Set LED GPIO
-const int ledPin = LED_BUILTIN;
-// LED state
-String ledState;
+// Actions to be taken in the loop
+bool loopToggleStop=false, loopToggleFace=false;
 
 // Local functions
 bool startWiFiClient();
 void stopWifi();
 
 String processor(const String& var);
-String programs_processor(const String& var);
+String select_processor(const String& var);
 
 String getStringIf(char *name);
 void removeIf(char *name);
@@ -141,14 +139,7 @@ void resetWifi(void) {
 
 // Replaces placeholders with values in most pages
 String processor(const String& var) {
-  if (var == "STATE") {
-    if (digitalRead(ledPin)) {
-      ledState = "ON";
-    } else {
-      ledState = "OFF";
-    }
-    return ledState;
-  } else if (var == "MAC") {
+  if (var == "MAC") {
     return MAC;
   } else if (var == "SSID") {
     return ssid;
@@ -183,23 +174,29 @@ String processor(const String& var) {
 }
 
 // Replaces placeholders with values in basetemplate.html for programs
-String programs_processor(const String& var) {
-  if (var == "TITLE") {
-    return String("Select program");
-  } else if (var == "TOPHEADER") {
-    return String("Select program");
-  } else if (var == "BASE_BODY") {
+String select_processor(const String& var) {
+  if (var == "PROG_OPTIONS") {
+    String body;
     // Get a pointer to the turning config array
     TurnConfig *tc=turnconfig_ptr();
-    String body="<div><label for=\"programs\">Select program:</label>\n";
-    body+="<select name=\"programs\" id=\"programs\">";
-    for (uint8_t i=0; i<tc->programs; i++) {
+    for (uint8_t i=0;i<tc->programs;i++) {
       body+="<option value=\"" + String(i) + "\">" + String(tc->program[i].longname) + "</option>\n";
     }
-    body+="</select\n";
     return body;
   }
   return String();
+}
+
+void wifiloop(void) {
+  // Take actions that should not interrupt current screen redraws, etc
+  if (loopToggleFace) {
+    loopToggleFace=! loopToggleFace;
+    toggle_face(false);
+  }
+  if (loopToggleStop) {
+    loopToggleStop=! loopToggleStop;
+    toggle_stop();
+  }
 }
 
 // Shut down web and wifi
@@ -261,13 +258,8 @@ bool startWiFiClient() {
 void initWifi() {
   // Work out how we are setting up, AP or client, and do it.
 
-  // Set LED pin as an OUTPUT
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
-
+  // We need file storage
   initLittleFS();
-
-
   // Init Preferences R/O
   prefs.begin(TURN_WIFI_PREFS, true);
 
@@ -333,21 +325,69 @@ void initWifi() {
   Serial.print("WiFi MAC: ");
   Serial.println(MAC);
 
-  // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(LittleFS, "/www/index.html", "text/html", false, processor);
+    request->send(LittleFS, "/www/index.html", "text/html", false, select_processor);
+  });
+  server.on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(LittleFS, "/www/index.html", "text/html", false, select_processor);
   });
 
-  // Route to set GPIO state to HIGH
-  server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request) {
-    digitalWrite(ledPin, HIGH);
-    request->send(LittleFS, "/www/index.html", "text/html", false, processor);
+  server.on("/set.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "OK");
+    int params = request->params();
+#ifdef DEBUG
+    Serial.println("set.html results");
+    Serial.println(params);
+#endif //DEBUG
+    for (int i=0;i<params;i++) {
+      const AsyncWebParameter* p = request->getParam(i);
+#ifdef DEBUG
+      Serial.println(p->name());
+#endif //DEBUG
+
+      if (p->name() == "prognum") {
+#ifdef DEBUG
+        Serial.print("prognum: ");
+        Serial.println(p->value().c_str());
+#endif //DEBUG
+        changeprognum(p->value().toInt());
+
+      } else if (p->name() == "stagenum") {
+#ifdef DEBUG
+        Serial.print("stagenum: ");
+        Serial.println(p->value().c_str());
+#endif //DEBUG
+        changestagenum(p->value().toInt(), false);
+
+      } else if (p->name() == "stop") {
+#ifdef DEBUG
+        Serial.print("stop: ");
+        Serial.println(p->value().c_str());
+#endif //DEBUG
+        if (p->value() == "T")
+          loopToggleStop=true;
+      } else if (p->name() == "face") {
+#ifdef DEBUG
+        Serial.print("face: ");
+        Serial.println(p->value().c_str());
+#endif //DEBUG
+        if (p->value() == "T")
+          loopToggleFace=true;
+      }
+    }
   });
 
-  // Route to set GPIO state to LOW
-  server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request) {
-    digitalWrite(ledPin, LOW);
-    request->send(LittleFS, "/www/index.html", "text/html", false, processor);
+  server.on("/state.json", HTTP_GET, [](AsyncWebServerRequest *request) {
+    // Return json of the current state of the controller
+    request->send(200, "application/json", state_json());
+  });
+
+  server.on("/programs.json", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "application/json", prog_list_json());
+  });
+
+  server.on("/stage.json", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "application/json", stage_json());
   });
 
   // Reset all WiFi configs
@@ -358,11 +398,6 @@ void initWifi() {
     //stopWifi();
   });
 
-  // TODO This needs a POST method which selects the program on the controller
-  server.on("/programs.html", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(LittleFS, "/www/basetemplate.html", "text/html", false, programs_processor);
-  });
-
   // Setup page with values to save
   server.on("/wifisetup.html", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(LittleFS, "/www/wifisetup.html", "text/html", false, processor);
@@ -371,9 +406,9 @@ void initWifi() {
   server.on("/wifisetup.html", HTTP_POST, [](AsyncWebServerRequest *request) {
     // Set WiFi Preferences
     int params = request->params();
-    for(int i=0;i<params;i++){
+    for (int i=0;i<params;i++) {
       const AsyncWebParameter* p = request->getParam(i);
-      if(p->isPost()){
+      if (p->isPost()) {
         // HTTP POST values
         // Open prefs R/W
         prefs.begin(TURN_WIFI_PREFS, false);
@@ -390,9 +425,7 @@ void initWifi() {
           } else {
             removeIf("ssid");
           }
-        }
-        // HTTP POST pass value
-        if (p->name() == "pass") {
+        } else if (p->name() == "pass") {
           pass = p->value().c_str();
           pass.trim();
 #ifdef DEBUG
@@ -404,8 +437,7 @@ void initWifi() {
           } else if (pass.length() >= TURN_WIFI_PASS_MIN) {
             prefs.putString("pass", pass);
           }
-        }
-        if (p->name() == "ap_ssid") {
+        } else if (p->name() == "ap_ssid") {
           ap_ssid = p->value().c_str();
           ap_ssid.trim();
 #ifdef DEBUG
@@ -417,9 +449,7 @@ void initWifi() {
           } else {
             removeIf("ap_ssid");
           }
-        }
-        // HTTP POST ap_pass value
-        if (p->name() == "ap_pass") {
+        } else if (p->name() == "ap_pass") {
           ap_pass = p->value().c_str();
           ap_pass.trim();
 #ifdef DEBUG
@@ -431,9 +461,7 @@ void initWifi() {
           } else if (ap_pass.length() >= TURN_WIFI_PASS_MIN) {
             prefs.putString("ap_pass", ap_pass);
           }
-        }
-        // HTTP POST ip value
-        if (p->name() == "ip") {
+        } else if (p->name() == "ip") {
           ip = p->value().c_str();
           ip.replace(" ", "");
           // TODO ip needs more validation
@@ -446,9 +474,7 @@ void initWifi() {
           } else {
             removeIf("ip");
           }
-        }
-        // HTTP POST gateway value
-        if (p->name() == "subnet") {
+        } else if (p->name() == "subnet") {
           subnet = p->value().c_str();
           subnet.replace(" ", "");
           // TODO subnet needs more validation
@@ -461,9 +487,7 @@ void initWifi() {
           } else {
             removeIf("subnet");
           }
-        }
-        // HTTP POST gateway value
-        if (p->name() == "gateway") {
+        } else if (p->name() == "gateway") {
           gateway = p->value().c_str();
           gateway.replace(" ", "");
           // TODO gateway needs more validation
@@ -484,7 +508,6 @@ void initWifi() {
     }
     // Close Preferences
     prefs.end();
-
 
     if (pass != "" && pass.length() < TURN_WIFI_PASS_MIN) {
       request->send(400, "text/plain", "Password too short. Minimum length=" + String(TURN_WIFI_PASS_MIN));

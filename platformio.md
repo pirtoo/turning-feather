@@ -16,7 +16,7 @@ The project used to use TFT_eSPI but the configuration for it was not simple and
 
 ## Internal filesystem
 
-The boot splash image and the backup configuration live on internal flash, this can be SPIFFS or LittleFS. The configuration is normally loaded from the sdcard and uses the internal filesystem as a backup in case there is no sdcard, the boot image is normally loaded from the internal filesystem.
+The boot splash image and the backup configuration live on internal flash,  LittleFS. The configuration is normally loaded from the sdcard and uses the internal filesystem as a backup in case there is no sdcard, the boot image is normally loaded from the internal filesystem.
 
 If you use LittleFS the first time the ESP32 is powered on after the Turning Feather code is installed it will format the onboard filesystem then fail to load files from it since it is empty. You can then transfer the files in [data](data/) with [the Arduino IDE uploader](https://randomnerdtutorials.com/esp32-vs-code-platformio-littlefs/). If you change the define in the [code](include/turning.h) and the config in [platformio.ini](platformio.ini) then you can go back to SPIFFS if desired but support for SPIFFS is apparently ending.
 

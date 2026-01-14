@@ -69,6 +69,8 @@ struct StageConfig {
   void save(JsonObject) const;
 };
 
+bool serializeStageConfig(const StageConfig *config, char *dst, const size_t dst_len);
+
 // The config for a program/course of fire
 struct ProgramConfig {
   static const uint8_t maxstages=TURN_MAX_STAGES;
@@ -94,3 +96,29 @@ struct TurnConfig {
 
 bool serializeTurnConfig(const TurnConfig &config, Print &dst);
 bool deserializeTurnConfig(Stream &src, TurnConfig &config);
+
+// json for the state of the controller
+
+// {
+//   "prognum": 0,
+//   "stagenum": 0,
+//   "stagemax": 0,
+//   "stop": True,
+//   "face": False,
+//   "status: 0
+// }
+
+struct ControlStatus {
+  uint8_t prognum;
+  uint8_t stagenum;
+  uint8_t stagemax;
+  bool stop;
+  bool face;
+  uint8_t status;
+
+  void save(JsonObject obj) const;
+};
+
+bool serializeControlStatus(ControlStatus status, char *dst, const size_t dst_len);
+bool serializeProgList(TurnConfig *tc, char *dst, const size_t dst_len);
+

@@ -160,7 +160,12 @@ void setup() {
   lcd_println("tf@pir.net                ");
   Serial.println("");
 
-  delay(3000);
+  // If enabled bring up WiFi
+#ifdef TURN_WIFI_ENABLE
+  initWifi();
+#else
+  delay(2000);
+#endif //TURN_WIFI_ENABLE
 
   // Load the config into a datastructure
   setup_turnconfig();
@@ -178,14 +183,8 @@ void setup() {
   zpt_serial_setup();
 #endif //USE_ZPT_SERIAL
 
-  timer_setup();
   // Timer and face/away setup.
-
-  // If enabled bring up WiFi
-#ifdef TURN_WIFI_ENABLE
-  initWifi();
-#endif //TURN_WIFI_ENABLE
-
+  timer_setup();
 
   Serial.println(F("\r\nSetup finished.\r\n"));
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
@@ -206,6 +205,10 @@ void loop() {
   // Physical buttons action
   buttons_loop();
 #endif
+
+#ifdef TURN_WIFI_ENABLE
+  wifiloop();
+#endif //TURN_WIFI_ENABLE
 
 #ifdef USE_ZPT_SERIAL
   // ZPT serial handling

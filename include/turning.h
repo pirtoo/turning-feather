@@ -12,6 +12,8 @@
 #include "main.h"
 #include "TurnConfig.h"
 
+#define STATUS_JSON_MAX_SIZE 1024
+
 // Where in the process are we?
 enum stage {
   IN_INIT,
@@ -31,6 +33,12 @@ void button_action(const unsigned int button, const bool chirp);
 void toggle_stop(void);
 void toggle_face(bool use_timer);
 TurnConfig *turnconfig_ptr(void);
+char *state_json(void);
+char *prog_list_json(void);
+char *stage_json(void);
+
+bool changeprognum(const int prognum);
+bool changestagenum(const int stagenum, const bool chirp);
 
 void turntick(void);
 void turntick_loop(void);

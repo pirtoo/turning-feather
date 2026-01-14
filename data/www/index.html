@@ -1,28 +1,183 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Turning Feather</title>
+    <title>Turning Feather State</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Pragma" content="no-cache">
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="icon" type="image/png" href="favicon.png">
+    <script>
+      function JsonGetWithDefault(JObject, JKey, Default) {
+        return JKey in JObject ? JObject[JKey] : Default;
+      }
+      function Start() {
+        document.getElementById('programs').onchange = function() {
+          var index=this.selectedIndex;
+          SendSet(`prognum=${index}`);
+          GetStage();
+        }
+        document.getElementById('stages').onchange = function() {
+          var index=this.selectedIndex;
+          SendSet(`stagenum=${index}`);
+          GetStage();
+        }
+        GetState();
+        GetStage();
+      }
+      function SendSet(value) {
+        var req=new XMLHttpRequest();
+        req.open('GET', `set.html?${value}`);
+        req.send();
+      }
+      function GetState() {
+        if (+button_updates.value < 20) {
+          var req=new XMLHttpRequest();
+          req.responseType='json';
+          req.open('GET', 'state.json');
+
+          req.onerror=() => {
+            button_updates.value=+button_updates.value +1;
+          }
+          req.onload=() => {
+            if (req.readyState === req.DONE && req.status === 200) {
+              var jsonResponse=req.response;
+              if (+programs.value !== jsonResponse['prognum']) {
+                programs.value=jsonResponse['prognum'];
+                GetStage();
+              }
+              var stagemax=jsonResponse['stagemax'];
+              if (stages.options.length !== stagemax) {
+                var values="";
+                for (let i=0; i<jsonResponse['stagemax']; i++) {
+                  j=i+1;
+                  values+=`<option value="${i}">${j}</option>\n`;
+                }
+                stages.innerHTML=values;
+              }
+              if (stage_table.value != jsonResponse['stagenum']) {
+                stages.value=jsonResponse['stagenum'];
+                stage_table.value=jsonResponse['stagenum'];
+                GetStage();
+              }
+
+              if (jsonResponse['stop'] && button_stop.value !== 'STOPPED') {
+                button_stop.value='STOPPED';
+              } else if (! jsonResponse['stop'] && button_stop.value !== 'RUNNING') {
+                button_stop.value='RUNNING';
+              }
+              if (jsonResponse['face'] && button_face.value !== 'FACE') {
+                button_face.value='FACE';
+              } else if (! jsonResponse['face'] && button_face.value !== 'AWAY') {
+                button_face.value='AWAY';
+              }
+            }
+          }
+          req.send();
+        }
+        if (+button_updates.value > 19 && +button_updates.value < 50) {
+          button_updates.value=50;
+          button_updates.innerText="Updates OFF";
+        }
+        setTimeout('GetState()', 500);
+      }
+      function GetStage() {
+        var req=new XMLHttpRequest();
+        req.responseType='json';
+        req.open('GET', 'stage.json');
+        req.onload=() => {
+          if (req.readyState === req.DONE && req.status === 200) {
+            var jsonResponse=req.response;
+            val_b.textContent=JsonGetWithDefault(jsonResponse, 'beep', '');
+            val_f.textContent=JsonGetWithDefault(jsonResponse, 'face', '');
+            val_a.textContent=JsonGetWithDefault(jsonResponse, 'away', '');
+            val_r.textContent=JsonGetWithDefault(jsonResponse, 'repeat', '');
+            val_fl.textContent=JsonGetWithDefault(jsonResponse, 'flash', '');
+            val_fa.textContent=JsonGetWithDefault(jsonResponse, 'flashaway', '');
+            val_na.textContent=JsonGetWithDefault(jsonResponse, 'nextaway', '');
+            val_an.textContent=JsonGetWithDefault(jsonResponse, 'autonext', 'false');
+          }
+        }
+        req.send();
+      }
+      function ToggleUpdates() {
+        if (+button_updates.value < 20) {
+          button_updates.value=50;
+          button_updates.innerText="Updates OFF";
+        } else {
+          button_updates.value=0;
+          button_updates.innerText="Updates ON";
+        }
+      }
+      function StopStart() {
+        SendSet('stop=T');
+      }
+      function FaceAway() {
+        SendSet('face=T');
+      }
+    </script>
   </head>
-  <body>
+  <body onload="Start()">
     <div class="topnav">
-      <h1>Buttons</h1>
-    </div>
-    <div>
-      <a href="wifisetup.html">WiFi Setup</a>
+      <h1>Turning Feather</h1>
     </div>
     <div class="content">
       <div class="card-grid">
         <div class="card">
-          <p class="card-title"><i class="fas fa-lightbulb"></i>LED_BUILTIN</p>
           <p>
-            <a href="on"><button class="button-on">ON</button></a>
-            <a href="off"><button class="button-off">OFF</button></a>
+            <input type="button" id="button_stop" onclick="StopStart()" value="- -">
+            <input type="button" id="button_face" onclick="FaceAway()" value="- -">
           </p>
-          <p class="state">State: %STATE%</p>
+        </div>
+        <div class="card">
+          <p>
+            <select name="programs" id="programs">
+              %PROG_OPTIONS%
+            </select>
+            <select name="stages" id="stages">
+            </select>
+            <table id="stage_table", value="">
+              <caption>Current stage</caption>
+              <tbody>
+              <tr>
+                <th scope="row">Beep</th>
+                <td id="val_b">- -</td>
+              </tr>
+              <tr>
+                <th scope="row">Face</th>
+                <td id="val_f">- -</td>
+              </tr>
+              <tr>
+                <th scope="row">Away</th>
+                <td id="val_a">- -</td>
+              </tr>
+              <tr>
+                <th scope="row">Repeat</th>
+                <td id="val_r">- -</td>
+              </tr>
+              <tr>
+                <th scope="row">Flash</th>
+                <td id="val_fl">- -</td>
+              </tr>
+              <tr>
+                <th scope="row">Flash away</th>
+                <td id="val_fa">- -</td>
+                </tr>
+              <tr>
+                <th scope="row">Next away</th>
+                <td id="val_na">- -</td>
+              </tr>
+              <tr>
+                <th scope="row">Auto next</th>
+                <td id="val_an">- -</td>
+              </tr>
+            </tbody>
+          </table>
+        </p>
+        </div>
+        <div class="card">
+          <p>
+            <button id="button_updates" onclick="ToggleUpdates()" value="0" width="200">Updates ON</button>
+          </p>
         </div>
       </div>
     </div>

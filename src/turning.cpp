@@ -16,23 +16,14 @@
 #include "turn_rfbuttons.h"
 #endif //RF_BUTTONS
 
-/*
- * Definitions that need to be early
- */
-
-// Are the targets facing (or in the process of facing)
-// vs away or in the process of turning away.
-// Are we in a running program or stopped.
-bool face=true, turnstop=true;
-
 // Config file
 #include "TurnConfig.h"
 struct TurnConfig turnconfig;
 struct ProgramConfig *currentprog;
 struct StageConfig *currentstage;
 const char *turnconf_file=TURNCONF;
-
-uint8_t currentstagenum=0, currentprognum=0;
+struct ControlStatus current;
+char json[STATUS_JSON_MAX_SIZE];
 
 enum stage in_stage=IN_INIT;
 
@@ -43,12 +34,34 @@ bool in_fudge=false;
 // How many seconds since the turn counter started.
 volatile uint32_t turncounter=0;
 
+// After a program/stage changes update pointers
+void updatecurrent(void);
+
+bool checknewprognum(const int num);
+bool checknewstagenum(const int num);
+
+// Return the current state of the controller as json
+char *state_json(void) {
+  serializeControlStatus(current, json, STATUS_JSON_MAX_SIZE);
+  return json;
+}
+
+// Return the current stage config as json
+char *stage_json(void) {
+  serializeStageConfig(currentstage, json, STATUS_JSON_MAX_SIZE);
+  return json;
+}
+
+// Return the list of programs on the controller as json
+char *prog_list_json(void) {
+  serializeProgList(&turnconfig, json, STATUS_JSON_MAX_SIZE);
+  return json;
+}
+
 TurnConfig *turnconfig_ptr(void) {
   // Return a pointer to the turnconfig object
   return &turnconfig;
 }
-
-
 
 void setup_turnconfig() {
   // Get the config file from SD/SPIFFS/LittleFS
@@ -56,7 +69,7 @@ void setup_turnconfig() {
   File turnfile=turn_file_init(turnconf_file);
 
   // This may fail if the JSON is invalid
-  if (!deserializeTurnConfig(turnfile, turnconfig)) {
+  if (! deserializeTurnConfig(turnfile, turnconfig)) {
     lcd_clear();
     lcd_println("Config file not valid");
     while (1) {
@@ -64,9 +77,17 @@ void setup_turnconfig() {
     }
   }
 
-  // Set pointer to initial program and stage
-  currentprog=&turnconfig.program[currentprognum];
-  currentstage=&currentprog->stage[currentstagenum];
+  // Start at program 0
+  current.prognum=0;
+  // Start at stage 0
+  current.stagenum=0;
+  // We are not running or away
+  current.stop=true;
+  current.face=true;
+  // TODO Need a better translation from the enum to something displayable?
+  current.status=0;
+  // Set pointers to initial program and stage
+  updatecurrent();
 
   // Does this get seen on screen?
   // Add a delay after?
@@ -86,25 +107,24 @@ void setup_turnconfig() {
 #endif
 
   // Display setup on the LCD
-  lcd_display_set(currentprog, currentprognum, currentstagenum);
-  lcd_stop(turnstop);
+  lcd_display_set(currentprog, current.prognum, current.stagenum);
+  lcd_stop(current.stop);
 }
 
-bool checkstagechange(const int change) {
+bool checknewstagenum(const int num) {
   // Check if a stage change can be made
-  return ((currentstagenum + change < currentprog->stages) and
-          (currentstagenum + change >= 0));
+  return ((num < currentprog->stages) and (num >= 0));
 }
 
-bool changestagenum(const int change, const bool chirp) {
+bool changestagenum(const int stagenum, const bool chirp) {
   // Alter the current stage num within parameters
-  if (not checkstagechange(change)) {
+  if (! checknewstagenum(stagenum))
     return false;
-  }
-  currentstagenum=currentstagenum + change;
+
+  current.stagenum=stagenum;
 #ifdef DEBUG
   Serial.print(F("Set stage to "));
-  Serial.println(currentstagenum);
+  Serial.println(current.stagenum);
 #endif //DEBUG
 #ifdef STAGE_CHANGE_CHIRP
   if (chirp) {
@@ -113,33 +133,36 @@ bool changestagenum(const int change, const bool chirp) {
   }
 #endif //STAGE_CHANGE_CHIRP
   updatecurrent();
-  lcd_stage(currentstage, currentstagenum);
+  lcd_stage(currentstage, current.stagenum);
   return true;
 }
 
-bool changeprognum(const int change) {
+bool checknewprognum(const int num) {
+  // Check if a program change can be made
+  return ((num < turnconfig.programs) and (num >= 0));
+}
+
+bool changeprognum(const int prognum) {
   // Alter the current stage num within parameters
-  if (currentprognum + change >= turnconfig.programs) {
+  if (! checknewprognum(prognum))
     return false;
-  }
-  if (currentprognum + change < 0) {
-    return false;
-  }
-  currentprognum=currentprognum + change;
-  currentstagenum=0;
+
+  current.prognum=prognum;
+  current.stagenum=0;
 #ifdef DEBUG
   Serial.print(F("Set program to "));
-  Serial.println(currentprognum);
+  Serial.println(current.prognum);
 #endif //DEBUG
   updatecurrent();
-  lcd_prog(currentprog->longname, currentprognum);
-  lcd_stage(currentstage, currentstagenum);
+  lcd_prog(currentprog->longname, current.prognum);
+  lcd_stage(currentstage, current.stagenum);
   return true;
 }
 
 void updatecurrent() {
-  currentprog=&turnconfig.program[currentprognum];
-  currentstage=&currentprog->stage[currentstagenum];
+  currentprog=&turnconfig.program[current.prognum];
+  currentstage=&currentprog->stage[current.stagenum];
+  current.stagemax=currentprog->stages;
 #ifdef DEBUG2
   Serial.print("Stage: beep=");
   Serial.print(currentstage->beep);
@@ -187,8 +210,8 @@ void button_action(const unsigned int button, const bool chirp) {
 #ifdef DEBUG
       Serial.println("stage--");
 #endif // DEBUG
-      if (turnstop) {
-        changestagenum(-1, chirp);
+      if (current.stop) {
+        changestagenum(current.stagenum -1, chirp);
       }
       break;
     case 4:
@@ -196,8 +219,8 @@ void button_action(const unsigned int button, const bool chirp) {
 #ifdef DEBUG
       Serial.println("stage++");
 #endif // DEBUG
-      if (turnstop) {
-        changestagenum(1, chirp);
+      if (current.stop) {
+        changestagenum(current.stagenum +1, chirp);
       }
       break;
     case 5:
@@ -205,8 +228,8 @@ void button_action(const unsigned int button, const bool chirp) {
 #ifdef DEBUG
       Serial.println("program--");
 #endif // DEBUG
-      if (turnstop) {
-        changeprognum(-1);
+      if (current.stop) {
+        changeprognum(current.prognum -1);
       }
       break;
     case 6:
@@ -214,8 +237,8 @@ void button_action(const unsigned int button, const bool chirp) {
 #ifdef DEBUG
       Serial.println("program++");
 #endif // DEBUG
-      if (turnstop) {
-        changeprognum(1);
+      if (current.stop) {
+        changeprognum(current.prognum +1);
       }
       break;
   }
@@ -300,7 +323,7 @@ void start_stage() {
   // without wasting a tick to go to the beep state
   // when beep is zero.
 
-  if (!face) {
+  if (! current.face) {
     toggle_face(false);
   }
   starttimer(turntimer, true);
@@ -331,7 +354,7 @@ void turntick() {
   // Where are we in what part of a stage?
   // Main turning targets logic.
 
-  if (turnstop) {
+  if (current.stop) {
     // We are not running, stop the timer
     timerStop(turntimer);
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
@@ -397,7 +420,7 @@ void turntick() {
         if (currentstage->flash + FACE_FUDGE <= turncount) {
           in_fudge=false;
           // finished exposure pause
-          if (face) {
+          if (current.face) {
             toggle_face(false);
           }
           starttimer(turntimer, true);
@@ -417,7 +440,7 @@ void turntick() {
           in_fudge=false;
           // Flash away has finished, off to normal face
           starttimer(turntimer, true);
-          if (!face) {
+          if (! current.face) {
             toggle_face(false);
           }
           in_stage=IN_FACE;
@@ -435,7 +458,7 @@ void turntick() {
         if (currentstage->face + FACE_FUDGE <= turncount) {
           in_fudge=false;
           // finished exposure pause
-          if (face) {
+          if (current.face) {
             toggle_face(false);
           }
           starttimer(turntimer, true);
@@ -468,7 +491,7 @@ void turntick() {
           in_fudge=false;
           // finished away pause
           starttimer(turntimer, true);
-          if (!face) {
+          if (! current.face) {
             toggle_face(false);
           }
           in_stage=IN_FACE;
@@ -479,7 +502,7 @@ void turntick() {
       case IN_NEXT:
         // Skipping onto the next stage automatically
         // Setting is taken from the previous stage.
-        if (not checkstagechange(1)) {
+        if (not checknewstagenum(current.stagenum + 1)) {
 #ifdef DEBUG
           Serial.println("NO AUTONEXT");
 #endif //DEBUG
@@ -498,7 +521,7 @@ void turntick() {
         if (currentstage->nextaway + AWAY_FUDGE <= turncount) {
           in_fudge=false;
           // Start the next program
-          changestagenum(1, false);
+          changestagenum(current.stagenum +1, false);
           updatecurrent();
           if (currentstage->beep > 0) {
             in_stage=IN_BEEP;
@@ -515,10 +538,10 @@ void turntick() {
 
 void toggle_stop() {
   // Toggle start/stop
-  turnstop=!turnstop;
-  lcd_stop(turnstop);
+  current.stop=!current.stop;
+  lcd_stop(current.stop);
 
-  if (turnstop) {
+  if (current.stop) {
 #if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
     np(0);
 #endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
@@ -539,7 +562,7 @@ void toggle_stop() {
     starttimer(turntimer, true);
 
     // Make sure targets go away.
-    if (face) {
+    if (current.face) {
       toggle_face(false);
       in_stage=IN_INIT_PAUSE;
     } else {
@@ -554,11 +577,11 @@ void toggle_stop() {
 
 void toggle_face(bool use_timer) {
   // Toggle face/away
-  face=!face;
+  current.face=!current.face;
   // Work out how to check if the timer is running before stopping it
   timerStop(changetimer);
-  lcd_face(face);
-  if (face) {
+  lcd_face(current.face);
+  if (current.face) {
     // Face the target
 #ifdef DEBUG
     Serial.println("FACE");

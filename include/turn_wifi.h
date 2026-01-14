@@ -26,6 +26,8 @@
 void initWifi(void);
 // Set all wifi settings back to defaults
 void resetWifi(void);
+// Tasks to do in the loop
+void wifiloop(void);
 
 #endif //IF_WIFI_H
 #endif //TURN_WIFI_ENABLE
