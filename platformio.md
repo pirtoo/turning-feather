@@ -22,4 +22,4 @@ If you use LittleFS the first time the ESP32 is powered on after the Turning Fea
 
 ## ArduinoJson
 
-The project has updated to ArduinoJson V7 which is current. This no longer needs a pre-calculation of size, it will work with json files up to the size of memory. If your jso file doesn't work then it may be too large. A planned feature addition is the ability to use different files. Stage names are limited in length because the screen width is limited.
+The project has updated to ArduinoJson V7 which is current. This no longer needs a pre-calculation of size, it will work with json files up to the size of memory. If your json file doesn't work then it may be too large. A planned feature addition is the ability to use different files. Stage names are limited in length because the screen width is limited.
