@@ -230,6 +230,7 @@ void stopWifi() {
 bool startWiFiClient() {
   if (ssid == "") {
     Serial.println("No remote SSID set, not connecting as client");
+    delay(2000);
     return false;
   }
 
@@ -265,12 +266,15 @@ bool startWiFiClient() {
   localIP=WiFi.localIP();
   localSubnet=WiFi.subnetMask();
   localGateway=WiFi.gatewayIP();
+  MAC=WiFi.macAddress();
   Serial.print("Client WiFi ip: ");
   Serial.println(localIP);
   Serial.print("Client WiFi subnet: ");
   Serial.println(localSubnet);
   Serial.print("Client WiFi gateway: ");
   Serial.println(localGateway);
+  Serial.print("WiFi MAC: ");
+  Serial.println(MAC);
   return true;
 }
 
@@ -335,16 +339,16 @@ bool initWifi() {
     localIP=WiFi.softAPIP();
     localSubnet=WiFi.softAPSubnetMask();
     localGateway=WiFi.softAPBroadcastIP();
+    MAC=WiFi.softAPmacAddress();
     Serial.print("AP WiFi ip: ");
     Serial.println(localIP);
     Serial.print("AP WiFi subnet: ");
     Serial.println(localSubnet);
     Serial.print("AP WiFi gateway: ");
     Serial.println(localGateway);
+    Serial.print("WiFi MAC: ");
+    Serial.println(MAC);
   }
-  MAC=WiFi.macAddress();
-  Serial.print("WiFi MAC: ");
-  Serial.println(MAC);
 
   // basic authentication
   basicAuth.setUsername(TURN_WIFI_DEFAULT_ADMIN);
