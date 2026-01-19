@@ -29,9 +29,9 @@
 #include "turn_lcd.h"
 #include "zpt_serial.h"
 
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
 #include "turn_neopixel.h"
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
 
 #ifdef RF_BUTTONS
 #include "turn_rfbuttons.h"
@@ -130,10 +130,10 @@ void setup() {
   Serial.println("\r\nStart\r\n");
 #endif //DEBUG
 
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
   // Set up a Neopixel if configured.
   np_setup();
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
 
   // If microsd doesn't work
   // Keep this before the lcd_setup();
@@ -193,9 +193,9 @@ void setup() {
   timer_setup();
 
   Serial.println(F("\r\nSetup finished.\r\n"));
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
   np(0);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
 }
 
 void loop() {

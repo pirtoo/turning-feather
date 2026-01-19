@@ -3,7 +3,7 @@
  */
 
 // Only valid on the V2 and if enabled.
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
 #include <turn_neopixel.h>
 #include <Adafruit_NeoPixel.h>
 
@@ -24,4 +24,4 @@ void np(uint32_t c) {
     strip.setPixelColor(0, c);
   strip.show();
 }
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL

@@ -23,7 +23,7 @@
 
 // This is calibration data for the raw touch
 // data to the screen coordinates
-#ifdef TFT_FW_24_V2
+#ifdef TSC2007_TS
 #define TS_MINX 3800
 #define TS_MAXX 300
 #define TS_MINY 185
@@ -33,7 +33,7 @@
 #define TS_MAXX 3800
 #define TS_MINY 100
 #define TS_MAXY 3750
-#endif //TFT_FW_24_V2
+#endif //TSC2007_TS
 
 // Try to not have calibration data for each screen
 #define TOUCH_FUDGE 20

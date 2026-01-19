@@ -2,7 +2,7 @@
  * If we have a Neopixel we can use it to illuminate stage changes.
  */
 
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
 #ifndef TURN_NEOPIXEL_H
 #define TURN_NEOPIXEL_H
 
@@ -16,4 +16,4 @@ void np_setup();
 void np(uint32_t c);
 
 #endif //TURN_NEOPIXEL_H
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL

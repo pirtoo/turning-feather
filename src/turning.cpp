@@ -8,9 +8,9 @@
 #include "turning.h"
 #include "turn_lcd.h"
 
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
 #include "turn_neopixel.h"
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
 
 #ifdef RF_BUTTONS
 #include "turn_rfbuttons.h"
@@ -331,9 +331,9 @@ void start_stage() {
     // No flash, go straight to face
     in_stage=IN_FACE;
   }
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
   np(0x00FF00);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
   in_repeat=1;
 }
 
@@ -354,9 +354,9 @@ void turntick() {
   if (current.stop) {
     // We are not running, stop the timer
     timerStop(turntimer);
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
     np(0);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
   
   } else {
     // We are running
@@ -399,16 +399,16 @@ void turntick() {
         if (currentstage->beep <= turncount)
           // finished beep pause
           start_stage();
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0xFF0000);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
         break;
 
       case IN_FLASH:
         // Do a single flash exposure.
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0x00FF00);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->flash <= turncount)
           in_fudge=true;
         if (currentstage->flash + FACE_FUDGE <= turncount) {
@@ -423,9 +423,9 @@ void turntick() {
 
       case IN_FLASH_AWAY:
         // Targets are in a flash away time
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0x0000FF);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->flashaway <= turncount)
           in_fudge=true;
         if (currentstage->flashaway + AWAY_FUDGE <= turncount) {
@@ -440,9 +440,9 @@ void turntick() {
 
       case IN_FACE:
         // Targets are in an exposure.
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0x00FF00);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->face <= turncount)
           in_fudge=true;
         if (currentstage->face + FACE_FUDGE <= turncount) {
@@ -469,9 +469,9 @@ void turntick() {
 
       case IN_AWAY:
         // Targets are in an away time.
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0x0000FF);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
         uint8_t c;
         if (currentstage->away <= turncount )
           in_fudge=true;
@@ -499,9 +499,9 @@ void turntick() {
           Serial.println("AUTONEXT");
 #endif //DEBUG
         }
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0xFF0000);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
         if (currentstage->nextaway <= turncount)
           in_fudge=true;
         if (currentstage->nextaway + AWAY_FUDGE <= turncount) {
@@ -528,9 +528,9 @@ void toggle_stop() {
   lcd_stop(current.stop);
 
   if (current.stop) {
-#if defined(HUZZAH32_V2) && defined(ESP_V2_NEOPIXEL)
+#if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
     np(0);
-#endif //HUZZAH32_V2 && ESP_V2_NEOPIXEL
+#endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
     onbeeptimer();
     timerStop(turntimer);
     // In case anything is still running,

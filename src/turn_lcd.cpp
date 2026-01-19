@@ -22,7 +22,7 @@ Adafruit_ILI9341 tft=Adafruit_ILI9341(TFT_CS, TFT_DC);
 
 
 // Touchscreen driver changes depending on V1 or V2 of Featherwing display
-#ifdef TFT_FW_24_V2
+#ifdef TSC2007_TS
 // This is the V2 version of the feartherwing
 #include <Adafruit_TSC2007.h>
 // If you're using the TSC2007 there is no CS pin needed, so instead its an IRQ
@@ -35,19 +35,19 @@ uint16_t z1, z2;
 #include <Adafruit_STMPE610.h>
 Adafruit_STMPE610 ts=Adafruit_STMPE610(STMPE_CS);
 TS_Point p;
-#endif //TFT_FW_24_V2
+#endif //TSC2007_TS
 
 
 // format line for printing the program name
 #define LCD_PROG_FORMAT "%-" STR(TURN_NAME_LENGTH) "." STR(TURN_NAME_LENGTH) "s"
 
 // Active screen area
-#ifdef TFT_FW_24_V2
+#ifdef TSC2007_TS
 // touch screen coords are reflected in X in the V2
 static const struct rect screen={{TS_MAXX, TS_MINY}, {TS_MINX, TS_MAXY}};
 #else
 static const struct rect screen={{TS_MINX, TS_MINY}, {TS_MAXX, TS_MAXY}};
-#endif //TFT_FW_24_V2
+#endif //TSC2007_TS
 
 
 // Co-ords for printing timings
@@ -131,7 +131,7 @@ uint8_t screen_button_num(const struct point *t) {
 uint8_t lcd_button() {
   // Handle the correct touchscreen type "button" push
 
-#ifdef TFT_FW_24_V2
+#ifdef TSC2007_TS
   if (! digitalRead(TSC_IRQ)) {
     if (ts.read_touch(&t.x, &t.y, &z1, &z2) && (z1 > 100)) {
 #else
@@ -141,7 +141,7 @@ uint8_t lcd_button() {
       p=ts.getPoint();
       t.x=p.x;
       t.y=p.y;
-#endif //TFT_FW_24_V2
+#endif //TSC2007_TS
       if (in_rect(&t, &screen, 0)) {
         ts_remap(&t);
         uint8_t button=screen_button_num(&t);
@@ -466,18 +466,18 @@ void lcd_setup() {
     Serial.println("Trying Featherwing V1 - STMPE610H");
 #endif //DEBUG
 
-#ifndef TFT_FW_24_V2
+#ifndef TSC2007_TS
   if (ts.begin()) {
 #ifdef DEBUG
     Serial.println("Touchscreen controller STMPE610H OK");
 #endif //DEBUG
-#else //TFT_FW_24_V2
+#else //TSC2007_TS
 if (ts.begin(0x48, &Wire)) {
     pinMode(TSC_IRQ, INPUT);
 #ifdef DEBUG
     Serial.println("Touchscreen controller TSC2007 OK");
 #endif //DEBUG
-#endif //TFT_FW_24_V2
+#endif //TSC2007_TS
   } else {
     Serial.println("Touchscreen controller init fail");
   }

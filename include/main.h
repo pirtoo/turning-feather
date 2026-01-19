@@ -15,12 +15,12 @@
 //#define DEBUG_TIMER
 
 // Using the V2 version of the Adafruit ESP32, default is V1
-//#define HUZZAH32_V2
+//#define FEATHER_ESP32_V2
 // If you have the ESP32 V2 you can use the built in NEOPIXEL
 //#define ESP_V2_NEOPIXEL
 
 // Using the V2 version of the Adafruit TFT 2.4" featherwing
-//#define TFT_FW_24_V2
+//#define TSC2007_TS
 
 // To use ESP32 WiFi
 //#define TURN_WIFI_ENABLE
