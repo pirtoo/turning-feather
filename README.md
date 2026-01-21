@@ -1,6 +1,11 @@
 # turning-feather
 ## Turning controller based on an Adafruit [Feather HUZZAH32](https://www.adafruit.com/product/3405) or [Feather ESP32 V2](https://www.adafruit.com/product/5400)
 
+# This branch
+
+This branch is testing LVGL and associated GUI libraries and a major restructuring of the code.
+It is not yet complete but all main functions are in place. Still working out how best to display stage information on the main program screen.
+
 ## Features
 
 * More flexible than an [Auto Duel](https://web.archive.org/web/20170504011814/http://www.indelfa.co.uk/tt/ttcontruk.html) controller (and indelfa seem to have vanished), programs defined in JSON in a text file on a micro SD card. Can have a backup config file flashed to SPI accessed via LittleFS.
@@ -40,7 +45,7 @@ IP addresses on your router or IP can be set on the device (not recommended). Pa
 
 * [Custom PCB](PCBs/kicad/turning-feather) made for the main IO board manufactured by [PCBWay](https://www.pcbway.com/project/shareproject/Turning_Feather.html). See [schematic](PCBs/kicad/turning-feather/turning-feather.pdf).
 
-* Graphics are currently fairly simple but functional.
+* New generation of graphics are in progress.
 
 * Two physical buttons for face/away and start/stop. Program selection via the touchscreen. Start/stop, face/away and stage +/- via RF remote.
 
@@ -72,6 +77,8 @@ Turning Feather is still very much in alpha and under development however it has
 - [X] Updates planned here to provide [parts lists](PCBs/README.md), links, etc, to allow others to build their own units.
 
 - [ ] Provide a full definition of the config file and what all the options do.
+
+- [ ] Add random range options for configs for face/away times.
 
 - [ ] Add the ability to use cheaper 433MHz radio transmitters (there are some nice 4/6 button units available) as an option but getting reliable detection of events with debouncing is hard to do well, unlike with the [RF Solutions](https://www.rfsolutions.co.uk/) units.
 
