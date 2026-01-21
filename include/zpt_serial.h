@@ -55,6 +55,7 @@ struct zpt_serial_packet {
 };
 
 uint32_t zpt_packet_serialnum(void);
+uint8_t zpt_packet_rssi(void);
 bool zpt_packet_lowbatt(void);
 bool zpt_packet_learn(void);
 bool zpt_packet_isready(void);

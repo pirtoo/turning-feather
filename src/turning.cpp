@@ -6,15 +6,15 @@
 // General includes
 #include <cstddef>
 #include "turning.h"
-#include "turn_lcd.h"
+#include "turn_tft.h"
 
 #if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
 #include "turn_neopixel.h"
 #endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
 
-#ifdef RF_BUTTONS
-#include "turn_rfbuttons.h"
-#endif //RF_BUTTONS
+#ifdef ZPT_BUTTONS
+#include "turn_zpt_buttons.h"
+#endif //ZPT_BUTTONS
 
 // Config file
 #include "TurnConfig.h"
@@ -33,6 +33,8 @@ bool in_fudge=false;
 
 // How many seconds since the turn counter started.
 volatile uint32_t turncounter=0;
+// Start time of current running stage
+unsigned long stage_start_time=0;
 
 // After a program/stage changes update pointers
 void updatecurrent(void);
@@ -65,11 +67,12 @@ TurnConfig *turnconfig_ptr(void) {
 void setup_turnconfig() {
   // Get the config file from SD/LittleFS
   char line[4];
+  // TODO enable passing a filename through to open to change files
   File turnfile=turn_file_init(turnconf_file);
 
   // This may fail if the JSON is invalid
   if (! deserializeTurnConfig(turnfile, turnconfig)) {
-    lcd_clear();
+    // TODO change to a popup
     lcd_println("Config file not valid");
     while (1) {
       delay(100);
@@ -85,16 +88,17 @@ void setup_turnconfig() {
   current.face=true;
   // TODO Need a better translation from the enum to something displayable?
   current.status=0;
+  // Percentages through states are zero
+  current.faceperc=0;
+  current.stageperc=0;
+
   // Set pointers to initial program and stage
   updatecurrent();
 
   // Does this get seen on screen?
   // Add a delay after?
-  // Move lcd print to after splash and info print?
-  lcd_print("Loaded ");
-  snprintf(line, 3, "%d", turnconfig.programs);
-  lcd_print(line);
-  lcd_println(" programs");
+  // Move display print to after splash and info print?
+  Serial.printf("Loaded %d programs\r\n", turnconfig.programs);
 #ifdef DEBUG
   for (uint8_t i=0; i<turnconfig.programs; i++) {
     Serial.print("  ");
@@ -106,9 +110,12 @@ void setup_turnconfig() {
   Serial.println();
 #endif
 
-  // Display setup on the LCD
-  lcd_display_set(currentprog, current.prognum, current.stagenum);
-  lcd_stop(current.stop);
+  // Set up the list of programs
+  tft_prog_list(&turnconfig);
+  // Display setup on the TFT
+  tft_display_set(&turnconfig, current.prognum, current.stagenum);
+  tft_stage_list(currentstage, current.stagemax, current.stagenum);
+  tft_stop(current.stop);
 }
 
 bool checknewstagenum(const int num) {
@@ -133,7 +140,7 @@ bool changestagenum(const int stagenum, const bool chirp) {
   }
 #endif //STAGE_CHANGE_CHIRP
   updatecurrent();
-  lcd_stage(currentstage, current.stagenum);
+  tft_stage(currentstage, current.stagenum);
   return true;
 }
 
@@ -154,8 +161,9 @@ bool changeprognum(const int prognum) {
   Serial.println(current.prognum);
 #endif //DEBUG
   updatecurrent();
-  lcd_prog(currentprog->longname, current.prognum);
-  lcd_stage(currentstage, current.stagenum);
+  tft_prog(current.prognum);
+  tft_stage_list(currentstage, current.stagemax, current.stagenum);
+  tft_stage(currentstage, current.stagenum);
   return true;
 }
 
@@ -179,7 +187,8 @@ void updatecurrent() {
   Serial.print(" autonext=");
   Serial.print(currentstage->autonext);
   Serial.print(" nextaway=");
-  Serial.println(currentstage->nextaway);
+  Serial.print(currentstage->nextaway);
+  Serial.printf(" totallen=%d\r\n", currentstage->totallen);
 #endif //DEBUG2
 }
 
@@ -308,17 +317,14 @@ void timer_setup() {
   timerAlarm(turntimer, TURN_RATE, true, 0);
 }
 
-void turntick_loop() {
-  if (xSemaphoreTake(turnsemaphore, 0) == pdTRUE) {
-    // Take the next action if we are running
-    turntick();
-  }
-}
-
 void start_stage() {
   // Common code used in turntick() to begin a stage
   // without wasting a tick to go to the beep state
   // when beep is zero.
+
+  // Reset face percentage bar
+  current.faceperc=0;
+  tft_stagerun(&current, 0, 0, 0);
 
   if (! current.face) {
     toggle_face(false);
@@ -337,6 +343,14 @@ void start_stage() {
   in_repeat=1;
 }
 
+void turntick_loop() {
+  // The counter has ticked up and the timer has fired
+  if (xSemaphoreTake(turnsemaphore, 0) == pdTRUE) {
+    // Take the next action if we are running
+    turntick();
+  }
+}
+
 void turntick() {
   // Turning target counter has ticked up one count
   portENTER_CRITICAL(&turnmux);
@@ -344,7 +358,7 @@ void turntick() {
   portEXIT_CRITICAL(&turnmux);
 
 #ifdef DEBUG2
-  Serial.print("Timer: ");
+  Serial.print("timer turncount: ");
   Serial.println(turncount);
 #endif //DEBUG2
 
@@ -354,10 +368,14 @@ void turntick() {
   if (current.stop) {
     // We are not running, stop the timer
     timerStop(turntimer);
+    // Reset the stage bars
+    current.stageperc=0;
+    current.faceperc=0;
+    tft_stagerun(&current, 0, 0, 0);
 #if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
     np(0);
 #endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
-  
+
   } else {
     // We are running
 #ifdef DEBUG2
@@ -365,15 +383,21 @@ void turntick() {
     Serial.println(in_stage);
     Serial.print("in_repeat: ");
     Serial.println(in_repeat);
+    Serial.print("stageperc: ");
+    Serial.println(current.stageperc);
+    Serial.print("faceperc: ");
+    Serial.println(current.faceperc);
 #endif //DEBUG2
 
+/*
     if (!in_fudge) {
 #ifdef DEBUG2
-      Serial.println("Updating LCD");
+      //Serial.println("Updating TFT");
 #endif //DEBUG2
-      lcd_stagerun(turncount, in_stage, in_repeat);
+      //lcd_stagerun(turncount, in_stage, in_repeat);
+      //tft_stagerun(&current, turncount, in_stage, in_repeat);
     }
-
+*/
     // If using an ESP32 V2 set the neopixel to a different colour
     // depending on which case we are in
 
@@ -385,6 +409,9 @@ void turntick() {
         // FALLTHROUGH
       case IN_INIT:
         // Initial stage setup/start.
+        // Display percentages are zero
+        current.stageperc=0;
+        current.faceperc=0;
         if (currentstage->beep > 0) {
           beep(BEEP_LENGTH);
           in_stage=IN_BEEP;
@@ -396,28 +423,41 @@ void turntick() {
 
       case IN_BEEP:
         // Are we ready to face targets?
-        if (currentstage->beep <= turncount)
+        if (currentstage->beep <= turncount) {
           // finished beep pause
+          current.stageperc=0;
           start_stage();
+        } else {
+          // Display percentages for beep time
+          current.faceperc=int((100.0 * turncount / currentstage->beep) + 0.5);
 #if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
-        np(0xFF0000);
+          np(0xFF0000);
 #endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
+        }
         break;
 
       case IN_FLASH:
         // Do a single flash exposure.
+        // IN_FLASH is set from start_stage()
 #if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0x00FF00);
 #endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
-        if (currentstage->flash <= turncount)
-          in_fudge=true;
+
         if (currentstage->flash + FACE_FUDGE <= turncount) {
           in_fudge=false;
+          current.faceperc=0;
           // finished exposure pause
           if (current.face)
             toggle_face(false);
           starttimer(turntimer, true);
           in_stage=IN_FLASH_AWAY;
+        } else if (currentstage->flash <= turncount) {
+          in_fudge=true;
+          current.faceperc=100;
+        } else {
+          in_fudge=false;
+          // We're in flash, work out the percentage
+          current.faceperc=int((100.0 * turncount / currentstage->flash) + 0.5);
         }
         break;
 
@@ -426,15 +466,21 @@ void turntick() {
 #if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0x0000FF);
 #endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
-        if (currentstage->flashaway <= turncount)
-          in_fudge=true;
         if (currentstage->flashaway + AWAY_FUDGE <= turncount) {
           in_fudge=false;
+          current.faceperc=0;
           // Flash away has finished, off to normal face
           starttimer(turntimer, true);
           if (! current.face)
             toggle_face(false);
           in_stage=IN_FACE;
+        } else if (currentstage->flashaway <= turncount) {
+          in_fudge=true;
+          current.faceperc=100;
+        } else {
+          in_fudge=false;
+          // We're in flash away, work out the percentage
+          current.faceperc=int((100.0 * turncount / currentstage->flashaway) + 0.5);
         }
         break;
 
@@ -443,10 +489,10 @@ void turntick() {
 #if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0x00FF00);
 #endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
-        if (currentstage->face <= turncount)
-          in_fudge=true;
+
         if (currentstage->face + FACE_FUDGE <= turncount) {
           in_fudge=false;
+          current.faceperc=0;
           // finished exposure pause
           if (current.face)
             toggle_face(false);
@@ -454,16 +500,26 @@ void turntick() {
           // if we're at the end, what next?
           // do we have an automatic next stage?
           if (currentstage->repeat <= in_repeat) {
+            // We are finishing
             if (currentstage->autonext) {
               // Straight on to the next one, if we can
               in_stage=IN_NEXT;
             } else {
               // We're done
               toggle_stop();
+              break;
             }
           } else {
             in_stage=IN_AWAY;
           }
+        } else if (currentstage->face <= turncount) {
+          // We are finishing
+          in_fudge=true;
+          current.faceperc=100;
+        } else {
+          in_fudge=false;
+          // We're in face, work out the percentage
+          current.faceperc=int(1.0 * turncount / currentstage->face * 100.0);
         }
         break;
 
@@ -473,16 +529,21 @@ void turntick() {
         np(0x0000FF);
 #endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
         uint8_t c;
-        if (currentstage->away <= turncount )
-          in_fudge=true;
         if (currentstage->away + AWAY_FUDGE <= turncount ) {
           in_fudge=false;
+          current.faceperc=0;
           // finished away pause
           starttimer(turntimer, true);
           if (! current.face)
             toggle_face(false);
           in_stage=IN_FACE;
           in_repeat++;
+        } else if (currentstage->away <= turncount ) {
+          in_fudge=true;
+          current.faceperc=100;
+        } else {
+          // We're in away, work out the percentage
+          current.faceperc=int(1.0 * turncount / currentstage->away * 100.0);
         }
         break;
 
@@ -494,6 +555,7 @@ void turntick() {
           Serial.println("NO AUTONEXT");
 #endif //DEBUG
           toggle_stop();
+          break;
 #ifdef DEBUG
         } else {
           Serial.println("AUTONEXT");
@@ -502,30 +564,42 @@ void turntick() {
 #if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
         np(0xFF0000);
 #endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
-        if (currentstage->nextaway <= turncount)
-          in_fudge=true;
         if (currentstage->nextaway + AWAY_FUDGE <= turncount) {
           in_fudge=false;
+          current.faceperc=0;
           // Start the next program
           changestagenum(current.stagenum +1, false);
           updatecurrent();
+          stage_start_time=millis();
           if (currentstage->beep > 0) {
             in_stage=IN_BEEP;
             beep(BEEP_LENGTH);
           } else {
+            // autonext starts a new stage, restart the time
             start_stage();
           }
+        } else if (currentstage->nextaway <= turncount) {
+          in_fudge=true;
+          current.faceperc=100;
+        } else {
+          // We're in nextaway, work out the percentage
+          current.faceperc=int(1.0 * turncount / currentstage->nextaway * 100.0);
         }
       break;
-
     }
+    if (! current.stop)
+      current.stageperc=int(1.0 * (millis()-stage_start_time) / currentstage->totallen);
+    tft_stagerun(&current, 0, 0, 0);
   }
 }
 
 void toggle_stop() {
   // Toggle start/stop
   current.stop=!current.stop;
-  lcd_stop(current.stop);
+
+  current.faceperc=0;
+  current.stageperc=0;
+  tft_stagerun(&current, 0, 0, 0);
 
   if (current.stop) {
 #if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
@@ -545,6 +619,7 @@ void toggle_stop() {
 #ifdef DEBUG
     Serial.println("START");
 #endif //DEBUG
+    stage_start_time=millis();
     starttimer(turntimer, true);
 
     // Make sure targets go away.
@@ -557,16 +632,15 @@ void toggle_stop() {
     updatecurrent();
     starttimer(turntimer, true);
   }
-  // To stop or start, clear the run times
-  lcd_stagerun_clear();
+  tft_stop(current.stop);
 }
 
 void toggle_face(bool use_timer) {
   // Toggle face/away
   current.face=!current.face;
-  // Work out how to check if the timer is running before stopping it
+  // TODO Work out how to check if the timer is running before stopping it
   timerStop(changetimer);
-  lcd_face(current.face);
+
   if (current.face) {
     // Face the target
 #ifdef DEBUG
@@ -594,6 +668,7 @@ void toggle_face(bool use_timer) {
 #ifdef KEEP_CHANGE_ACTIVE
   }
 #endif //KEEP_CHANGE_ACTIVE
+  tft_face(current.face);
 }
 
 void beep(const uint32_t length) {

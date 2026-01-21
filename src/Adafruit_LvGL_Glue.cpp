@@ -1,0 +1,392 @@
+#include "Adafruit_LvGL_Glue.h"
+#include <lvgl.h>
+
+lv_disp_draw_buf_t Adafruit_LvGL_Glue::lv_disp_draw_buf;
+lv_disp_drv_t Adafruit_LvGL_Glue::lv_disp_drv;
+lv_color_t *Adafruit_LvGL_Glue::lv_pixel_buf;
+lv_indev_drv_t Adafruit_LvGL_Glue::lv_indev_drv;
+
+// ARCHITECTURE-SPECIFIC TIMER STUFF ---------------------------------------
+
+// Tick interval for LittlevGL internal timekeeping; 1 to 10 ms recommended
+static const int lv_tick_interval_ms = 10;
+
+// ------------------------------------------------
+// The following preprocessor code segments are based around the LVGL example
+// project for ESP32:
+// https://github.com/lvgl/lv_port_esp32/blob/master/main/main.c
+
+// Semaphore to handle concurrent calls to LVGL
+// If you wish to call *any* lvgl function from other threads/tasks
+// on ESP32, wrap the lvgl function calls inside of lvgl_acquire() and
+// lvgl_release()
+static SemaphoreHandle_t xGuiSemaphore = NULL;
+static TaskHandle_t g_lvgl_task_handle;
+
+// Periodic timer handler
+// NOTE: We use the IRAM_ATTR here to place this code into RAM rather than flash
+static void IRAM_ATTR lv_tick_handler(void *arg) {
+  (void)arg;
+  lv_tick_inc(lv_tick_interval_ms);
+}
+
+// Pinned task used to update the GUI, called by FreeRTOS
+static void gui_task(void *args) {
+  while (1) {
+    // Delay 1 tick (follows lv_tick_interval_ms)
+    vTaskDelay(pdMS_TO_TICKS(lv_tick_interval_ms));
+
+    // Try to take the semaphore, call lvgl task handler function on success
+    if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY)) {
+      lv_task_handler();
+      xSemaphoreGive(xGuiSemaphore);
+    }
+  }
+}
+
+/**
+ * @brief Locks LVGL resource to prevent memory corrupton on ESP32.
+ * NOTE: This function MUST be called PRIOR to a LVGL function (`lv_`) call.
+ */
+void Adafruit_LvGL_Glue::lvgl_acquire(void) {
+  TaskHandle_t task = xTaskGetCurrentTaskHandle();
+  if (g_lvgl_task_handle != task) {
+    xSemaphoreTake(xGuiSemaphore, portMAX_DELAY);
+  }
+}
+
+/**
+ * @brief Unlocks LVGL resource to prevent memory corrupton on ESP32.
+ * NOTE: This function MUST be called in application code AFTER lvgl_acquire()
+ */
+void Adafruit_LvGL_Glue::lvgl_release(void) {
+  TaskHandle_t task = xTaskGetCurrentTaskHandle();
+  if (g_lvgl_task_handle != task) {
+    xSemaphoreGive(xGuiSemaphore);
+  }
+}
+
+// TOUCHSCREEN STUFF -------------------------------------------------------
+
+// STMPE610/TSC2007 calibration for raw touch data
+#ifdef TSC2007_TS
+#define TS_MINX 300
+#define TS_MAXX 3800
+#define TS_MINY 185
+#define TS_MAXY 3700
+#else
+#define TS_MINX 100
+#define TS_MAXX 3800
+#define TS_MINY 100
+#define TS_MAXY 3750
+#endif //TSC2007_TS
+
+static void touchscreen_read(struct _lv_indev_drv_t *indev_drv,
+                             lv_indev_data_t *data) {
+  static lv_coord_t last_x = 0, last_y = 0;
+  static uint8_t release_count = 0;
+
+  // Get pointer to glue object from indev user data
+  Adafruit_LvGL_Glue *glue = (Adafruit_LvGL_Glue *)indev_drv->user_data;
+  Adafruit_SPITFT *disp = glue->display;
+
+
+if (true) {
+    bool more = false;
+#if TSC2007_TS
+    Adafruit_TSC2007 *touch = (Adafruit_TSC2007 *)glue->touchscreen;
+#else
+    uint8_t fifo; // Number of points in touchscreen FIFO
+    Adafruit_STMPE610 *touch = (Adafruit_STMPE610 *)glue->touchscreen;
+#endif
+    // Before accessing SPI touchscreen, wait on any in-progress
+    // DMA screen transfer to finish (shared bus).
+    disp->dmaWait();
+    disp->endWrite();
+#if TSC2007_TS
+    if (! digitalRead(glue->tsc_irq_pin)) {
+      uint16_t x, y, z1, z2;
+      // If we have a touch and it is in the screen area
+      if (touch->read_touch(&x, &y, &z1, &z2) && (z1 > 100) &&
+         (x > TS_MINX) && (x < TS_MAXX) && (y > TS_MINY) && (y < TS_MAXY)) {
+        TS_Point p;
+        p.x = x;
+        p.y = y;
+        data->state = LV_INDEV_STATE_PR;  // Is PRESSED
+#else
+    if ((fifo = touch->bufferSize())) { // 1 or more points await
+      TS_Point p = touch->getPoint();
+      release_count = 0;
+      if ((p.x > TS_MINX) && (p.x < TS_MAXX) && (p.y > TS_MINY) && (p.y < TS_MAXY)) {
+        data->state = LV_INDEV_STATE_PR;  // Is PRESSED
+      } else {
+        // Touch was off the screen area, ignore it
+        return;
+      }
+#endif
+      // Serial.printf("%d %d %d\r\n", p.x, p.y, p.z);
+      // On big TFT FeatherWing and V2 FeatherWings, raw X axis is flipped??
+      if ((glue->display->width() == 480) || (glue->display->height() == 480) || TSC2007_TS) {
+        p.x = (TS_MINX + TS_MAXX) - p.x;
+      }
+      switch (glue->display->getRotation()) {
+      case 0:
+        last_x = map(p.x, TS_MAXX, TS_MINX, 0, disp->width() - 1);
+        last_y = map(p.y, TS_MINY, TS_MAXY, 0, disp->height() - 1);
+        break;
+      case 1:
+        last_x = map(p.y, TS_MINY, TS_MAXY, 0, disp->width() - 1);
+        last_y = map(p.x, TS_MINX, TS_MAXX, 0, disp->height() - 1);
+        break;
+      case 2:
+        last_x = map(p.x, TS_MINX, TS_MAXX, 0, disp->width() - 1);
+        last_y = map(p.y, TS_MAXY, TS_MINY, 0, disp->height() - 1);
+        break;
+      case 3:
+        last_x = map(p.y, TS_MAXY, TS_MINY, 0, disp->width() - 1);
+        last_y = map(p.x, TS_MAXX, TS_MINX, 0, disp->height() - 1);
+        break;
+      }
+#if TSC2007_TS
+      more = digitalRead(glue->tsc_irq_pin);
+#else
+      more = (fifo > 1); // true if more in FIFO, false if last point
+#endif
+
+#if TSC2007_TS
+      }
+#endif
+    } else {                            // FIFO empty
+      release_count += (release_count < 255);
+      if (release_count >= 3) {
+        data->state = LV_INDEV_STATE_REL; // Is REALLY RELEASED
+      } else {
+        data->state = LV_INDEV_STATE_PR; // Is STILL PRESSED
+      }
+    }
+
+    data->point.x = last_x; // Last-pressed coordinates
+    data->point.y = last_y;
+    data->continue_reading = more;
+  }
+}
+
+// OTHER LITTLEVGL VITALS --------------------------------------------------
+
+#if LV_COLOR_DEPTH != 16
+#pragma error("LV_COLOR_DEPTH must be 16")
+#endif
+// This isn't necessarily true, don't mention it for now. See notes later.
+//#if LV_COLOR_16_SWAP != 0
+//  #pragma message("Set LV_COLOR_16_SWAP to 0 for best display performance")
+//#endif
+
+// Actual RAM usage will be 2X these figures, since using 2 DMA buffers...
+#define LV_BUFFER_ROWS 8 // Most others have a bit more space
+
+// This is the flush function required for LittlevGL screen updates.
+// It receives a bounding rect and an array of pixel data (conveniently
+// already in 565 format, so the Earth was lucky there).
+static void lv_flush_callback(lv_disp_drv_t *disp, const lv_area_t *area,
+                              lv_color_t *color_p) {
+  // Get pointer to glue object from indev user data
+  Adafruit_LvGL_Glue *glue = (Adafruit_LvGL_Glue *)disp->user_data;
+  Adafruit_SPITFT *display = glue->display;
+
+  if (!glue->first_frame) {
+    display->dmaWait();  // Wait for prior DMA transfer to complete
+    display->endWrite(); // End transaction from any prior call
+  } else {
+    glue->first_frame = false;
+  }
+
+  uint16_t width = (area->x2 - area->x1 + 1);
+  uint16_t height = (area->y2 - area->y1 + 1);
+  display->startWrite();
+  display->setAddrWindow(area->x1, area->y1, width, height);
+  display->writePixels((uint16_t *)color_p, width * height, false,
+                       LV_COLOR_16_SWAP);
+  lv_disp_flush_ready(disp);
+}
+
+#if (LV_USE_LOG)
+// Optional LittlevGL debug print function, writes to Serial if debug is
+// enabled when calling glue begin() function.
+static void lv_debug(const char *buf) { Serial.println(buf); }
+#endif
+
+// GLUE LIB FUNCTIONS ------------------------------------------------------
+
+// Constructor
+/**
+ * @brief Construct a new Adafruit_LvGL_Glue::Adafruit_LvGL_Glue object,
+ * initializing minimal variables
+ *
+ */
+Adafruit_LvGL_Glue::Adafruit_LvGL_Glue(void) : first_frame(true) {
+#if defined(ARDUINO_ARCH_SAMD)
+  zerotimer = NULL;
+#endif
+}
+
+// Destructor
+/**
+ * @brief Destroy the Adafruit_LvGL_Glue::Adafruit_LvGL_Glue object, freeing any
+ * memory previously allocated within this library.
+ *
+ */
+Adafruit_LvGL_Glue::~Adafruit_LvGL_Glue(void) {
+  delete[] lv_pixel_buf;
+#if defined(ARDUINO_ARCH_SAMD)
+  delete zerotimer;
+#endif
+  // Probably other stuff that could be deallocated here
+}
+
+// begin() function is overloaded for STMPE610/TSC2007 touch, ADC touch, or none.
+
+// Pass in POINTERS to ALREADY INITIALIZED display & touch objects (user code
+// should have previously called corresponding begin() functions and checked
+// return states before invoking this),
+// they are NOT initialized here. Debug arg is
+// touch arg can be NULL (or left off) if using LittlevGL as a passive widget
+// display.
+
+/**
+ * @brief Configure the glue layer and the underlying LvGL code to use the given
+ * TFT display driver and touchscreen controller instances
+ *
+ * @param tft Pointer to an **already initialized** display object instance
+ * @param debug Debug flag to enable debug messages. Only used if LV_USE_LOG is
+ * configured in LittleLVGL's lv_conf.h
+ * @return LvGLStatus The status of the initialization:
+ * * LVGL_OK : Success
+ * * LVGL_ERR_TIMER : Failure to set up timers
+ * * LVGL_ERR_ALLOC : Failure to allocate memory
+ */
+LvGLStatus Adafruit_LvGL_Glue::begin(Adafruit_SPITFT *tft, bool debug) {
+  return begin(tft, (void *)NULL, debug);
+}
+
+#if TSC2007_TS
+LvGLStatus Adafruit_LvGL_Glue::begin(Adafruit_SPITFT *tft, Adafruit_TSC2007 *touch,
+                                     u_int16_t irq_pin,
+                                     bool debug) {
+#else
+LvGLStatus Adafruit_LvGL_Glue::begin(Adafruit_SPITFT *tft, Adafruit_STMPE610 *touch,
+                                     bool debug) {
+#endif
+  String LVGL_Arduino=String("LVGL V") + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
+  Serial.println(LVGL_Arduino);
+  lv_init();
+#if (LV_USE_LOG)
+  if (debug) {
+    lv_log_register_print_cb(lv_debug); // Register debug print function
+  }
+#endif
+
+  // Allocate LvGL display buffer (x2 because DMA double buffering)
+  LvGLStatus status = LVGL_ERR_ALLOC;
+#if defined(USE_SPI_DMA)
+  if ((lv_pixel_buf = new lv_color_t[tft->width() * LV_BUFFER_ROWS * 2])) {
+#else
+  if ((lv_pixel_buf = new lv_color_t[tft->width() * LV_BUFFER_ROWS])) {
+#endif
+
+    display = tft;
+    touchscreen = (void *)touch;
+#if TSC2007_TS
+    tsc_irq_pin = irq_pin;
+#endif
+
+    // Initialize LvGL display buffers. The "second half" buffer is only
+    // used if USE_SPI_DMA is enabled in Adafruit_GFX.
+    lv_disp_draw_buf_init(&lv_disp_draw_buf, lv_pixel_buf,
+#if defined(USE_SPI_DMA)
+                          &lv_pixel_buf[tft->width() * LV_BUFFER_ROWS],
+#else
+                          NULL, // No double-buffering
+#endif
+                          tft->width() * LV_BUFFER_ROWS);
+
+    // Initialize LvGL display driver
+    lv_disp_drv_init(&lv_disp_drv);
+#if defined(ARDUINO_NRF52840_CLUE) || defined(ARDUINO_NRF52840_CIRCUITPLAY) || \
+    defined(ARDUINO_SAMD_CIRCUITPLAYGROUND_EXPRESS)
+    // ST7789 library (used by CLUE and TFT Gizmo for Circuit Playground
+    // Express/Bluefruit) is sort of low-level rigged to a 240x320
+    // screen, so this needs to work around that manually...
+    lv_disp_drv.hor_res = 240;
+    lv_disp_drv.ver_res = 240;
+#else
+    lv_disp_drv.hor_res = tft->width();
+    lv_disp_drv.ver_res = tft->height();
+#endif
+    lv_disp_drv.flush_cb = lv_flush_callback;
+    lv_disp_drv.draw_buf = &lv_disp_draw_buf;
+    lv_disp_drv.user_data = this;
+    lv_disp_drv_register(&lv_disp_drv);
+
+    // Initialize LvGL input device (touchscreen already started)
+    if ((touch)) { // Can also pass NULL if passive widget display
+      lv_indev_drv_init(&lv_indev_drv);          // Basic init
+      lv_indev_drv.type = LV_INDEV_TYPE_POINTER; // Is pointer dev
+      lv_indev_drv.read_cb = touchscreen_read;   // Read callback
+      lv_indev_drv.user_data = this;
+      lv_input_dev_ptr = lv_indev_drv_register(&lv_indev_drv);
+    }
+
+    // TIMER SETUP is architecture-specific ----------------------------
+
+// ------------------------------------------------
+    // Create a periodic timer to call `lv_tick_handler`
+    const esp_timer_create_args_t periodic_timer_args = {
+        .callback = &lv_tick_handler, .name = "lv_tick_handler"};
+    esp_timer_handle_t periodic_timer;
+    ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
+
+    // Create a new mutex
+    xGuiSemaphore = xSemaphoreCreateMutex();
+    if (xGuiSemaphore == NULL) {
+      return LVGL_ERR_MUTEX; // failure
+    }
+
+    // Pin the LVGL gui task to core 1
+    // TODO: For ESP32-S2/C3, this will need to be pined to core 0
+
+    // This causes problems with reading from SD
+    // Running lv_task_handler() in loop for now.
+    // TODO work out semaphores to not have to do this.
+#ifdef USE_LVGL_TASK
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+    // For unicore ESP32-x, pin GUI task to core 0
+    if (xTaskCreatePinnedToCore(gui_task, "lvgl_gui", 1024 * 8, NULL, 5,
+                                &g_lvgl_task_handle, 0) != pdPASS)
+      return LVGL_ERR_TASK; // failure
+#else //CONFIG_IDF_TARGET_ESP32C3
+    // For multicore ESP32-x, pin GUI task to core 1 to allow WiFi on core 0
+    if (xTaskCreatePinnedToCore(gui_task, "lvgl_gui", 1024 * 8, NULL, 5,
+                                &g_lvgl_task_handle, 1) != pdPASS)
+      return LVGL_ERR_TASK; // failure
+#endif //CONFIG_IDF_TARGET_ESP32C3
+#endif //USE_LVGL_TASK
+
+    // Start timer
+    ESP_ERROR_CHECK(
+        esp_timer_start_periodic(periodic_timer, lv_tick_interval_ms * 1000));
+    status = LVGL_OK;
+
+// end timer setup --------------------------------------------------
+  }
+
+  if (status != LVGL_OK) {
+    delete[] lv_pixel_buf;
+    lv_pixel_buf = NULL;
+#if defined(ARDUINO_ARCH_SAMD)
+    delete zerotimer;
+    zerotimer = NULL;
+#endif
+  }
+
+  return status;
+}

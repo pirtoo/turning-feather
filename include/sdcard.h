@@ -25,7 +25,7 @@
 #include <esp_littlefs.h>
 #include <LittleFS.h>
 
-void storage_init();
+void storage_init(void);
 File turn_file_init(const char *turnconf_file);
 
 #endif //TF_SDCARD_H

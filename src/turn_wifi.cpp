@@ -150,6 +150,13 @@ void resetWifi(void) {
   prefs.end();
 }
 
+// Clear the admin password
+void clearAdminPW(void) {
+  removeIf("a_pass");
+  a_pass="";
+  basicAuth.setAuthType(AsyncAuthType::AUTH_NONE);
+}
+
 // Replaces placeholders with values in most pages
 String processor(const String& var) {
   if (var == "MAC") {
@@ -222,6 +229,7 @@ void wifiloop(void) {
 // Shut down web and wifi
 void stopWifi() {
   server.end();
+  // TODO check this works with WiFi.softAPIP()
   WiFi.disconnect();
   Serial.println("WiFi stopped until reboot");
 }
@@ -252,6 +260,7 @@ bool startWiFiClient() {
   Serial.println(pass);
 #endif //DEBUG
 
+  // TODO Get rid of currentMillis
   unsigned long currentMillis = millis();
   previousMillis = currentMillis;
 
@@ -267,7 +276,7 @@ bool startWiFiClient() {
   localSubnet=WiFi.subnetMask();
   localGateway=WiFi.gatewayIP();
   MAC=WiFi.macAddress();
-  Serial.print("Client WiFi ip: ");
+  Serial.print("Client WiFi IP: ");
   Serial.println(localIP);
   Serial.print("Client WiFi subnet: ");
   Serial.println(localSubnet);
@@ -340,7 +349,7 @@ bool initWifi() {
     localSubnet=WiFi.softAPSubnetMask();
     localGateway=WiFi.softAPBroadcastIP();
     MAC=WiFi.softAPmacAddress();
-    Serial.print("AP WiFi ip: ");
+    Serial.print("AP WiFi IP: ");
     Serial.println(localIP);
     Serial.print("AP WiFi subnet: ");
     Serial.println(localSubnet);
@@ -361,10 +370,10 @@ bool initWifi() {
   }
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(LittleFS, "/www/index.html", "text/html", false, select_processor);
+    request->send(LittleFS, "/www-extra/index.html", "text/html", false, select_processor);
   });
   server.on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(LittleFS, "/www/index.html", "text/html", false, select_processor);
+    request->send(LittleFS, "/www-extra/index.html", "text/html", false, select_processor);
   });
 
   server.on("/set.html", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -388,11 +397,12 @@ bool initWifi() {
         changeprognum(p->value().toInt());
 
       } else if (p->name() == "stagenum") {
+        uint8_t num=p->value().toInt();
 #ifdef DEBUG
         Serial.print("stagenum: ");
-        Serial.println(p->value().c_str());
+        Serial.println(num);
 #endif //DEBUG
-        changestagenum(p->value().toInt(), false);
+        changestagenum(num, false);
 
       } else if (p->name() == "stop") {
 #ifdef DEBUG
@@ -426,7 +436,13 @@ bool initWifi() {
   });
 
   // Reset all WiFi configs
-  // This needs authentication when it is enabled.
+  // This needs authentication
+  server.on("/wifireset.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(LittleFS, "/www-extra/wifireset.html", "text/html", false, processor);
+  }).addMiddleware(&basicAuth);
+
+  // This needs authentication
+  // TODO Change this to a POST on above with a param so it cannot be accidentally hit
   server.on("/WIFIRESET", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("Resetting WiFi configuration.");
     resetWifi();
@@ -436,12 +452,12 @@ bool initWifi() {
   }).addMiddleware(&basicAuth);
 
   // Setup page with values to save
-  // This needs authentication when it is enabled.
+  // This needs authentication
   server.on("/wifisetup.html", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(LittleFS, "/www/wifisetup.html", "text/html", false, processor);
+    request->send(LittleFS, "/www-extra/wifisetup.html", "text/html", false, processor);
   }).addMiddleware(&basicAuth);
 
-  // This needs authentication when it is enabled.
+  // This needs authentication
   server.on("/wifisetup.html", HTTP_POST, [](AsyncWebServerRequest *request) {
     // Set WiFi Preferences
     int params = request->params();
@@ -460,9 +476,7 @@ bool initWifi() {
           Serial.println(a_pass);
 #endif //DEBUG
           if (a_pass == "REMOVE") {
-            removeIf("a_pass");
-            a_pass="";
-            basicAuth.setAuthType(AsyncAuthType::AUTH_NONE);
+            clearAdminPW();
           } else if (a_pass != "") {
             removeIf("a_pass");
             prefs.putString("a_pass", a_pass);

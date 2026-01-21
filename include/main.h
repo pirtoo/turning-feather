@@ -20,15 +20,13 @@
 //#define ESP_V2_NEOPIXEL
 
 // Using the V2 version of the Adafruit TFT 2.4" featherwing
-//#define TSC2007_TS
+//#define TSC2007_TS=1
 
 // To use ESP32 WiFi
 //#define TURN_WIFI_ENABLE
 
-// Default config file, json, sdcard
+// Default config file, json, sdcard or LittleFS
 #define TURNCONF "/turnconf.txt"
-// Default splash image, bmp, sdcard
-#define SPLASH_BMP "/pp1-320x240.bmp"
 
 // Constants
 // Clock rate for timer
@@ -67,9 +65,6 @@
 #define FACE_PIN 25
 #define AWAY_PIN 26
 
-// Physical buttons pin
-#define BUTTONS_PIN 39 // A3
-
 // On Feather ESP32 V2 the physical board button is BUTTON/38
 
 // Unused currently
@@ -90,7 +85,7 @@
 // Extra serial output from the ZPT
 #define USE_ZPT_SERIAL
 // Enable buttons on RF remote
-#define RF_BUTTONS
+#define ZPT_BUTTONS
 // Enable physical buttons on case
 #define PHYSICAL_BUTTONS
 
@@ -102,5 +97,7 @@
   #include <driver/gpio.h>
   #include <rom/ets_sys.h>
 #endif //ESP_ARDUINO_VERSION_MAJOR >= 3 && defined(ESP32)
+
+void set_config_mode(bool mode);
 
 #endif //TF_MAIN_H

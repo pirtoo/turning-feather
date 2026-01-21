@@ -7,11 +7,9 @@
 
 
 // TODO: Put fudge times into a config file
-// TODO: Put debug settings into a config file
 // TODO: Put chirp (and chirp time) into config file
 // TODO: WIFI/web server
 //       - edit device config file
-//       - watch current state, provide buttons
 //       - ability to edit extra configs
 // TODO: add extra turning configs, concat them from
 //         main file, write out seperately?
@@ -20,90 +18,63 @@
 //         files?
 // TODO: Text for stage use, eg: "GRCF stage 1"?
 //       - will this make the file too large for json?
-// TODO: Mode to show ZPT signal strength
+
 
 // General includes
 #include <Arduino.h>
 #include "main.h"
 #include "turning.h"
-#include "turn_lcd.h"
+#include "turn_tft.h"
 #include "zpt_serial.h"
+#include "sdcard.h"
+#include "ui/vars.h"
+
+bool config_mode=false;
+unsigned long start_millis;
 
 #if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
 #include "turn_neopixel.h"
 #endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
 
-#ifdef RF_BUTTONS
-#include "turn_rfbuttons.h"
-#endif //RF_BUTTONS
+#ifdef ZPT_BUTTONS
+#include "turn_zpt_buttons.h"
+#endif //ZPT_BUTTONS
 
-#ifdef USE_ZPT_SERIAL
-#include "zpt_serial.h"
-#endif //USE_ZPT_SERIAL
+#ifdef PHYSICAL_BUTTONS
+#include "analogbuttons.h"
+#endif // PHYSICAL_BUTTONS
 
 // WiFi
 #ifdef TURN_WIFI_ENABLE
 #include "turn_wifi.h"
 #endif //TURN_WIFI_ENABLE
 
-// SD card and config file
-#include "sdcard.h"
-
-// Adafruit featherwing LCD display
-#include "turn_lcd.h"
-uint8_t lcd_button_num=0;
-
-/*
- * Analog multi buttons
- */
-// TODO move to their own file
-#ifdef PHYSICAL_BUTTONS
-#include <AnalogMultiButton.h>
-
-const int buttons_values[2] = {5, 684};
-AnalogMultiButton buttons(BUTTONS_PIN, 2, buttons_values);
-
-void buttons_setup() {
-  // Make sure all analog systems read the same
-  analogReadResolution(10);
-}
-
-void buttons_loop() {
-  buttons.update();
-  if (buttons.onPress(0)) {
-#ifdef DEBUG2
-    Serial.println("Physical 0 has been pressed");
-#endif //DEBUG2
-    button_action(2, false);
-  }
-  if (buttons.onPress(1)) {
-#ifdef DEBUG2
-    Serial.println("Physical 1 has been pressed");
-#endif //DEBUG2
-    button_action(1, false);
-  }
-}
-#endif // PHYSICAL_BUTTONS
-
-
 #ifdef USE_ZPT_SERIAL
-void rf_serial_actions() {
+#include "zpt_serial.h"
+void zpt_serial_actions();
+void zpt_serial_actions() {
   if (zpt_packet_lowbatt()) {
     // Print a red on white '!' if remote battery low
-    lcd_statusprint('!');
+    // TODO display element or popup?
+    //lcd_statusprint('!');
   } else if (!zpt_packet_learn()) {
     // Print a red on white '?' if remote not paired
-    lcd_statusprint('?');
+    // TODO dispay element?
+    //lcd_statusprint('?');
   } else {
     // Clear status
-    lcd_statusclear();
+    // TODO clear element
+    //lcd_statusclear();
   }
+  set_var_zpt_signal_strength_int(zpt_packet_rssi());
 }
 #endif //USE_ZPT_SERIAL
 
-/*
- * Setup and loop
- */
+void set_config_mode(bool mode) {
+  config_mode=mode;
+}
+
+// Setup everything that needs to be set up
 void setup() {
   // outputs setup
   // Make aure the 12v mosfet drivers are off
@@ -116,8 +87,6 @@ void setup() {
   pinMode(UNUSED_1, OUTPUT);
   digitalWrite(BUZZER, LOW);
   digitalWrite(UNUSED_1, LOW);
-  pinMode(BUTTONS_PIN, INPUT);
-
 
   // Serial setup
   Serial.begin(SERIAL_SPEED);
@@ -126,9 +95,10 @@ void setup() {
   }
   // some delay before dealing with SPI, let it settle
   delay(1000);
-#ifdef DEBUG
   Serial.println("\r\nStart\r\n");
-#endif //DEBUG
+  Serial.println("Turning Feather");
+  Serial.println("(c) pir 2019-2026");
+  Serial.println("tf@pir.net\r\n");
 
 #if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
   // Set up a Neopixel if configured.
@@ -136,91 +106,119 @@ void setup() {
 #endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
 
   // If microsd doesn't work
-  // Keep this before the lcd_setup();
+  // Keep this before the display setup;
   //SPI.begin(SCK, MISO, MOSI, SD_CS_PIN);
-  //pinMode(SD_CS_PIN, OUTPUT);
+  pinMode(SD_CS_PIN, OUTPUT);
   //SPI.setDataMode(SPI_MODE0);
-
-#ifdef DEBUG
-  Serial.println("Calling lcd_setup");
-#endif //DEBUG
-  // Basic LCD setup
-  lcd_setup();
 
 #ifdef DEBUG
   Serial.println("Calling storage_init");
 #endif //DEBUG
+  // Keep this before the display setup
   storage_init();
 
 #ifdef DEBUG
-  Serial.println("Calling lcd_splash");
+  Serial.println("Running setup_tft_screen");
 #endif //DEBUG
-  lcd_splash(SPLASH_BMP);
-  Serial.println("\r\n");
-  lcd_println("Turning feather controller");
-  lcd_println("(c) pir 2019-2026         ");
-  lcd_println("tf@pir.net                ");
-  Serial.println("");
+  setup_tft_screen();
 
-  // If enabled bring up WiFi
-#ifdef TURN_WIFI_ENABLE
-  if (! initWifi()) {
-    // WiFi init failed
-    lcd_println("WiFi disabled             ");
-    delay(2000);
-  }
-#else
-  delay(2000);
-#endif //TURN_WIFI_ENABLE
-
-  // Load the config into a datastructure
-  setup_turnconfig();
-
-#ifdef PHYSICAL_BUTTONS
-  // Physical buttons setup
-  buttons_setup();
-#endif //PHYSICAL_BUTTONS
-
-  // bravo/ZPT RF setup
-  rf_buttons_setup();
+  //loadScreen(SCREEN_ID_SPLASH);
+  //loop_tft_screen();
 
 #ifdef USE_ZPT_SERIAL
+#ifdef DEBUG
+  Serial.println("Running zpt_serial_setup");
+#endif //DEBUG
   // ZPT serial setup
   zpt_serial_setup();
 #endif //USE_ZPT_SERIAL
 
+  // Is the turn/face button being held down at boot?
+  if (analogRead(BUTTONS_PIN) < 5) {
+//  if (true) {
+    set_config_mode(true);
+    loadScreen(SCREEN_ID_CONFIG_MAIN);
+  }
+
+#ifdef DEBUG
+  Serial.println("Running setup_turnconfig");
+#endif //DEBUG
+  // Load the config into a datastructure
+  setup_turnconfig();
+
+  // If enabled bring up WiFi
+#ifdef TURN_WIFI_ENABLE
+#ifdef DEBUG
+  Serial.println("Calling initWifi");
+#endif //DEBUG
+  if (! initWifi()) {
+    // WiFi init failed
+    // TODO change this to a popup?
+    lcd_println("WiFi disabled             ");
+    delay(2000);
+  }
+#else //TURN_WIFI_ENABLE
+  Serial.println("WiFi disabled, TURN_WIFI_ENABLE not defined");
+#endif //TURN_WIFI_ENABLE
+
+#ifdef PHYSICAL_BUTTONS
+  // Physical buttons setup
+#ifdef DEBUG
+  Serial.println("Calling buttons_setup");
+#endif //DEBUG
+  buttons_setup();
+#endif //PHYSICAL_BUTTONS
+
+  // bravo/ZPT RF setup
+#ifdef DEBUG
+  Serial.println("Calling zpt_buttons_setup");
+#endif //DEBUG
+  zpt_buttons_setup();
+
   // Timer and face/away setup.
+#ifdef DEBUG
+  Serial.println("Calling timer_setup");
+#endif //DEBUG
   timer_setup();
 
   Serial.println(F("\r\nSetup finished.\r\n"));
 #if defined(FEATHER_ESP32_V2) && defined(ESP_V2_NEOPIXEL)
   np(0);
 #endif //FEATHER_ESP32_V2 && ESP_V2_NEOPIXEL
+  delay(2000);
 }
 
 void loop() {
-#ifdef RF_BUTTONS
-  rf_buttons_loop();
-#endif // RF_BUTTONS
-  // Check semaphore and run turntick if ready
-  turntick_loop();
-  // Take screen button press actions
-  button_action(lcd_button(), false);
-#ifdef PHYSICAL_BUTTONS
-  // Physical buttons action
-  buttons_loop();
-#endif
+  // Anything related to the screen/UI
+  loop_tft_screen();
+
 #ifdef TURN_WIFI_ENABLE
   wifiloop();
 #endif //TURN_WIFI_ENABLE
+
+  if (! config_mode) {
+#ifdef ZPT_BUTTONS
+    zpt_buttons_loop();
+#endif // ZPT_BUTTONS
+
+#ifdef PHYSICAL_BUTTONS
+    // Physical buttons action
+    buttons_loop();
+#endif
+
+    // Check semaphore and run turntick if ready
+    turntick_loop();
+  }
+
 #ifdef USE_ZPT_SERIAL
   // ZPT serial handling
   zpt_serial_loop();
   if (zpt_packet_isready()) {
-    rf_serial_actions();
+    zpt_serial_actions();
     // Signal ready for another packet.
     zpt_packet_getnew();
   }
 #endif //USE_ZPT_SERIAL
+
   yield();
 }

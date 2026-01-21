@@ -2,6 +2,20 @@
  * Config parsing from and to JSON
  */
 #include "TurnConfig.h"
+// Needed for fudge times
+#include "main.h"
+
+#ifndef FACE_FUDGE
+#define FACE_FUDGE 0
+#endif
+
+#ifndef AWAY_FUDGE
+#define AWAY_FUDGE 0
+#endif
+
+#ifndef INIT_PAUSE
+#define INIT_PAUSE 0
+#endif
 
 void StageConfig::save(JsonObject obj) const {
   obj["beep"]=beep / NUM_MULT;
@@ -39,6 +53,25 @@ void StageConfig::load(JsonObjectConst obj) {
   flash=flash % 10000;
   flashaway=(obj["flashaway"] | 0.0) * NUM_MULT;
   flashaway=flashaway % 10000;
+
+  // Calculate total length of the stage
+  totallen=0;
+  if (beep > 0)
+    totallen+=beep + INIT_PAUSE;
+  if (face > 0)
+    totallen+=face;
+  if (repeat > 1) {
+    if (face > 0)
+      totallen+=(face + FACE_FUDGE) * (repeat -1);
+    if (away > 0)
+      totallen+=(away + AWAY_FUDGE) * (repeat -1);
+  }
+  if (flash > 0)
+    totallen+=flash + FACE_FUDGE;
+  if (flashaway > 0)
+    totallen+=flashaway + AWAY_FUDGE;
+  if (autonext && nextaway > 0)
+    totallen+=nextaway + AWAY_FUDGE;
 }
 
 void StageConfig::clearnext() {
@@ -90,7 +123,7 @@ void ProgramConfig::load(JsonObjectConst obj) {
 void TurnConfig::load(JsonArrayConst obj) {
   // Extract each program.
   programs=0;
-  
+
   for (JsonObjectConst prog : obj) {
     // Load program
     program[programs].load(prog);
@@ -138,6 +171,8 @@ void ControlStatus::save(JsonObject obj) const {
   obj["stop"]=stop;
   obj["face"]=face;
   obj["status"]=status;
+  obj["faceperc"]=faceperc;
+  obj["stageperc"]=stageperc;
 }
 
 bool serializeControlStatus(ControlStatus status, char *dst, size_t dst_len) {

@@ -2,7 +2,7 @@
  * Config definition used for turning target
  * courses of fire and the stages within.
  */
- 
+
 #pragma once
 
 #include <ArduinoJson.h>
@@ -63,6 +63,7 @@ struct StageConfig {
   uint16_t nextaway=0;
   uint16_t flash=0;
   uint16_t flashaway=0;
+  uint32_t totallen=0;
 
   void clearnext();
   void load(JsonObjectConst);
@@ -115,6 +116,8 @@ struct ControlStatus {
   bool stop;
   bool face;
   uint8_t status;
+  uint8_t faceperc;
+  uint8_t stageperc;
 
   void save(JsonObject obj) const;
 };

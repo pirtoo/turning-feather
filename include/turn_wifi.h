@@ -32,10 +32,12 @@
 
 // Initialise wifi in setup()
 bool initWifi(void);
-// Set all wifi settings back to defaults
-void resetWifi(void);
 // Tasks to do in the loop
 void wifiloop(void);
+// Set all wifi settings back to defaults
+void resetWifi(void);
+// Clear admin password
+void clearAdminPW(void);
 
 #endif //TF_WIFI_H
 #endif //TURN_WIFI_ENABLE

@@ -1,7 +1,7 @@
 /*
  * Turning target controller.
  * Turning feather.
- * 
+ *
  * General defines and main functions.
  */
 

@@ -1,8 +1,8 @@
-/* 
+/*
  * SD card setup
  */
 #include "turning.h"
-#include "turn_lcd.h"
+#include "turn_tft.h"
 #include "sdcard.h"
 
 bool sd_init_ok=false, localfs_init_ok=false;
@@ -35,14 +35,23 @@ File checkfsfile(const char *filename) {
   return file;
 }
 
-void storage_init() {
+void storage_init(void) {
   // SD card and littlefs setup
   uint8_t count=0;
 
-  while (!SD.begin(SD_CS_PIN) and count <= SD_RETRIES) {
+#ifdef DEBUG
+  Serial.println("Starting storage_init");
+#endif //DEBUG
+  while (! SD.begin(SD_CS_PIN) and count <= SD_RETRIES) {
+#ifdef DEBUG2
+    Serial.println("storage_init SD.begin loop");
+#endif //DEBUG
     delay(500);
     count++;
   }
+#ifdef DEBUG
+  Serial.println("SD init done");
+#endif //DEBUG
 
   if (count <= SD_RETRIES) {
     sd_init_ok=true;
@@ -55,7 +64,7 @@ void storage_init() {
 
   if (!LittleFS.begin(true)) {
     lcd_println("LittleFS storage:");
-    lcd_println("  mount failed");    
+    lcd_println("  mount failed");
   } else {
     localfs_init_ok=true;
   }
