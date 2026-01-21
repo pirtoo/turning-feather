@@ -124,7 +124,7 @@ void create_screen_program() {
             lv_obj_t *obj = lv_table_create(parent_obj);
             objects.prog_table = obj;
             lv_obj_set_pos(obj, 1, 38);
-            lv_obj_set_size(obj, 318, 130);
+            lv_obj_set_size(obj, 318, 131);
             lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_GESTURE_BUBBLE|LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW|LV_OBJ_FLAG_SNAPPABLE);
             lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_OFF);
             lv_obj_set_scroll_dir(obj, LV_DIR_NONE);

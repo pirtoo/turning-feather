@@ -54,24 +54,24 @@ uint32_t read32(fs::File &f);
 
 void extra_lvgl_setup() {
   // Setup some things that cannot be done through EEZ
-  /*
+/*
   lv_obj_t *table=objects.prog_table;
 
   ;lv_table_set_row_cnt(table, 2);
   ;lv_table_set_col_cnt(table, 6);
 
-  ;lv_table_set_col_width(table, 0, 70);
-  ;lv_table_set_col_width(table, 1, 50);
-  ;lv_table_set_col_width(table, 2, 70);
-  ;lv_table_set_col_width(table, 3, 50);
-  ;lv_table_set_col_width(table, 4, 70);
-  ;lv_table_set_col_width(table, 5, 50);
+  ;lv_table_set_col_width(table, 0, 65);
+  ;lv_table_set_col_width(table, 1, 65);
+  ;lv_table_set_col_width(table, 2, 65);
+  ;lv_table_set_col_width(table, 3, 65);
+  ;lv_table_set_col_width(table, 4, 65);
+  ;lv_table_set_col_width(table, 5, 65);
 
   lv_table_set_cell_value(table, 0, 0, "Beep");
   lv_table_set_cell_value(table, 0, 1, "Face");
   lv_table_set_cell_value(table, 0, 2, "Away");
   lv_table_set_cell_value(table, 0, 3, "Repeat");
-  lv_table_set_cell_value(table, 2, 0, "Flash");
+  lv_table_set_cell_value(table, 0, 4, "Flash");
   lv_table_set_cell_value(table, 2, 1, "F Away");
   lv_table_set_cell_value(table, 2, 2, "N Away");
   lv_table_set_cell_value(table, 2, 3, "Auto N");
@@ -84,7 +84,7 @@ void extra_lvgl_setup() {
   lv_table_set_cell_value(table, 3, 1, "999.9");
   lv_table_set_cell_value(table, 4, 2, "50.3");
   lv_table_set_cell_value(table, 4, 3, "No");
-  */
+*/
 }
 
 void setup_tft_screen() {
