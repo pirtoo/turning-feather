@@ -18,7 +18,7 @@
 // Convert a bmp to the correct format with:
 //   mogrify -format bmp -define bmp:format=bmp4 filename.bmp
 #ifndef SPLASH_BMP
-#define SPLASH_BMP "/pp1-320x240t.bmp"
+#define SPLASH_BMP "/pp1-320x240.bmp"
 #endif //SPLASH_BMP
 
 // featherwing pindefs
