@@ -11,6 +11,7 @@ extern void action_button_press(lv_event_t * e);
 extern void action_button_press_config(lv_event_t * e);
 extern void action_list_select(lv_event_t * e);
 extern void action_dropdown_checked(lv_event_t * e);
+extern void action_table_row_draw(lv_event_t * e);
 
 
 #ifdef __cplusplus

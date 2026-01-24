@@ -4,7 +4,13 @@
 # This branch
 
 This branch is testing LVGL and associated GUI libraries and a major restructuring of the code.
-It is not yet complete but all main functions are in place. Still working out how best to display stage information on the main program screen.
+WiFi connectivity is working, it will create its own WiFI network if it cannot connect elsewhere.
+LVGL display with dropdowns for program and stage selections, progress bars for the current exposure/away and for the stage as a whole are working.
+
+Either disable WiFi or set a password on the WiFi network and an admin password on settings change.
+There is a config menu on the device to reset settings if they are forgotten, to disable WiFi entirely and a signal strength meter for the ZPT RF remote control.
+
+Still to come are popup messages for any errors or WiFi issues and if the ZPT remote control is low on battery or is not properly paired.
 
 ## Features
 
@@ -16,7 +22,7 @@ It is not yet complete but all main functions are in place. Still working out ho
 
   * Configs can be checked for JSON validity [here](https://arduinojson.org/v7/assistant/) or on any JSON website with a checker.
 
-* Touch screen to select program/stage.
+* Touch screen to select program/stage and start/stop face/away.
 
 * RF remote control via [RF Solutions](https://www.rfsolutions.co.uk/) [ZPT module](https://www.rfsolutions.co.uk/radio-modules/zpt-433-868mhz-radio-telemetry-modules/?searchid=35864&search_query=zpt), compatable with their 4 button [Fobber](https://www.rfsolutions.co.uk/remote-control-systems/fobber-433mhz-868mhz-remote-control-key-fob-transmitter/?searchid=35862&search_query=fobber) or longer range [Trap](https://www.rfsolutions.co.uk/remote-control-systems/trap-handheld-transmitters-868mhz-or-918mhz-versions/?searchid=35863&search_query=trap) remote.
 

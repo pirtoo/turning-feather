@@ -38,7 +38,7 @@ char *prog_list_json(void);
 char *stage_json(void);
 
 bool changeprognum(const int prognum);
-bool changestagenum(const int stagenum, const bool chirp);
+bool changestagenum(const int stagenum, const bool chirp, const bool cont);
 
 void turntick(void);
 void turntick_loop(void);

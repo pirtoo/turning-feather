@@ -402,7 +402,7 @@ bool initWifi() {
         Serial.print("stagenum: ");
         Serial.println(num);
 #endif //DEBUG
-        changestagenum(num, false);
+        changestagenum(num, false, false);
 
       } else if (p->name() == "stop") {
 #ifdef DEBUG

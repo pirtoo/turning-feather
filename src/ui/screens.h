@@ -16,11 +16,12 @@ typedef struct _objects_t {
     lv_obj_t *face_away_button;
     lv_obj_t *prog_dropdown;
     lv_obj_t *stage_dropdown;
-    lv_obj_t *prog_table;
-    lv_obj_t *prog_messagebox;
+    lv_obj_t *prog_stage_bar;
     lv_obj_t *start_stop_label;
     lv_obj_t *face_away_label;
-    lv_obj_t *prog_stage_bar;
+    lv_obj_t *prog_table1;
+    lv_obj_t *prog_table2;
+    lv_obj_t *prog_messagebox;
     lv_obj_t *config_label;
     lv_obj_t *reset_wifi_button;
     lv_obj_t *reset_wifi_label;

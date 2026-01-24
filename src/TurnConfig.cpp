@@ -5,6 +5,10 @@
 // Needed for fudge times
 #include "main.h"
 
+#ifndef BEEP_FUDGE
+#define BEEP_FUDGE 0
+#endif
+
 #ifndef FACE_FUDGE
 #define FACE_FUDGE 0
 #endif

@@ -11,6 +11,7 @@
 #include "main.h"
 #include "turn_wifi.h"
 #include "turning.h"
+#include "turn_tft.h"
 
 
 extern void action_button_press(lv_event_t * e) {
@@ -92,13 +93,17 @@ void action_list_select(lv_event_t *e) {
     switch (ud) {
       case 1:
         // program list selection
+#ifdef DEBUG2
         Serial.println("Program selection made");
+#endif //DEBUG2
         changeprognum(lv_dropdown_get_selected(lv_event_get_target(e)));
         break;
       case 2:
         // Stage selection
+#ifdef DEBUG2
         Serial.println("Stage selection made");
-        changestagenum(lv_dropdown_get_selected(lv_event_get_target(e)), false);
+#endif //DEBUG2
+        changestagenum(lv_dropdown_get_selected(lv_event_get_target(e)), false, false);
         break;
     }
   }
@@ -111,6 +116,10 @@ void action_dropdown_checked(lv_event_t *e) {
 #ifdef DEBUG2
     Serial.printf("Dropdown opened prog: %d\n", ud);
 #endif //DEBUG2
+    // Any dropdown that is opened, set the list font other than default
+    //lv_obj_set_style_text_font(lv_dropdown_get_list(lv_event_get_target(e)), &lv_font_montserrat_16, 0);
+
+    // When a dropdown is opened make sure the other one closes
     switch (ud) {
       case 1:
         // When you open the programs dropdown, close the stage dropdown
@@ -119,6 +128,30 @@ void action_dropdown_checked(lv_event_t *e) {
       case 2:
         // When you open the stage dropdown, close the programs dropdown
         lv_dropdown_close(objects.prog_dropdown);
+        break;
+    }
+  }
+}
+
+void action_table_row_draw(lv_event_t *e) {
+  lv_obj_t * obj = lv_event_get_target(e);
+  lv_obj_draw_part_dsc_t * dsc = lv_event_get_draw_part_dsc(e);
+
+  // If the cells are being drawn
+  if (dsc->part == LV_PART_ITEMS) {
+    uint32_t row = dsc->id /  lv_table_get_col_cnt(obj);
+    //uint32_t col = dsc->id - row * lv_table_get_col_cnt(obj);
+
+    // row colours
+    switch (row) {
+      case PC_R_H1:
+        dsc->rect_dsc->bg_color=lv_color_hex(0x0c2070);
+        dsc->label_dsc->align = LV_TEXT_ALIGN_AUTO;
+        break;
+      case PC_R_D1:
+      case PC_R_S1:
+        dsc->label_dsc->align = LV_TEXT_ALIGN_AUTO;
+      //  dsc->rect_dsc->bg_color=lv_color_hex(0x111111);
         break;
     }
   }

@@ -50,6 +50,7 @@
 
 // Fudge to allow time for targets to turn
 // in 10ths of a second
+#define BEEP_FUDGE 1
 #define FACE_FUDGE 3
 #define AWAY_FUDGE 3
 

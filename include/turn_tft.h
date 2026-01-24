@@ -52,9 +52,20 @@
 #define SCREEN_DEBOUNCE 400
 #define TIME_DIV 10.0
 
-// Use these when printing or drawing nicer text
-//#define PRETTY_FONT_12 &FreeSans12pt7b
-//#define PRETTY_FONT_24 &FreeSans24pt7b
+#define PC_R_D1 0
+#define PC_R_H1 1
+#define PC_R_S1 2
+
+#define PC_C_BEEP 1
+#define PC_C_FACE 2
+#define PC_C_AWAY 3
+#define PC_C_REPEAT 4
+#define PC_C_FLASH 1
+#define PC_C_FAWAY 2
+#define PC_C_NAWAY 3
+#define PC_C_AUTON 4
+
+#define PC_CWIDTH 73
 
 struct point {
   uint16_t x;
@@ -66,12 +77,8 @@ struct rect {
 };
 
 uint8_t lcd_button();
-void lcd_stagerun(const uint16_t num, const uint8_t pos, const uint8_t repeat);
-void lcd_stagerun_clear();
 void lcd_statusprint(const char ch);
 void lcd_statusclear();
-void lcd_stagerun_clear_top(void);
-void lcd_stagerun_clear_bottom(void);
 void lcd_stagerun_repeat_top(const uint8_t rep);
 void lcd_print(const char *str);
 void lcd_println(const char *str);
@@ -84,12 +91,16 @@ void loop_tft_screen(void);
 
 void tft_display_set(const TurnConfig *tc, uint8_t prognum, uint8_t stagenum);
 void tft_stop(const bool isstop);
-void tft_face(const bool isface);
+void tft_face(const bool isface, const uint8_t in_stage);
 void tft_prog(const uint8_t prognum);
 void tft_prog_list(TurnConfig *tc);
+void tft_table_cell_value_float(lv_obj_t *table, const u_int8_t row, const u_int8_t col, const float value);
+void tft_table_cell_value_int(lv_obj_t *table, const u_int8_t row, const u_int8_t col, const u_int8_t value);
+void tft_table_cell_value_bool(lv_obj_t *table, const u_int8_t row, const u_int8_t col, const bool value);
 void tft_stage(const StageConfig *stage, const uint8_t stagenum);
 void tft_stage_list(const struct StageConfig *stage, const u_int8_t stages, const uint8_t stagenum);
 void tft_stagerun(const struct ControlStatus *status, const uint16_t num, const uint8_t pos, const uint8_t repeat);
+void tft_stagerun_clear(const u_int8_t pos);
 
 void tft_splash(const char *filename);
 void tft_drawBmp(fs::File &f, int16_t x, int16_t y);

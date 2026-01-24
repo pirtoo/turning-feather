@@ -41,6 +41,9 @@ Adafruit_LvGL_Glue glue;
 #define BUFF_LEN 500
 char buff[BUFF_LEN];
 
+// Main tables to fill in data when running
+lv_obj_t *table1, *table2;
+
 // Text to be used on main screen buttons
 const char *stop_str="STOPPED";
 const char *run_str="RUNNING";
@@ -52,39 +55,49 @@ void extra_lvgl_setup(void);
 uint16_t read16(fs::File &f);
 uint32_t read32(fs::File &f);
 
+
 void extra_lvgl_setup() {
   // Setup some things that cannot be done through EEZ
-/*
-  lv_obj_t *table=objects.prog_table;
 
-  ;lv_table_set_row_cnt(table, 2);
-  ;lv_table_set_col_cnt(table, 6);
+  // Main tables in programming screen for stage numbers
+  table1=objects.prog_table1;
+  table2=objects.prog_table2;
+  // Nonstandard font
+  //lv_obj_set_style_text_font(table, &lv_font_unscii_8, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-  ;lv_table_set_col_width(table, 0, 65);
-  ;lv_table_set_col_width(table, 1, 65);
-  ;lv_table_set_col_width(table, 2, 65);
-  ;lv_table_set_col_width(table, 3, 65);
-  ;lv_table_set_col_width(table, 4, 65);
-  ;lv_table_set_col_width(table, 5, 65);
+  // table size in row/columns
+  lv_table_set_row_cnt(table1, 3);
+  lv_table_set_col_cnt(table1, 6);
+  lv_table_set_row_cnt(table2, 3);
+  lv_table_set_col_cnt(table2, 6);
 
-  lv_table_set_cell_value(table, 0, 0, "Beep");
-  lv_table_set_cell_value(table, 0, 1, "Face");
-  lv_table_set_cell_value(table, 0, 2, "Away");
-  lv_table_set_cell_value(table, 0, 3, "Repeat");
-  lv_table_set_cell_value(table, 0, 4, "Flash");
-  lv_table_set_cell_value(table, 2, 1, "F Away");
-  lv_table_set_cell_value(table, 2, 2, "N Away");
-  lv_table_set_cell_value(table, 2, 3, "Auto N");
+  // Gap at the left hand side to centre things
+  lv_table_set_col_width(table1, 0, 20);
+  lv_table_set_col_width(table2, 0, 20);
+  for (int i=1; i<5; i++) {
+    lv_table_set_col_width(table1, i, PC_CWIDTH);
+    lv_table_set_col_width(table2, i, PC_CWIDTH);
+  }
 
-  lv_table_set_cell_value(table, 1, 0, "0.0");
-  lv_table_set_cell_value(table, 1, 1, "120.0");
-  lv_table_set_cell_value(table, 1, 2, "10.0");
-  lv_table_set_cell_value(table, 1, 3, "99.0");
-  lv_table_set_cell_value(table, 3, 0, "42.0");
-  lv_table_set_cell_value(table, 3, 1, "999.9");
-  lv_table_set_cell_value(table, 4, 2, "50.3");
-  lv_table_set_cell_value(table, 4, 3, "No");
-*/
+  lv_table_set_cell_value(table1, PC_R_H1, PC_C_BEEP, "Beep");
+  lv_table_set_cell_value(table1, PC_R_H1, PC_C_FACE, "Face");
+  lv_table_set_cell_value(table1, PC_R_H1, PC_C_AWAY, "Away");
+  lv_table_set_cell_value(table1, PC_R_H1, PC_C_REPEAT, "Repeat");
+
+  lv_table_set_cell_value(table2, PC_R_H1, PC_C_FLASH, "Flash");
+  lv_table_set_cell_value(table2, PC_R_H1, PC_C_FAWAY, "F Away");
+  lv_table_set_cell_value(table2, PC_R_H1, PC_C_NAWAY, "N Away");
+  lv_table_set_cell_value(table2, PC_R_H1, PC_C_AUTON, "Auto N");
+
+  //lv_table_set_cell_value(table1, PC_R_S1, 0, "888.0");
+  //lv_table_set_cell_value(table1, PC_R_S1, 1, "120.0");
+  //lv_table_set_cell_value(table1, PC_R_S1, 2, "108.0");
+  //lv_table_set_cell_value(table1, PC_R_S1, 3, "998.0");
+
+  //lv_table_set_cell_value(table2, PC_R_S1, 0, "428.0");
+  //lv_table_set_cell_value(table2, PC_R_S1, 1, "999.9");
+  //lv_table_set_cell_value(table2, PC_R_S1, 2, "505.3");
+  //lv_table_set_cell_value(table2, PC_R_S1, 3, "No");
 }
 
 void setup_tft_screen() {
@@ -198,7 +211,9 @@ void loop_tft_screen(void) {
 */
 }
 
-void tft_face(const bool isface) {
+void tft_face(const bool isface, const uint8_t in_stage) {
+  // clear previous number
+  tft_stagerun_clear(in_stage);
   // Set face/away
   if (isface) {
     // Change the colour of the run bar and the face/away button
@@ -215,6 +230,8 @@ void tft_face(const bool isface) {
 
 void tft_stop(const bool isstop) {
   // Set start/stop
+  // If we're stopping or starting then the times can be cleared
+  tft_stagerun_clear(IN_INIT);
   if (isstop) {
     // Change the colour of the face/away button
     set_var_start_stop_btn_checked_bool(false);
@@ -239,6 +256,21 @@ void tft_prog_list(TurnConfig *tc) {
     strncat(buff, line, BUFF_LEN -1);
   }
   set_var_prog_list(buff);
+}
+
+void tft_table_cell_value_float(lv_obj_t *table, const u_int8_t row, const u_int8_t col, const float value) {
+  snprintf(buff, BUFF_LEN -1, "%4.1f", value);
+  lv_table_set_cell_value(table, row, col, buff);
+}
+
+void tft_table_cell_value_int(lv_obj_t *table, const u_int8_t row, const u_int8_t col, const u_int8_t value) {
+  snprintf(buff, BUFF_LEN -1, "%d", value);
+  lv_table_set_cell_value(table, row, col, buff);
+}
+
+void tft_table_cell_value_bool(lv_obj_t *table, const u_int8_t row, const u_int8_t col, const bool value) {
+  snprintf(buff, BUFF_LEN -1, "%s", value ? "Yes" : "No");
+  lv_table_set_cell_value(table, row, col, buff);
 }
 
 void tft_stage_list(const struct StageConfig *stage,
@@ -270,9 +302,18 @@ void tft_prog(const uint8_t prognum) {
 }
 
 void tft_stage(const struct StageConfig *stage, const uint8_t stagenum) {
-  // TODO Set a selected stage, on list and on display
-  // TODO Set up config on screen
+  // Display stage values on screen
   set_var_stage_list_sel_int(stagenum);
+
+  tft_table_cell_value_float(table1, PC_R_S1, PC_C_BEEP, stage->beep / TIME_DIV);
+  tft_table_cell_value_float(table1, PC_R_S1, PC_C_FACE, stage->face / TIME_DIV);
+  tft_table_cell_value_float(table1, PC_R_S1, PC_C_AWAY, stage->away / TIME_DIV);
+  tft_table_cell_value_int(table1, PC_R_S1, PC_C_REPEAT, stage->repeat);
+
+  tft_table_cell_value_float(table2, PC_R_S1, PC_C_FLASH, stage->flash / TIME_DIV);
+  tft_table_cell_value_float(table2, PC_R_S1, PC_C_FAWAY, stage->flashaway / TIME_DIV);
+  tft_table_cell_value_float(table2, PC_R_S1, PC_C_NAWAY, stage->nextaway / TIME_DIV);
+  tft_table_cell_value_bool(table2, PC_R_S1, PC_C_AUTON, stage->autonext);
 }
 
 void tft_stagerun(const struct ControlStatus *status, const uint16_t num, const uint8_t pos, const uint8_t repeat) {
@@ -285,12 +326,16 @@ void tft_stagerun(const struct ControlStatus *status, const uint16_t num, const 
 #endif //DEBUG2
   set_var_prog_face_bar_int(status->faceperc);
   set_var_prog_stage_bar_int(status->stageperc);
-}
 
+  if (repeat == 0) {
+    // Clear the repeat field
+    if (pos == IN_INIT)
+      lv_table_set_cell_value(table1, PC_R_D1, PC_C_REPEAT, "");
+  } else {
+    tft_table_cell_value_int(table1, PC_R_D1, PC_C_REPEAT, repeat);
+  }
 
-void lcd_stagerun(const uint16_t num, const uint8_t pos, const uint8_t repeat) {
-  // Keep the running numbers up to date
-
+  // Keep running numbers up to date
   switch (pos) {
     case IN_INIT:
       break;
@@ -300,77 +345,93 @@ void lcd_stagerun(const uint16_t num, const uint8_t pos, const uint8_t repeat) {
 
     case IN_BEEP:
       // beep
-      //tft.setCursor(timing_x, timing_y_3);
-      //tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      //tft.printf("%4.1f               ", num / TIME_DIV);
-      //lcd_stagerun_clear_bottom();
+      tft_table_cell_value_float(table1, PC_R_D1, PC_C_BEEP, num / TIME_DIV);
       break;
 
     case IN_FACE:
       // face
-      //tft.setCursor(timing_x, timing_y_3);
-      //tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      //tft.printf("     %5.1f       %2d", num / TIME_DIV, repeat);
-      //lcd_stagerun_clear_bottom();
+      tft_table_cell_value_float(table1, PC_R_D1, PC_C_FACE, num / TIME_DIV);
       break;
 
     case IN_AWAY:
       // away
-      //tft.setCursor(timing_x, timing_y_3);
-      //tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      //tft.printf("           %5.1f %2d", num / TIME_DIV, repeat);
-      //lcd_stagerun_clear_bottom();
+      tft_table_cell_value_float(table1, PC_R_D1, PC_C_AWAY, num / TIME_DIV);
       break;
 
     case IN_FLASH:
       // flash
-      //lcd_stagerun_clear_top();
-      //tft.setCursor(timing_x, timing_y_6);
-      //tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      //tft.printf("%5.1f             ", num / TIME_DIV);
+      tft_table_cell_value_float(table2, PC_R_D1, PC_C_FLASH, num / TIME_DIV);
       break;
 
     case IN_FLASH_AWAY:
       // flash away
-      //lcd_stagerun_clear_top();
-      //tft.setCursor(timing_x, timing_y_6);
-      //tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      //tft.printf("      %5.1f       ", num / TIME_DIV);
+      tft_table_cell_value_float(table2, PC_R_D1, PC_C_FAWAY, num / TIME_DIV);
       break;
 
     case IN_NEXT:
       // next away
-      //lcd_stagerun_repeat_top(repeat);
-      //tft.setCursor(timing_x, timing_y_6);
-      ///tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-      //tft.printf("            %5.1f ", num / TIME_DIV);
+      tft_table_cell_value_float(table2, PC_R_D1, PC_C_NAWAY, num / TIME_DIV);
       break;
 
     default:
 #ifdef DEBUG
-      Serial.println("lcd_stagerun default case");
+      Serial.println("tft_stagerun default case");
 #endif //DEBUG
       break;
   }
 }
 
-void lcd_stagerun_clear() {
+void tft_stagerun_clear(const u_int8_t pos) {
 #ifdef DEBUG
-  Serial.println("Clearing LCD run times");
+  Serial.println("Clearing TFT run times");
 #endif //
-}
 
-void lcd_stagerun_clear_top() {
+  switch (pos) {
+    case IN_INIT:
+    case IN_INIT_PAUSE:
+      lv_table_set_cell_value(table1, PC_R_D1, PC_C_BEEP, "");
+      lv_table_set_cell_value(table1, PC_R_D1, PC_C_FACE, "");
+      lv_table_set_cell_value(table1, PC_R_D1, PC_C_AWAY, "");
+      lv_table_set_cell_value(table1, PC_R_D1, PC_C_REPEAT, "");
+
+      lv_table_set_cell_value(table2, PC_R_D1, PC_C_FLASH, "");
+      lv_table_set_cell_value(table2, PC_R_D1, PC_C_FAWAY, "");
+      lv_table_set_cell_value(table2, PC_R_D1, PC_C_NAWAY, "");
+      break;
+
+    case IN_BEEP:
+      // beep
+      lv_table_set_cell_value(table1, PC_R_D1, PC_C_BEEP, "");
+      break;
+
+    case IN_FACE:
+      // face
+      lv_table_set_cell_value(table1, PC_R_D1, PC_C_FACE, "");
+      break;
+
+    case IN_AWAY:
+      // away
+      lv_table_set_cell_value(table1, PC_R_D1, PC_C_AWAY, "");
+      break;
+
+    case IN_FLASH:
+      // flash
+      lv_table_set_cell_value(table2, PC_R_D1, PC_C_FLASH, "");
+      break;
+
+    case IN_FLASH_AWAY:
+      // flash away
+      lv_table_set_cell_value(table2, PC_R_D1, PC_C_FAWAY, "");
+      break;
+
+    case IN_NEXT:
+      // next away
+      lv_table_set_cell_value(table2, PC_R_D1, PC_C_NAWAY, "");
+      break;
+  }
 }
 
 void lcd_stagerun_repeat_top(const uint8_t rep) {
-}
-
-void lcd_stagerun_clear_bottom() {
-}
-
-void tft_display_set(const struct TurnConfig *tc, uint8_t prognum, uint8_t stagenum) {
-  // Set up the 
 }
 
 void lcd_statusprint(const char ch) {
